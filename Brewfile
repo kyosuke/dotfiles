@@ -7,6 +7,20 @@ brew 'mongodb26'
 brew 'ngrok'
 
 cask 'google-chrome'
+cask 'firefox'
+
+cask 'atom'
+cask 'coteditor'
+cask 'sublime-text'
+cask 'nvalt'
+
+cask 'virtualbox'
+cask 'boot2docker'
+
+cask 'iterm2'
+cask 'sourcetree'
+
 cask 'alfred'
 cask 'dropbox'
-cask 'iterm2'
+cask 'skype'
+cask 'microsoft-office'
