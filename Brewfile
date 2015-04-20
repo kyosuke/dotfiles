@@ -23,4 +23,7 @@ cask 'sourcetree'
 cask 'alfred'
 cask 'dropbox'
 cask 'skype'
+
 cask 'microsoft-office'
+cask 'totalfinder'
+cask 'mailplane'
