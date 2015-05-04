@@ -7,6 +7,8 @@ export ZSH=/Users/kyosuke/.oh-my-zsh
 # time that oh-my-zsh is loaded.
 ZSH_THEME="agnoster"
 
+DEFAULT_USER="kyosuke"
+
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
 
