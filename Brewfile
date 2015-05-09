@@ -6,7 +6,6 @@ brew 'brew-cask'
 brew 'mongodb26'
 brew 'ngrok'
 
-cask 'google-chrome'
 cask 'firefox'
 
 cask 'atom'
