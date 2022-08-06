@@ -1,4 +1,3 @@
 #!/bin/sh
 
-ln -sf ~/dotfiles/Brewfile ~/Brewfile
-ln -sf ~/dotfiles/.zshrc ~/.zshrc
+ln -sf ~/GitHub/kyosuke/dotfiles/.npmrc ~/.npmrc
