@@ -13,4 +13,7 @@ if status is-interactive
   # Bun
   setenv BUN_INSTALL $HOME/.bun
   fish_add_path $BUN_INSTALL/bin
+
+  # Turso
+  fish_add_path $HOME/.turso
 end
