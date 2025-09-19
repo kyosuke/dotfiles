@@ -16,4 +16,7 @@ if status is-interactive
 
   # Turso
   fish_add_path $HOME/.turso
+
+  # webinstall.dev (Webi)
+  fish_add_path $HOME/.local/bin
 end
