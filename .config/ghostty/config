@@ -1,0 +1,25 @@
+# シェル
+command = /usr/local/bin/fish --login --interactive
+shell-integration = fish
+
+# タブはタイトルバーに表示
+macos-titlebar-style = tabs
+
+# テーマ
+theme = "GitHub Dark Dimmed"
+
+# 背景
+background-opacity = 0.90
+background-blur = true
+
+# フォント
+font-family = "PlemolJP35 Console"
+font-size = 14
+
+# 余白
+window-padding-x = 12
+window-padding-y = 8
+
+# ウィンドウサイズ（縦幅最大）
+window-height = 999
+window-width = 100
