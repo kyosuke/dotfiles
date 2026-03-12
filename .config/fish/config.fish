@@ -1,3 +1,6 @@
+# Editor
+set -gx EDITOR "code --wait"
+
 # Webi
 fish_add_path $HOME/.local/bin
 
