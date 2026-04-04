@@ -29,7 +29,6 @@ link() {
   say "✔️  $dst"
 }
 
-link "$DIR/.npmrc" "$HOME/.npmrc"
 link "$DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
 link "$DIR/.config/git/ignore" "$HOME/.config/git/ignore"
 link "$DIR/.config/ghostty/config" "$HOME/.config/ghostty/config"
