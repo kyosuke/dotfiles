@@ -22,3 +22,9 @@ fish_add_path $DENO_INSTALL/bin
 # Turso
 fish_add_path $HOME/.turso
 
+# Emscripten (emsdk)
+set -gx EMSDK $HOME/GitHub/emscripten-core/emsdk
+fish_add_path $EMSDK
+fish_add_path $EMSDK/upstream/emscripten
+fish_add_path $EMSDK/python/3.13.3_64bit/bin
+
