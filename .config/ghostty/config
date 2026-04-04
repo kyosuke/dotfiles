@@ -13,7 +13,7 @@ background-opacity = 0.90
 background-blur = true
 
 # フォント
-font-family = "PlemolJP35 Console"
+font-family = "PlemolJP35 Console NF"
 font-size = 14
 
 # 余白
