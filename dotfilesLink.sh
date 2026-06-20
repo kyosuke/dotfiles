@@ -32,5 +32,6 @@ link() {
 link "$DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
 link "$DIR/.config/git/ignore" "$HOME/.config/git/ignore"
 link "$DIR/.config/ghostty/config" "$HOME/.config/ghostty/config"
+link "$DIR/.config/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
 link "$DIR/.wezterm.lua" "$HOME/.wezterm.lua"
 link "$DIR/.zshenv" "$HOME/.zshenv"

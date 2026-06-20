@@ -32,3 +32,10 @@ fish_add_path $EMSDK/python/3.13.3_64bit/bin
 # Rust (cargo)
 fish_add_path $HOME/.cargo/bin
 
+# zellij ではペインにカレントディレクトリが出るので、プロンプト(Pure)からは省く。
+# Pure に CWD を隠すオプションはないため内部関数を空で上書きする。
+if set -q ZELLIJ
+    function _pure_prompt_current_folder
+    end
+end
+

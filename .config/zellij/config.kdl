@@ -1,0 +1,12 @@
+// zellij の設定。デフォルトと異なる項目だけを書く。
+// 全オプションの一覧は `zellij setup --dump-config` で確認できる。
+
+// fish を使う。ghostty がログインシェル経由で zellij を起動し PATH が
+// 解決済みのため、インストール先をハードコードせず相対指定で見つけられる。
+default_shell "fish"
+
+// macOS のクリップボードへコピー
+copy_command "pbcopy"
+
+// 組み込みテーマ
+theme "ao"

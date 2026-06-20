@@ -1,5 +1,8 @@
-# シェル
-command = /usr/local/bin/fish --login --interactive
+# シェル。起動時に zellij の main セッションへ接続（無ければ作成）。
+# ログインシェル(zsh)経由で起動して PATH を解決してから zellij を exec する。
+# これで zellij も default_shell の fish もインストール先をハードコードせず
+# 名前解決でき、Intel/Apple Silicon どちらでも動く。
+command = /bin/zsh --login -c "exec zellij attach -c main"
 shell-integration = fish
 
 # タブはタイトルバーに表示
