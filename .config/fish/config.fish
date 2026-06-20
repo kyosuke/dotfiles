@@ -6,7 +6,7 @@ fish_add_path $HOME/.local/bin
 
 # pnpm
 set -gx PNPM_HOME $HOME/Library/pnpm
-fish_add_path $PNPM_HOME
+fish_add_path $PNPM_HOME/bin
 
 # npm global
 set -gx NPM_CONFIG_PREFIX $HOME/.npm_global
