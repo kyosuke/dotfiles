@@ -29,3 +29,6 @@ fish_add_path $EMSDK
 fish_add_path $EMSDK/upstream/emscripten
 fish_add_path $EMSDK/python/3.13.3_64bit/bin
 
+# Rust (cargo)
+fish_add_path $HOME/.cargo/bin
+
