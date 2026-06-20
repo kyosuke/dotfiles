@@ -5,8 +5,13 @@
 command = /bin/zsh --login -c "exec zellij attach -c main"
 shell-integration = fish
 
-# タブはタイトルバーに表示
-macos-titlebar-style = tabs
+# タブは使わない（多重化は zellij 側で行う）。
+# transparent だと macOS ネイティブのタブ扱いになり、2タブ以上のときだけ
+# タブバーが出る。zellij 運用では基本1タブなので表示されない。
+macos-titlebar-style = transparent
+
+# ⌘T でのタブ新規作成を無効化（zellij 運用で誤爆を防ぐ）。
+keybind = super+t=unbind
 
 # テーマ
 theme = "GitHub Dark Dimmed"
