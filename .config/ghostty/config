@@ -1,5 +1,7 @@
-# シェル
-command = /usr/local/bin/fish --login --interactive
+# シェル。起動時に zellij の main セッションへ接続（無ければ作成）。
+# zellij が default_shell の fish を起動する。GUI 起動では PATH を解決
+# できないため zellij は絶対パスで指定する。
+command = /Users/kyosuke/.cargo/bin/zellij attach -c main
 shell-integration = fish
 
 # タブはタイトルバーに表示
