@@ -8,3 +8,6 @@ export PATH="$EMSDK:$EMSDK/upstream/emscripten:$EMSDK/python/3.13.3_64bit/bin:$P
 
 # Rust (cargo)
 export PATH="$HOME/.cargo/bin:$PATH"
+
+# webi
+export PATH="$HOME/.local/bin:$PATH"
