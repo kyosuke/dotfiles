@@ -1,12 +1,8 @@
 # シェル。herdr は名前を指定しなくても永続セッションへ自動で再接続する。
-# Ghostty.app が herdr ペイン内から起動された場合など、HERDR_ENV が
-# 環境に残っていると「nested herdr is disabled by default」で即終了する
-# ため、exec 前に明示的に unset する。Ghostty は常にトップレベルの
-# ターミナルなので、この変数を引き継ぐべきケースはない。
 # ログインシェル(zsh)経由で起動して PATH を解決してから herdr を exec する。
 # これで herdr も default_shell の fish もインストール先をハードコードせず
 # 名前解決でき、Intel/Apple Silicon どちらでも動く。
-command = /bin/zsh --login -c "unset HERDR_ENV; exec herdr"
+command = /bin/zsh --login -c "exec herdr"
 shell-integration = fish
 
 # タブは使わない（多重化は herdr 側で行う）。
