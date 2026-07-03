@@ -1,5 +1,6 @@
 {
   "permissions": {
+    "defaultMode": "auto",
     "allow": [
       "Bash(ls:*)",
       "Bash(git status)",
@@ -22,7 +23,9 @@
       "Bash(rm -rf */node_modules)",
       "Read",
       "Glob",
-      "Grep"
+      "Grep",
+      "WebFetch(domain:www.pxgrid.com)",
+      "WebFetch(domain:www.codegrid.net)"
     ],
     "deny": [
       "Bash(git push --force:*)",
