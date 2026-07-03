@@ -1,0 +1,79 @@
+---
+name: pr-review-fix
+description: PRのレビューコメントを確認し、妥当な指摘を修正してコメント返信・Resolve・サマリー提示を行う
+disable-model-invocation: true
+argument-hint: [pr-number]
+allowed-tools: Bash(gh *) Bash(git *) Read Edit Write Grep Glob Agent
+---
+
+# PR レビューコメント対応
+
+対象 PR: #$ARGUMENTS
+
+## コンテキスト収集
+
+まず以下のコマンドを実行して PR の状態を把握する:
+
+1. PR 概要の取得:
+```bash
+gh pr view $ARGUMENTS --json title,body,headRefName,baseRefName
+```
+
+2. レビューコメント一覧の取得:
+```bash
+gh api repos/{owner}/{repo}/pulls/$ARGUMENTS/comments --jq '.[] | "id=\(.id) path=\(.path) line=\(.original_line) in_reply_to=\(.in_reply_to_id // "none") user=\(.user.login)\n\(.body)\n---"'
+```
+
+3. レビュースレッドの Resolve 状態の取得 (owner/repo は `gh repo view --json owner,name` で取得):
+```bash
+gh api graphql -f query='{ repository(owner: "<OWNER>", name: "<REPO>") { pullRequest(number: $ARGUMENTS) { reviewThreads(first: 50) { nodes { id isResolved comments(first: 1) { nodes { id body path line } } } } } } }'
+```
+
+4. PR のブランチに checkout する:
+```bash
+gh pr checkout $ARGUMENTS
+```
+
+## 対応手順
+
+1. **未解決のレビューコメントを特定する**: Resolved 済みのスレッドはスキップする
+2. **各コメントを検討する**: 指摘が妥当かどうか、実際のコードを読んで判断する
+3. **妥当な指摘を修正する**: コードを修正し、コミットする
+4. **コメントに返信する**: 以下のフォーマットで返信し、スレッドを Resolve する
+5. **妥当でない指摘**: 理由を簡潔にコメントし、Resolve はしない
+
+## 返信方法
+
+コメントへの返信:
+```bash
+gh api repos/{owner}/{repo}/pulls/$ARGUMENTS/comments/<COMMENT_ID>/replies -f body='<返信内容>'
+```
+
+スレッドの Resolve:
+```bash
+gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "<THREAD_ID>"}) { thread { isResolved } } }'
+```
+
+## 返信フォーマット
+
+修正した場合 (コメントの主が AI の場合、前置きの挨拶は不要):
+```
+<commit-url> で対応しました。
+```
+
+修正不要と判断した場合:
+```
+<理由を簡潔に説明>
+```
+
+## push
+
+対応が完了したら変更を push する。
+
+## サマリー
+
+最後に、全コメントについてどのように対応したかをユーザーに提示する:
+
+| コメント | ファイル | 対応 |
+|---------|--------|------|
+| 指摘内容の要約 | ファイルパス:行番号 | 修正済み / 修正不要（理由） |

@@ -1,0 +1,12 @@
+# 公開リポジトリのため .claude/ はデフォルト非公開にする。
+# セッション履歴・トランスクリプト・キャッシュ・認証情報がここに集まるので、
+# 共有すると決めた設定とスキルだけを明示的に opt-in する。
+/*
+!/.gitignore
+!/settings.json
+!/skills/
+/skills/*
+!/skills/grill-me/
+!/skills/dual-review/
+!/skills/post-merge-cleanup/
+!/skills/pr-review-fix/
