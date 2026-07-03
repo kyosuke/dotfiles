@@ -47,7 +47,6 @@
       "Bash(gh run cancel:*)"
     ]
   },
-  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
