@@ -4,9 +4,12 @@ onboarding = false
 
 [terminal]
 # fish を使う。ログインシェルは zsh のため、default_shell が空だと
-# $SHELL 経由で zsh が起動してしまう。zellij と同じ理由で明示する。
+# $SHELL 経由で zsh が起動してしまうので明示する。
 default_shell = "fish"
 
 [theme]
 name = "solarized"
 auto_switch = false
+
+[ui]
+agent_panel_sort = "spaces"
