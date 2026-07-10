@@ -37,6 +37,8 @@ link "$DIR/.config/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
 link "$DIR/.wezterm.lua" "$HOME/.wezterm.lua"
 link "$DIR/.zshenv" "$HOME/.zshenv"
 
+link "$DIR/.codex/rules/default.rules" "$HOME/.codex/rules/default.rules"
+
 link "$DIR/.claude/settings.json" "$HOME/.claude/settings.json"
 link "$DIR/.claude/skills/grill-me" "$HOME/.claude/skills/grill-me"
 link "$DIR/.claude/skills/dual-review" "$HOME/.claude/skills/dual-review"

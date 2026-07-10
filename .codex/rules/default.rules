@@ -1,0 +1,72 @@
+# Command approval policy shared by Codex CLI and the Codex app.
+#
+# Codex evaluates the argv prefix of commands that request execution outside
+# the sandbox. RTK is required by the global AGENTS.md, so each migrated rule
+# also covers the corresponding `rtk <command>` invocation.
+
+def command_rule(pattern, decision, justification):
+    prefix_rule(
+        pattern = pattern,
+        decision = decision,
+        justification = justification,
+    )
+    prefix_rule(
+        pattern = ["rtk"] + pattern,
+        decision = decision,
+        justification = justification,
+    )
+
+
+# Claude Code permissions.allow
+command_rule(["ls"], "allow", "Read-only directory listing")
+command_rule(["git", "status"], "allow", "Read-only Git status inspection")
+command_rule(["git", ["diff", "log", "show"]], "allow", "Read-only Git inspection")
+command_rule(["pwd"], "allow", "Print the current directory")
+command_rule(["which"], "allow", "Resolve an executable on PATH")
+command_rule(["cat"], "allow", "Read file contents")
+command_rule(["wc"], "allow", "Count file contents")
+command_rule(["gh", "pr"], "allow", "GitHub pull request operations allowed by the Claude policy")
+command_rule(["gh", "issue"], "allow", "GitHub issue operations allowed by the Claude policy")
+command_rule(["gh", "run"], "allow", "GitHub Actions run operations allowed by the Claude policy")
+command_rule(["gh", "project"], "allow", "GitHub project operations allowed by the Claude policy")
+command_rule(["gh", "release"], "allow", "GitHub release operations allowed by the Claude policy")
+command_rule(["gh", "repo", "view"], "allow", "Read-only GitHub repository inspection")
+command_rule(["gh", "status"], "allow", "Read-only GitHub status inspection")
+
+
+# Claude Code permissions.deny. The most restrictive matching Codex rule wins,
+# so these override the broader GitHub allow rules above.
+command_rule(["git", "push", "--force"], "forbidden", "Use a normal push or --force-with-lease after explicit review")
+command_rule(["git", "reset", "--hard"], "forbidden", "Use a non-destructive restore strategy")
+command_rule(["git", "checkout", "."], "forbidden", "Restore only explicitly reviewed paths")
+command_rule(["git", "clean"], "forbidden", "Remove untracked files selectively")
+command_rule(["git", "branch", "-D"], "forbidden", "Delete branches safely with -d after verifying merge state")
+command_rule(["gh", "repo", "delete"], "forbidden", "Delete repositories manually after explicit review")
+command_rule(["gh", "pr", "merge"], "forbidden", "Merge pull requests manually after explicit review")
+command_rule(["gh", "issue", "delete"], "forbidden", "Close the issue instead of deleting it")
+command_rule(["gh", "run", "delete"], "forbidden", "Keep workflow run history")
+command_rule(["gh", "project", "delete"], "forbidden", "Delete projects manually after explicit review")
+command_rule(["gh", "project", "field-delete"], "forbidden", "Delete project fields manually after explicit review")
+command_rule(["gh", "project", "item-delete"], "forbidden", "Delete project items manually after explicit review")
+command_rule(["gh", "release", "delete"], "forbidden", "Delete releases manually after explicit review")
+command_rule(["gh", "release", "delete-asset"], "forbidden", "Delete release assets manually after explicit review")
+command_rule(["gh", "issue", "transfer"], "forbidden", "Transfer issues manually after explicit review")
+
+
+# Claude Code permissions.ask
+command_rule(["gh", "pr", "close"], "prompt", "Closing a pull request requires approval")
+command_rule(["gh", "release", "create"], "prompt", "Publishing a release requires approval")
+command_rule(["gh", "run", "cancel"], "prompt", "Cancelling a workflow run requires approval")
+
+
+# Existing Codex approvals retained while bringing the file under dotfiles.
+command_rule(["gh", "api"], "allow", "Existing Codex approval")
+command_rule(["gh", "pr", "checkout"], "allow", "Existing Codex approval")
+command_rule(["curl", "-I", "http://127.0.0.1:5173/"], "allow", "Existing Codex approval")
+command_rule(["curl", "-i", "-X", "POST", "http://127.0.0.1:5173/api/auth/sign-in/magic-link", "-H", "content-type: application/json", "--data", "{\"email\":\"smoke@example.com\",\"name\":\"smoke@example.com\",\"callbackURL\":\"/dashboard\",\"errorCallbackURL\":\"/auth/error\"}"], "allow", "Existing Codex approval")
+command_rule(["npm", "run", "dev"], "allow", "Existing Codex approval")
+command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Existing Codex approval")
+prefix_rule(pattern=["rtk", "npm", "audit", "fix"], decision="allow")
+prefix_rule(pattern=["rtk", "npm", "run", "types"], decision="allow")
+prefix_rule(pattern=["rtk", "npm", "run", "types:check"], decision="allow")
+prefix_rule(pattern=["rtk", "npm", "test"], decision="allow")
