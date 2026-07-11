@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Bash(ls:*)",
       "Bash(git status)",
@@ -48,8 +47,10 @@
       "Bash(gh pr close:*)",
       "Bash(gh release create:*)",
       "Bash(gh run cancel:*)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -90,10 +91,15 @@
         "source": "github",
         "repo": "openai/codex-plugin-cc"
       }
+    },
+    "chrome-devtools-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
     }
   },
   "effortLevel": "xhigh",
-  "advisorModel": "fable",
   "tui": "fullscreen",
   "theme": "dark-daltonized",
   "skipAutoPermissionPrompt": true
