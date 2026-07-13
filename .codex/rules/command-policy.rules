@@ -1,8 +1,16 @@
-# Command approval policy shared by Codex CLI and the Codex app.
+# Authored command-approval policy for Codex CLI and the Codex app.
+#
+# This file is version-controlled in dotfiles. It holds the command-approval
+# rules that are deliberately maintained by hand. Codex's own interactive
+# approvals (choosing "allow this command" in the TUI) are written to
+# default.rules, which is kept local and untracked so its churn and one-off,
+# project-specific entries never land in git.
 #
 # Codex evaluates the argv prefix of commands that request execution outside
-# the sandbox. RTK is required by the global AGENTS.md, so each migrated rule
-# also covers the corresponding `rtk <command>` invocation.
+# the sandbox, and applies the most restrictive decision when several rules
+# match (forbidden > prompt > allow). RTK is required by the global AGENTS.md,
+# so each rule also covers the corresponding `rtk <command>` invocation via
+# command_rule.
 
 def command_rule(pattern, decision, justification):
     prefix_rule(
@@ -59,13 +67,11 @@ command_rule(["gh", "release", "create"], "prompt", "Publishing a release requir
 command_rule(["gh", "run", "cancel"], "prompt", "Cancelling a workflow run requires approval")
 
 
-# Existing Codex approvals retained while bringing the file under dotfiles.
-command_rule(["gh", "api"], "allow", "Existing Codex approval")
-command_rule(["gh", "pr", "checkout"], "allow", "Existing Codex approval")
-command_rule(["curl", "-I", "http://127.0.0.1:5173/"], "allow", "Existing Codex approval")
-command_rule(["curl", "-i", "-X", "POST", "http://127.0.0.1:5173/api/auth/sign-in/magic-link", "-H", "content-type: application/json", "--data", "{\"email\":\"smoke@example.com\",\"name\":\"smoke@example.com\",\"callbackURL\":\"/dashboard\",\"errorCallbackURL\":\"/auth/error\"}"], "allow", "Existing Codex approval")
-command_rule(["npm", "run", "dev"], "allow", "Existing Codex approval")
-command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Existing Codex approval")
+# Common dev-command approvals (not part of the Claude policy).
+command_rule(["gh", "api"], "allow", "Read-only GitHub API access")
+command_rule(["gh", "pr", "checkout"], "allow", "Check out a pull request branch locally")
+command_rule(["npm", "run", "dev"], "allow", "Run the local dev server")
+command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Fetch modern web guidance")
 prefix_rule(pattern=["rtk", "npm", "audit", "fix"], decision="allow")
 prefix_rule(pattern=["rtk", "npm", "run", "types"], decision="allow")
 prefix_rule(pattern=["rtk", "npm", "run", "types:check"], decision="allow")
