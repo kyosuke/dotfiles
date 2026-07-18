@@ -4,13 +4,14 @@ input=$(cat)
 model=$(echo "$input" | jq -r '.model.display_name // "Unknown Model"' | sed 's/^Claude //;s/ context//')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // ""')
-dirname=$(basename "$cwd")
-
-branch=$(git -C "$cwd" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
-if [ -n "$branch" ]; then
-  branch_part="󰘬 ${branch}  "
-else
-  branch_part=""
+dirname=""
+branch_part=""
+if [ -n "$cwd" ]; then
+  dirname=$(basename "$cwd")
+  branch=$(git -C "$cwd" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [ -n "$branch" ]; then
+    branch_part="󰘬 ${branch}  "
+  fi
 fi
 
 # Helper: make_bar <percentage_int> <width>
