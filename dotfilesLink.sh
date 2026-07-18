@@ -40,6 +40,7 @@ link "$DIR/.zshenv" "$HOME/.zshenv"
 link "$DIR/.codex/rules/command-policy.rules" "$HOME/.codex/rules/command-policy.rules"
 
 link "$DIR/.claude/settings.json" "$HOME/.claude/settings.json"
+link "$DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
 link "$DIR/.claude/skills/grill-me" "$HOME/.claude/skills/grill-me"
 link "$DIR/.claude/skills/dual-review" "$HOME/.claude/skills/dual-review"
 link "$DIR/.claude/skills/post-merge-cleanup" "$HOME/.claude/skills/post-merge-cleanup"
