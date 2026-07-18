@@ -34,7 +34,7 @@ chmod u+x dotfilesLink.sh
 ./dotfilesLink.sh
 ```
 
-The script symlinks the files from your home directory into this repo, so edits
+The script symlinks the files from this repo into your home directory, so edits
 you make here take effect immediately. A missing source file is skipped with a
 warning instead of failing the whole run.
 
