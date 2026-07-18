@@ -4,6 +4,7 @@
 /*
 !/.gitignore
 !/settings.json
+!/statusline-command.sh
 !/skills/
 /skills/*
 !/skills/grill-me/
