@@ -66,7 +66,7 @@ git pull --ff-only
 git merge-base --is-ancestor <target-branch> <default-branch>; echo $?
 ```
 
-- `0`（デフォルトブランチの先祖＝マージ済み）→ `git branch -d <target-branch>` で削除する。先祖と確認済みなので `-d` は必ず成功する。手順5へ
+- `0`（デフォルトブランチの先祖＝マージ済み）→ `git branch -d <target-branch>` で削除し、手順5へ。マージは確認済みなので通常は `-d` も成功する。例外はローカルがupstreamより先行しているとき（デフォルトブランチには入っているが、ローカルの一部コミットが `origin/<同名>` に未push）で、`-d` はupstream基準で判定するため拒否することがある。この拒否はマージ未確認とは別物なので、`-D` は使わず、upstream先行で `-d` が拒否された旨を報告して呼び出し元に制御を戻し、止まる
 - `1`（先祖でない）→ 通常マージではまだ取り込まれていない。ただしsquash/rebaseマージではマージ済みでも先祖にならないので、`gh pr view <branch> --json state,mergedAt` でPRのマージ状態を確認する:
   - PRがマージ済み（`state`が`MERGED` / `mergedAt`が非null）→ squash/rebaseで取り込まれている。この場合 `git branch -d` は先祖でないため拒否し、削除には `-D` が要る。サブエージェントは `-D` を実行せず、PRマージ済みである旨と `-D` の可否をユーザーに確認する報告をして、呼び出し元に制御を戻して終了する
   - PRが未マージ（`state`が`OPEN`など）→ 本当に未マージ。**削除せず**、その旨を報告して止まる
