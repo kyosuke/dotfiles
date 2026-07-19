@@ -13,3 +13,25 @@ auto_switch = false
 
 [ui]
 agent_panel_sort = "spaces"
+
+# jj (Jujutsu) ワークスペース連携。プラグイン本体は herdr のランタイム領域に
+# ビルド・保存されるためコミット対象外。新環境では次のコマンドで入れ直す。
+#   herdr plugin install NathanFlurry/herdr-plugin-jj-workspace
+# ここで管理するのはキーバインドのみ（stock herdr では未割り当てのキー）。
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "nathanflurry.jj-workspace.new-tab"
+description = "new jj workspace (in tab)"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "nathanflurry.jj-workspace.new"
+description = "new jj workspace"
+
+[[keys.command]]
+key = "prefix+d"
+type = "plugin_action"
+command = "nathanflurry.jj-workspace.remove"
+description = "remove jj workspace"

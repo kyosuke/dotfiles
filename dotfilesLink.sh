@@ -52,6 +52,7 @@ link "$DIR/.zshenv" "$HOME/.zshenv"
 link "$DIR/.codex/rules/command-policy.rules" "$HOME/.codex/rules/command-policy.rules"
 
 link "$DIR/.claude/settings.json" "$HOME/.claude/settings.json"
+link "$DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
 relink_skill grill-me
 relink_skill dual-review
 relink_skill post-merge-cleanup
