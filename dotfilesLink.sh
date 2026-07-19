@@ -29,6 +29,17 @@ link() {
   say "✔️  $dst"
 }
 
+relink_skill() {
+  name=$1
+  legacy="$HOME/.claude/skills/$name"
+  # 旧構成ではスキルのディレクトリ自体をシンボリックリンクにしていた。
+  # 残っているとファイル単位の ln が親リンクを辿り、リポジトリ側の実体を壊すので先に外す
+  if [ -L "$legacy" ]; then
+    rm "$legacy"
+  fi
+  link "$DIR/.claude/skills/$name/SKILL.md" "$legacy/SKILL.md"
+}
+
 link "$DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
 link "$DIR/.config/git/ignore" "$HOME/.config/git/ignore"
 link "$DIR/.config/ghostty/config" "$HOME/.config/ghostty/config"
@@ -41,7 +52,7 @@ link "$DIR/.zshenv" "$HOME/.zshenv"
 link "$DIR/.codex/rules/command-policy.rules" "$HOME/.codex/rules/command-policy.rules"
 
 link "$DIR/.claude/settings.json" "$HOME/.claude/settings.json"
-link "$DIR/.claude/skills/grill-me/SKILL.md" "$HOME/.claude/skills/grill-me/SKILL.md"
-link "$DIR/.claude/skills/dual-review/SKILL.md" "$HOME/.claude/skills/dual-review/SKILL.md"
-link "$DIR/.claude/skills/post-merge-cleanup/SKILL.md" "$HOME/.claude/skills/post-merge-cleanup/SKILL.md"
-link "$DIR/.claude/skills/pr-review-fix/SKILL.md" "$HOME/.claude/skills/pr-review-fix/SKILL.md"
+relink_skill grill-me
+relink_skill dual-review
+relink_skill post-merge-cleanup
+relink_skill pr-review-fix
