@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "kyosuke-knowledge": {
+      "type": "remote",
+      "url": "https://knowledge-mcp.kyosuke.jp/mcp"
+    },
+    "pxgrid-company-context": {
+      "type": "remote",
+      "url": "https://company-context-mcp.pxgrid.com/mcp"
+    }
+  }
+}
