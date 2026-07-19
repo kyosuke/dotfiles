@@ -63,7 +63,7 @@ git pull --ff-only
 4. 対象ブランチがデフォルトブランチにマージ済みかを確認してから削除する。まず先祖判定を行う:
 
 ```bash
-git merge-base --is-ancestor <target-branch> <default-branch>; echo $?
+git merge-base --is-ancestor <target-branch> <default-branch> && echo 0 || echo $?
 ```
 
 - `0`（デフォルトブランチの先祖＝マージ済み）→ `git branch -d <target-branch>` で削除し、手順5へ。マージは確認済みなので通常は `-d` も成功する。例外はローカルがupstreamより先行しているとき（デフォルトブランチには入っているが、ローカルの一部コミットが `origin/<同名>` に未push）で、`-d` はupstream基準で判定するため拒否することがある。この拒否はマージ未確認とは別物なので、`-D` は使わず、upstream先行で `-d` が拒否された旨を報告して呼び出し元に制御を戻し、止まる
@@ -86,7 +86,7 @@ git remote prune origin
 ```bash
 git checkout <default-branch>
 git pull --ff-only
-git branch --merged <default-branch> | grep -vE '^\*|^\s*(main|master)$'   # マージ済みブランチ一覧
+git branch --merged <default-branch> | grep -vE '^\*|^\s*(<default-branch>|main|master)$'   # マージ済みブランチ一覧
 ```
 
 列挙された各ブランチを `git branch -d` で削除し、`git remote prune origin` を実行する。1件も該当しなければ「片付け対象なし」と報告する。`git branch --merged <default-branch>` は引数のコミット（デフォルトブランチ）から到達できるブランチだけを挙げる。upstreamではなくデフォルトブランチとの比較なので、`git branch -d` 単独の判定と違い未マージを取り違えない。squash/rebaseマージのブランチは先祖にならず列挙されないため、この一括経路では消えずに残る（個別の手順4で扱う）。
