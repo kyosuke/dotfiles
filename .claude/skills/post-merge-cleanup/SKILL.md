@@ -60,7 +60,7 @@ git pull --ff-only
 3. 対象ブランチがマージ済みかを確認して削除する:
 
 ```bash
-git merge-base --is-ancestor <target-branch> <default-branch> && echo 0 || echo $?
+git merge-base --is-ancestor <target-branch> <default-branch>; echo $?
 ```
 
 - `0`（マージ済み）→ `git branch -d <target-branch>` で削除し、手順4へ。例外として、デフォルトブランチには入っているがローカルの一部コミットが `origin/<同名>` に未pushだと、`-d` はupstream基準で拒否することがある。これはマージ未確認とは別物なので `-D` は使わず、upstream先行で拒否された旨を報告して止まる
