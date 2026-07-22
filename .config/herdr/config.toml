@@ -14,6 +14,12 @@ auto_switch = false
 [ui]
 agent_panel_sort = "spaces"
 
+[ui.sidebar.agents]
+row_gap = 1
+
+[ui.sidebar.spaces]
+row_gap = 1
+
 # jj (Jujutsu) ワークスペース連携。プラグイン本体は herdr のランタイム領域に
 # ビルド・保存されるためコミット対象外。新環境では次のコマンドで入れ直す。
 #   herdr plugin install NathanFlurry/herdr-plugin-jj-workspace
