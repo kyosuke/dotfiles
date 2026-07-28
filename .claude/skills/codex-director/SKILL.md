@@ -49,30 +49,37 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 ## Codex 委任コマンド
 
-導入済み公式プラグイン（`codex@openai-codex` v1.0.1）の `/codex:rescue` を使う。この環境では Skill ツールで `codex:rescue` を呼び、引数文字列にフラグと依頼文を渡す。
+委任は、公式プラグイン（`codex@openai-codex`）の companion スクリプトを **Bash から直接呼び、`run_in_background: true` で実行する**。これが検証済みの既定経路。
 
-新規タスク（フォアグラウンド。完了後すぐ検収する通常運用）:
+`/codex:rescue` を Skill ツール経由で呼ぶ方法は使わない。`rescue.md` の frontmatter が `context: fork` のためフォーク実行になり、`--wait` を付けてもディレクター側は待たない。さらに subagent が Codex 本体の完了前に「completed」を返すことがあり、作業ツリーが未変更のまま報告を回収できない事故が実運用で起きた。Bash 直接実行なら、プロセス終了がそのまま Codex の完了で、stdout の末尾に最終報告が入る。
 
-```
-/codex:rescue --wait --fresh --model <モデルID> --effort <推論量> <依頼文>
-```
+プラグインのパスはバージョンを含むので動的に解決する。
 
-修正依頼（同じ Codex セッションを継続）:
+新規タスク:
 
-```
-/codex:rescue --wait --resume --model <モデルID> --effort <推論量> <修正依頼>
-```
-
-長時間かかりそうなタスク（バックグラウンド）:
-
-```
-/codex:rescue --background --fresh --model <モデルID> --effort <推論量> <依頼文>
+```bash
+P=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/ | sort -V | tail -1)
+node "$P/scripts/codex-companion.mjs" task --write --model <モデルID> --effort <推論量> "<依頼文>"
 ```
 
-- `--fresh` を付けて resume の確認ダイアログを出さず、意図どおり新規/継続を制御する。
-- 実装タスクは既定で書き込み可（`--write` 相当）で動く。調査のみで編集させたくないときは、依頼文に「ファイルを変更せず調査のみ」と明記する。
-- `--background` で委任したときは、完了通知を受け取るまで検収と最終報告を終えない。ユーザー向けの `/codex:status`・`/codex:result` は使わず、完了通知を待つ。
+差し戻し（同じスレッドを継続）:
+
+```bash
+node "$P/scripts/codex-companion.mjs" task --write --resume-last --model <モデルID> --effort <推論量> "<修正依頼>"
+```
+
+- 必ず Bash ツールの `run_in_background: true` で実行する。完了通知が届いたら出力ファイルを読み、末尾の最終報告を回収する。
+- **`--write` を必ず付ける**。付けないと sandbox が `read-only` になり、Codex はファイルを変更できない。調査のみを頼むときは意図して外す。
+- `--resume-last` はリポジトリ単位で直近スレッドを解決するので、この経路でも差し戻しが効く。
+- フォアグラウンド実行はしない。Bash のタイムアウト上限は10分だが、実作業は20分を超えることがある。
+- ユーザーが `/codex:rescue` の使用を明示したときや、Skill 経由で呼んでしまい報告を回収できないときは `references/execution.md` の復旧手順に従う。
 - モデル名・推論量・オプションが将来この記述と食い違ったら、想像で補わず `commands/rescue.md` と `codex --help`、`~/.codex/models_cache.json` で実際を確認する。
+
+## 待機中の判断
+
+- **ファイルが未変更でも失敗と判断しない**。Codex は数分から十数分を調査に使ってから書き始める。実運用では開始3分後はまだ調査中だった。
+- 完了通知を受け取る前に、検収と最終報告を終えない。
+- 待機中は同じ作業ツリーを触らない。
 
 ## 基本規則
 
@@ -105,4 +112,5 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
-- `references/review-checklist.md` — 検収の確認項目と差し戻しの進め方。Codex 完了後に読む。
+- `references/review-checklist.md` — 検収の確認項目、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
+- `references/execution.md` — Skill 経由で呼んだ場合の進行確認・完了検知・報告の復旧手順。既定経路で報告を回収できなかったときだけ読む。
