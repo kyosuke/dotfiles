@@ -55,20 +55,24 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 プラグインのパスはバージョンを含むので動的に解決する。
 
+**依頼文は必ずファイルへ書いてから渡す。** 依頼文を二重引用符で直接埋め込むと、文中のバックティックがシェルのコマンド置換として実行され、その部分が依頼文から消える。実運用では `` `npm test` `` や `` `wrangler dev` `` が実際に走り（`wrangler dev` はサーバーとして残った）、ファイル名や `type: "RATE_LIMITED"` のような仕様の核が欠落した依頼文が Codex へ渡った。コード識別子やパスをバックティックで囲むのは自然な書き方なので、埋め込み方式を続ける限り再発する。
+
 新規タスク:
 
 ```bash
 P=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/ | sort -V | tail -1)
-node "$P/scripts/codex-companion.mjs" task --write --model <モデルID> --effort <推論量> "<依頼文>"
+ORDER=<scratchpad>/order.txt   # 依頼文は Write ツールでこのファイルへ書く
+node "$P/scripts/codex-companion.mjs" task --write --model <モデルID> --effort <推論量> "$(cat "$ORDER")"
 ```
 
 差し戻し（同じスレッドを継続）:
 
 ```bash
-node "$P/scripts/codex-companion.mjs" task --write --resume-last --model <モデルID> --effort <推論量> "<修正依頼>"
+node "$P/scripts/codex-companion.mjs" task --write --resume-last --model <モデルID> --effort <推論量> "$(cat "$ORDER")"
 ```
 
 - 必ず Bash ツールの `run_in_background: true` で実行する。完了通知が届いたら出力ファイルを読み、末尾の最終報告を回収する。
+- 出力の冒頭に `command not found` や `permission denied` の行が並んでいたら、依頼文がシェルに食われている。Codex を止め、ファイル渡しで出し直す。副作用で起動したプロセスが残っていないかも確認する。
 - **`--write` を必ず付ける**。付けないと sandbox が `read-only` になり、Codex はファイルを変更できない。調査のみを頼むときは意図して外す。
 - `--resume-last` はリポジトリ単位で直近スレッドを解決するので、この経路でも差し戻しが効く。
 - フォアグラウンド実行はしない。Bash のタイムアウト上限は10分だが、実作業は20分を超えることがある。
