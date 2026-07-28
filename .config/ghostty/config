@@ -18,6 +18,9 @@ keybind = super+shift+[=unbind
 keybind = ctrl+tab=unbind
 keybind = ctrl+shift+tab=unbind
 
+# フルスクリーンはデフォルトの cmd+ctrl+f が残るので、そちらを使う。
+keybind = super+enter=unbind
+
 # テーマ
 theme = "GitHub Dark Dimmed"
 
