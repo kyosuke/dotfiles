@@ -1,0 +1,74 @@
+# 実行経路の詳細と復旧手順
+
+既定経路（Bash から companion を `run_in_background: true` で実行）で問題が起きたとき、またはユーザーが `/codex:rescue` の使用を明示したときに読む。
+
+## なぜ Skill 経由を既定にしないか
+
+`/codex:rescue` の `rescue.md` は frontmatter に `context: fork` を持つ。Skill ツールから呼ぶとフォーク実行になり、`--wait` を渡してもディレクター側は待たずに戻る。2026-07-26 の実運用では、subagent が Codex 本体の完了前に `completed` を返し、その時点の作業ツリーは未変更だった。報告も回収できず、下記の復旧手順が必要になった。
+
+Bash 直接実行にはこの層がない。プロセス終了が Codex の完了で、stdout 末尾に最終報告が入る。`--resume-last` はリポジトリ単位でスレッドを解決するため、Claude のセッション状態にも依存しない。
+
+## Skill 経由で呼んでしまった場合の復旧
+
+### 1. 進行中か完了かを見分ける
+
+Codex の実行ログは `~/.codex/sessions/<年>/<月>/<日>/rollout-<時刻>-<セッションUUID>.jsonl` にある。作業ツリーが未変更でも、このファイルが更新され続けていれば調査中で、正常な進行である。
+
+```bash
+f=$(ls -t ~/.codex/sessions/*/*/*/rollout-*.jsonl | head -1)
+date; ls -lT "$f"; grep -o '"command":\[[^]]*\]' "$f" | tail -20
+```
+
+最後に実行されたコマンド列を見れば、いま何をしているかが分かる。
+
+### 2. 完了を検知する
+
+ハーネスの完了通知が期待できないので、ログの更新停止をアイドル検知として使う。Bash ツールの `run_in_background: true` で回す。
+
+```bash
+f=$(ls -t ~/.codex/sessions/*/*/*/rollout-*.jsonl | head -1)
+deadline=$(( $(date +%s) + 2400 ))
+while [ "$(date +%s)" -lt "$deadline" ]; do
+  m=$(stat -f %m "$f"); now=$(date +%s)
+  if [ $(( now - m )) -ge 120 ]; then
+    echo "codex idle 120s at $(date '+%H:%M:%S')"; exit 0
+  fi
+  sleep 20
+done
+echo "timed out waiting for codex"
+```
+
+これは heuristic である。閾値を短くすると長考中に誤検知し、長くすると待ちが延びる。macOS 前提（`stat -f %m`）でもある。既定経路が使えるならこれに頼らない。ファイル変更の有無を併せて見ると精度が上がる（対象ファイルの `md5 -q` を開始時と比較する）。
+
+### 3. 報告を回収する
+
+Skill 経由で報告を取り逃した場合、ログから Codex の最終メッセージを抽出する。
+
+```bash
+f=$(ls -t ~/.codex/sessions/*/*/*/rollout-*.jsonl | head -1)
+python3 - "$f" <<'EOF'
+import json, sys
+texts = []
+def walk(x):
+    if isinstance(x, dict):
+        if x.get("type") in ("output_text", "text") and isinstance(x.get("text"), str):
+            texts.append(x["text"])
+        for v in x.values(): walk(v)
+    elif isinstance(x, list):
+        for v in x: walk(v)
+for line in open(sys.argv[1]):
+    line = line.strip()
+    if not line: continue
+    try: walk(json.loads(line))
+    except Exception: continue
+out = [t for t in texts if len(t) > 200]
+print(out[-1][:8000] if out else "(no long text found)")
+EOF
+```
+
+回収できた報告も、そのまま信用せず実際の差分と突き合わせる。
+
+## 注意
+
+- 完了を待つ仕掛けを複数動かした場合、後から届く通知は既に検収済みのタスクのものかもしれない。最終報告後に通知が来たら、対象ファイルのチェックサムが検収時と一致するか確認し、変化がなければ追加対応は不要と判断する。
+- ログの中身は Codex の内部状態であり、成果物ではない。進行状況の把握と報告の復旧にだけ使い、検収は必ず実際の差分で行う。
