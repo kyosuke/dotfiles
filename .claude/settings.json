@@ -99,7 +99,7 @@
       }
     }
   },
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
   "tui": "fullscreen",
   "theme": "dark-daltonized",
   "skipAutoPermissionPrompt": true
