@@ -73,6 +73,14 @@ node "$P/scripts/codex-companion.mjs" task --write --resume-last --model <モデ
 
 - 必ず Bash ツールの `run_in_background: true` で実行する。完了通知が届いたら出力ファイルを読み、末尾の最終報告を回収する。
 - 出力の冒頭に `command not found` や `permission denied` の行が並んでいたら、依頼文がシェルに食われている。Codex を止め、ファイル渡しで出し直す。副作用で起動したプロセスが残っていないかも確認する。
+- **`Task <id> is still running. Use /codex:status before continuing it.` で発注が即失敗したら、中断したジョブの記録が `running` のまま残っている。** ハーネス側で止めても companion の状態は更新されない。`status --all` で確認し、そのジョブを `cancel <job-id>` すると発注できる。
+
+    ```bash
+    node "$P/scripts/codex-companion.mjs" status --all
+    node "$P/scripts/codex-companion.mjs" cancel <job-id>
+    ```
+
+    cancel 後の `--resume-last` は、まず `completed` のジョブ記録を探す。見つからなければ Codex のスレッド一覧を更新時刻順に辿るため、cancel したスレッドを再開することがある。中断分を捨てて出し直すなら `--resume-last` を外して新規タスクとして発注する。
 - **`--write` を必ず付ける**。付けないと sandbox が `read-only` になり、Codex はファイルを変更できない。調査のみを頼むときは意図して外す。
 - `--resume-last` はリポジトリ単位で直近スレッドを解決するので、この経路でも差し戻しが効く。
 - フォアグラウンド実行はしない。Bash のタイムアウト上限は10分だが、実作業は20分を超えることがある。
