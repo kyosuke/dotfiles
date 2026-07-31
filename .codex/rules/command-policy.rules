@@ -10,7 +10,9 @@
 # the sandbox, and applies the most restrictive decision when several rules
 # match (forbidden > prompt > allow). RTK is required by the global AGENTS.md,
 # so each rule also covers the corresponding `rtk <command>` invocation via
-# command_rule.
+# command_rule. Commands listed in RTK's own `[hooks] exclude_commands` never
+# carry the prefix, but covering both forms keeps a rule correct whichever way
+# the command arrives.
 
 def command_rule(pattern, decision, justification):
     prefix_rule(
@@ -29,6 +31,7 @@ def command_rule(pattern, decision, justification):
 command_rule(["ls"], "allow", "Read-only directory listing")
 command_rule(["git", "status"], "allow", "Read-only Git status inspection")
 command_rule(["git", ["diff", "log", "show"]], "allow", "Read-only Git inspection")
+command_rule(["git", "branch"], "allow", "Read-only branch listing; `git branch -D` stays forbidden below")
 command_rule(["pwd"], "allow", "Print the current directory")
 command_rule(["which"], "allow", "Resolve an executable on PATH")
 command_rule(["cat"], "allow", "Read file contents")
@@ -72,7 +75,6 @@ command_rule(["gh", "api"], "allow", "Read-only GitHub API access")
 command_rule(["gh", "pr", "checkout"], "allow", "Check out a pull request branch locally")
 command_rule(["npm", "run", "dev"], "allow", "Run the local dev server")
 command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Fetch modern web guidance")
-prefix_rule(pattern=["rtk", "npm", "audit", "fix"], decision="allow")
-prefix_rule(pattern=["rtk", "npm", "run", "types"], decision="allow")
-prefix_rule(pattern=["rtk", "npm", "run", "types:check"], decision="allow")
-prefix_rule(pattern=["rtk", "npm", "test"], decision="allow")
+command_rule(["npm", "audit", "fix"], "allow", "Apply non-breaking dependency security fixes")
+command_rule(["npm", "run", ["types", "types:check"]], "allow", "Run type checking")
+command_rule(["npm", "test"], "allow", "Run the test suite")
