@@ -150,6 +150,6 @@ Codex のサンドボックスはネットワークを閉じており、`127.0.0
 
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
-- `references/review-checklist.md` — 検収の確認項目、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
+- `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
 - `references/sandbox-network.md` — サンドボックスのネットワーク設定と実測結果。`listen EPERM` を見たとき、テスト実行を委任できるか迷ったときに読む。
 - `references/execution.md` — Skill 経由で呼んだ場合の進行確認・完了検知・報告の復旧手順。既定経路で報告を回収できなかったときだけ読む。
