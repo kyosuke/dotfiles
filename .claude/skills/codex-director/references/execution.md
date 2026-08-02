@@ -1,6 +1,21 @@
-# 実行経路の詳細と復旧手順
+# 実行経路のトラブルと復旧
 
-既定経路（Bash から companion を `run_in_background: true` で実行）で問題が起きたとき、またはユーザーが `/codex:rescue` の使用を明示したときに読む。
+既定経路（Bash から companion を `run_in_background: true` で実行）で発注が通らないとき、報告を回収できないとき、またはユーザーが `/codex:rescue` の使用を明示したときに読む。
+
+## 発注が即失敗する
+
+`Task <id> is still running. Use /codex:status before continuing it.` で止まったら、中断したジョブの記録が `running` のまま残っている。ハーネス側で止めても companion の状態は更新されない。
+
+```bash
+node "$P/scripts/codex-companion.mjs" status --all
+node "$P/scripts/codex-companion.mjs" cancel <job-id>
+```
+
+cancel 後の `--resume-last` は、まず `completed` のジョブ記録を探す。見つからなければ Codex のスレッド一覧を更新時刻順に辿るため、cancel したスレッドを再開することがある。中断分を捨てて出し直すなら `--resume-last` を外して新規タスクとして発注する。
+
+## 出力の冒頭に `command not found` が並ぶ
+
+依頼文がシェルに食われている（バックティックがコマンド置換として実行された）。Codex を止め、依頼文をファイルへ書いてから渡す方式で出し直す。副作用で起動したプロセスが残っていないかも確認する。
 
 ## なぜ Skill 経由を既定にしないか
 
