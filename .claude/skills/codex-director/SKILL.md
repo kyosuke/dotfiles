@@ -80,7 +80,8 @@ herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300
 - ファイル変更の可否にフラグは要らない。ペインの Codex はユーザーの設定（`workspace-write`）で動くので既定で書ける。調査だけを頼むなら `-s read-only` を付けて起動する。
 - `blocked` は承認か質問のUIである。**ディレクターは承認を代行しない**。何を求められているかをユーザーへ伝えて待つ（`references/herdr-pane.md`）。
 - 実装を伴う依頼は20分を超えることがある。Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
-- 報告は `herdr agent read <名前> --source recent-unwrapped --lines 600` で回収する。依頼文の末尾に終端行を出力させ、末尾まで届いたかを判定する。0行で返るのは失敗ではない。出力が画面に収まっているとスクロールバックが空になるので、`--source visible` で読む。
+- 報告は `herdr agent read <名前> --source recent-unwrapped --lines 600` で回収する。0行で返るのは失敗ではない。出力が画面に収まっているとスクロールバックが空になるので、`--source visible` で読む。
+- 依頼文に終端マーカーを入れない。完了は `--wait` が返すので二重になる。読み取りは下端が基準で、失われるのは先頭なので、終端マーカーでは取りこぼしも検出できない（`references/herdr-pane.md`）。
 - ペインに見えるのは Codex が描いた画面で、コマンドの生出力ではない。ツール出力は畳まれて読めない。検収は画面ではなく `git diff` で行う。
 - 終わったら `/quit` を送り、自分が作ったペインだけを閉じる。
 - モデル名・推論量・オプションがこの記述と食い違ったら、想像で補わず `herdr agent`・`codex --help`・`~/.codex/models_cache.json` で実際を確認する。
