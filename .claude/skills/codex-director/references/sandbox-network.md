@@ -37,11 +37,23 @@ Codex の workspace-write サンドボックスは既定でネットワークを
 
 Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、そのときは外向きを閉じたまま有効化する価値がある。
 
-## セッション単位の有効化は委任経路では効かない
+## セッション単位の有効化は companion 経路では効かない
 
-`codex -c 'sandbox_workspace_write.network_access=true'` は対話TUIには効くが、この Skill の委任には効かない。companion は `codex app-server` をフラグなしで起動するため（`scripts/lib/app-server.mjs`）、CLI の `-c` は届かない。プラグイン側は更新で上書きされるので手を入れない。
+`codex -c 'sandbox_workspace_write.network_access=true'` は対話TUIには効くが、companion 経由の委任には効かない。companion は `codex app-server` をフラグなしで起動するため（`scripts/lib/app-server.mjs`）、CLI の `-c` は届かない。プラグイン側は更新で上書きされるので手を入れない。
 
-どうしても1タスクだけ必要なら、config.toml を編集して発注し、終了後に戻す。実作業は20分を超えることがあるため、その間は全 Codex 実行で外向きが開く。戻し忘れると恒久設定と同じになる。使うなら、発注と同じターン内で戻すところまでを1セットとして扱う。
+companion 経路でどうしても1タスクだけ必要なら、config.toml を編集して発注し、終了後に戻す。実作業は20分を超えることがあるため、その間は全 Codex 実行で外向きが開く。戻し忘れると恒久設定と同じになる。使うなら、発注と同じターン内で戻すところまでを1セットとして扱う。
+
+## ペイン経路での見直し候補（未検証・保留中）
+
+既定の委任経路は herdr のペインに移った（`herdr-pane.md`）。ペインの Codex は対話TUIそのものなので、`herdr agent start` の `--` 以降に `-c sandbox_workspace_write.network_access=true` を渡せば、**そのペインのセッションだけ**ネットワークが開く見込みがある。2026-08-05時点で未検証であり、ユーザーの指示で保留にしている。実行する前に必ず確認を取る。
+
+これが成立すると、上で「払うもの」として挙げた事情のうち、config.toml がグローバルであることに由来するものが消える。全 Codex 実行（TUI・クライアント案件のリポジトリ）へ波及せず、戻し忘れも起きず、ペインを閉じれば効果も消える。`workers` プールや `wrangler dev` を伴う検証を委任できるようになる。
+
+残る払うものは消えない。Codex は全ディスクの読み取りを持つため、開いたペインでは1Passwordでマウント中の `.env` も読める。prompt injection による持ち出し経路は開いている間だけ増える。通信先はプロキシを併用しない限り制限されない。
+
+検証するなら、ペインで起動した Codex に `EPERM` の実測（末尾の listen テスト）をさせるのが最短である。あわせて、露出範囲を絞るために専用 worktree のペインに限定する運用も選択肢になる。
+
+なお、Codex へ「サンドボックス外への権限昇格を要求して」と指示する発注は Claude Code のclassifierに止められる。設定で開けるかどうかと、Codex に昇格を求めさせることは別の話である。後者は経路として使えない。
 
 ## 通常の運用
 

@@ -14,11 +14,14 @@ GPT-5.6 が使えなくなった場合は、`~/.codex/models_cache.json`（`visi
 
 ## 使える推論量（検証済み）
 
-委任での実効レンジは `none, low, medium, high, xhigh`。「推論を最小に」は `none`、「`high` の一段上」は `xhigh`。
+実効レンジは経路で違う。ペイン経路（既定）は `none, low, medium, high, xhigh, max`、companion 経路は `none, low, medium, high, xhigh`。「推論を最小に」はどちらも `none`。
 
-- companion が受理するのは `none | minimal | low | medium | high | xhigh`（`codex-companion.mjs` の `VALID_REASONING_EFFORTS` にハードコード。Codex 側の新しい版 1.0.6 も同じ集合なので、プラグイン更新では変わらない）。`max` は発注前にエラーで止まる。
-- GPT-5.6 の API が受理するのは `none, low, medium, high, xhigh` で、**`minimal` は 400（unsupported_value）で拒否される**。`none` は実測で正常に動く。
-- `max` は API 側では通る（`codex exec --model gpt-5.6-luna -c model_reasoning_effort="max"` が成功し、rollout に `"reasoning_effort":"max"` が残ることを 2026-08-01 に確認）。ただし `codex exec` の直呼びは companion のジョブ管理（`status --all` / `cancel` / `--resume-last`）の外に出るため、委任の上限は `xhigh` のままとする。`luna` + `xhigh` で足りないときは `terra` + `xhigh` へ移る。
+- GPT-5.6 の API が受理するのは `none, low, medium, high, xhigh, max` で、**`minimal` は 400（unsupported_value）で拒否される**。`none` は実測で正常に動く。この制約は経路によらない。
+- ペイン経路では推論量を `-c model_reasoning_effort=<値>` として Codex へ直接渡すので、companion の検証を経由しない。`max` も使える（2026-08-05に `herdr agent start ... -- --model gpt-5.6-luna -c model_reasoning_effort=max` で起動し、TUIのフッターが `gpt-5.6-luna max` になること、応答が返ることを確認）。
+- companion 経路が受理するのは `none | minimal | low | medium | high | xhigh`（`codex-companion.mjs` の `VALID_REASONING_EFFORTS` にハードコード。Codex 側の新しい版 1.0.6 も同じ集合なので、プラグイン更新では変わらない）。`max` は発注前にエラーで止まる。
+- `max` を除外していた理由は、以前の唯一の到達手段だった `codex exec` の直呼びが companion のジョブ管理（`status --all` / `cancel` / `--resume-last`）の外に出ることだった。ペイン経路では herdr が状態と完了を管理するので、この理由は当てはまらない。
+
+`max` を常用しない。段の並びは `xhigh` までで設計してあり、`luna` + `xhigh` で足りないときはまずモデルを上げる（`terra` + `xhigh`）。`max` は、モデルを上げたうえで推論量も限界まで要る作業に限る。所要時間と消費が伸びるので、選んだら理由を発注前報告に書く。
 
 ## 既定は luna。推論量を主なつまみにする
 

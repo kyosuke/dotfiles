@@ -45,40 +45,49 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 モデルを上げるのは `luna` で届かないときだけ。正しさの判定が難しい作業や仮説の否定を求める調査は最初から `sol` を選ぶ（`medium` 以下では使わない）。依頼文で迷う余地を消せたぶんは段を下げられる。逆に、設計判断を渡さずに段を上げても差し戻しは減らない。
 
-使える推論量は `none, low, medium, high, xhigh` のみ。`minimal` はフラグ検証を通るが GPT-5.6 の API が 400 で拒否するので、推論を最小にしたいときは `none` を使う。`max` は companion が受け付けない。
+使える推論量は `none, low, medium, high, xhigh`。`minimal` はフラグ検証を通るが GPT-5.6 の API が 400 で拒否するので、推論を最小にしたいときは `none` を使う。ペイン経路では `max` も通るが常用しない。段の設計は `xhigh` までで、足りないときはまずモデルを上げる（`references/model-routing.md`）。
 
 ## Codex 委任コマンド
 
-委任は、公式プラグイン（`codex@openai-codex`）の companion スクリプトを **Bash から直接呼び、`run_in_background: true` で実行する**。これが検証済みの既定経路。`/codex:rescue` を Skill ツール経由で呼ぶ方法は使わない（フォーク実行になり完了を待てず、報告を回収できない事故が起きた。詳細は `references/execution.md`）。
+委任は herdr のペインで Codex を起動して行う。動作がユーザーに見え、承認を求められても復旧でき、差し戻しが同じスレッドで続く。操作契約は `references/herdr-pane.md` にあり、発注前に読む。
 
-プラグインのパスはバージョンを含むので動的に解決する。
-
-**依頼文は必ずファイルへ書いてから渡す。** 依頼文を二重引用符で直接埋め込むと、文中のバックティックがシェルのコマンド置換として実行され、その部分が依頼文から消える。実運用では `` `npm test` `` や `` `wrangler dev` `` が実際に走り（`wrangler dev` はサーバーとして残った）、ファイル名や `type: "RATE_LIMITED"` のような仕様の核が欠落した依頼文が Codex へ渡った。コード識別子やパスをバックティックで囲むのは自然な書き方なので、埋め込み方式を続ける限り再発する。
-
-新規タスク:
+前提は herdr のペイン内で動いていることである。
 
 ```bash
-P=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/ | sort -V | tail -1)
-ORDER=<scratchpad>/order.txt   # 依頼文は Write ツールでこのファイルへ書く
-node "$P/scripts/codex-companion.mjs" task --write --model <モデルID> --effort <推論量> "$(cat "$ORDER")"
+test "${HERDR_ENV:-}" = 1
 ```
 
-差し戻し（同じスレッドを継続）:
+偽なら herdr の外にいる。そのときだけ companion 経路へ退避する（`references/execution.md`）。
+
+**依頼文は Write ツールでファイルへ書いてから渡す。** ヒアドキュメントも直接埋め込みも使わない。二重引用符で埋め込むと、文中のバックティックがシェルのコマンド置換として実行され、その部分が依頼文から消える。実運用では `` `npm test` `` や `` `wrangler dev` `` が実際に走り（`wrangler dev` はサーバーとして残った）、ファイル名や `type: "RATE_LIMITED"` のような仕様の核が欠落した依頼文が Codex へ渡った。コード識別子やパスをバックティックで囲むのは自然な書き方なので、埋め込み方式を続ける限り再発する。
+
+ペインを用意して Codex を起動する。返った JSON から `pane_id` を読む。
 
 ```bash
-node "$P/scripts/codex-companion.mjs" task --write --resume-last --model <モデルID> --effort <推論量> "$(cat "$ORDER")"
+herdr pane layout --pane "$HERDR_PANE_ID"
+herdr pane split --current --direction right --cwd "$PWD" --no-focus
+herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
+  -- --model <モデルID> -c model_reasoning_effort=<推論量>
 ```
 
-- 必ず Bash ツールの `run_in_background: true` で実行する。完了通知が届いたら出力ファイルを読み、末尾の最終報告を回収する。フォアグラウンド実行はしない（Bash のタイムアウト上限は10分だが、実作業は20分を超えることがある）。
-- **`--write` を必ず付ける**。付けないと sandbox が `read-only` になり、Codex はファイルを変更できない。調査のみを頼むときは意図して外す。
-- `--resume-last` はリポジトリ単位で直近スレッドを解決するので、この経路でも差し戻しが効く。
-- 発注が即失敗したとき、出力の冒頭に `command not found` が並ぶときの対処は `references/execution.md`。
-- 委任中にマシンを再起動するとジョブ記録ごと作業が失われる。長時間の委任中は再起動しない。
-- モデル名・推論量・オプションが将来この記述と食い違ったら、想像で補わず `commands/rescue.md` と `codex --help`、`~/.codex/models_cache.json` で実際を確認する。
+発注する。差し戻しも同じコマンドで、同じ名前へ送るだけで同じスレッドが続く。
+
+```bash
+herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300000
+```
+
+- `--wait` は `idle`・`done`・`blocked` のどれかで戻る。`agent get` を自分でポーリングしない。戻り値で分岐する。
+- ファイル変更の可否にフラグは要らない。ペインの Codex はユーザーの設定（`workspace-write`）で動くので既定で書ける。調査だけを頼むなら `-s read-only` を付けて起動する。
+- `blocked` は承認か質問のUIである。**ディレクターは承認を代行しない**。何を求められているかをユーザーへ伝えて待つ（`references/herdr-pane.md`）。
+- 実装を伴う依頼は20分を超えることがある。Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
+- 報告は `herdr agent read <名前> --source recent-unwrapped --lines 600` で回収する。依頼文の末尾に終端行を出力させ、末尾まで届いたかを判定する。0行で返るのは失敗ではない。出力が画面に収まっているとスクロールバックが空になるので、`--source visible` で読む。
+- ペインに見えるのは Codex が描いた画面で、コマンドの生出力ではない。ツール出力は畳まれて読めない。検収は画面ではなく `git diff` で行う。
+- 終わったら `/quit` を送り、自分が作ったペインだけを閉じる。
+- モデル名・推論量・オプションがこの記述と食い違ったら、想像で補わず `herdr agent`・`codex --help`・`~/.codex/models_cache.json` で実際を確認する。
 
 ## Codex のサンドボックスで実行できない検証
 
-Codex のサンドボックスはネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。`@cloudflare/vitest-pool-workers` の workers プールも `wrangler dev` も起動しない。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む**（設定で解除できるが、採らない理由と見直す条件をそこに記録してある）。
+Codex のサンドボックスはネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。`@cloudflare/vitest-pool-workers` の workers プールも `wrangler dev` も起動しない。ペイン経路でも同じである（2026-08-05に `LISTEN_FAIL EPERM` と外向きの `ENOTFOUND` を実測）。経路を変えてもこの制約は動かない。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む**（設定で解除できるが、採らない理由と見直す条件をそこに記録してある）。
 
 - サーバー起動を伴う通し実行・E2E検証は委任しない。実装とサンドボックス内で完結する検査までを委任し、サーバーを起動する検証はディレクター側で実行する。
 - 依頼文の `<verification>` には、サンドボックスで完走するコマンドだけを書く。workers プールを含むリポジトリなら `npm test` ではなく `npx vitest run --project node` を指定し、フルスイートはディレクター側で実行する。
@@ -88,7 +97,7 @@ Codex のサンドボックスはネットワークを閉じており、`127.0.0
 
 - **ファイルが未変更でも失敗と判断しない**。Codex は数分から十数分を調査に使ってから書き始める。実運用では開始3分後はまだ調査中だった。
 - 完了通知を受け取る前に、検収と最終報告を終えない。
-- 待機中は同じ作業ツリーを触らない。同一作業ツリーで複数の Codex 実装を並列実行しない。並列化が必要なら別の worktree / workspace を使う。
+- 待機中は同じ作業ツリーを触らない。同一作業ツリーで複数の Codex 実装を並列実行しない。並列化が必要なら別の worktree / workspace を使う。ペインを分けても作業ツリーは共有されるので、ペインの分離は並列化の根拠にならない。
 
 ## 基本規則
 
@@ -108,8 +117,9 @@ Codex のサンドボックスはネットワークを閉じており、`127.0.0
 
 ## 参照ファイル
 
+- `references/herdr-pane.md` — 既定の委任経路（herdr のペイン）の操作契約。発注前と、`blocked` が返ったときに読む。
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
 - `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
 - `references/sandbox-network.md` — サンドボックスのネットワーク設定と実測結果。`listen EPERM` を見たとき、テスト実行を委任できるか迷ったときに読む。
-- `references/execution.md` — 発注が通らないとき、報告を回収できないとき、ユーザーが `/codex:rescue` の使用を明示したときの手順。
+- `references/execution.md` — herdr の外にいるときの companion 経路、発注が通らないとき、報告を回収できないときの手順。
