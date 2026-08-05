@@ -4,7 +4,7 @@
 
 ## companion 経路（herdr の外にいるとき）
 
-公式プラグイン（`codex@openai-codex`）の companion スクリプトを Bash から直接呼び、`run_in_background: true` で実行する。プラグインのパスはバージョンを含むので動的に解決する。依頼文は Write ツールでファイルへ書いてから渡す。
+公式プラグイン（`codex@openai-codex`）の companion スクリプトを Bash から直接呼び、`run_in_background: true` で実行する。プラグインのパスはバージョンを含むので動的に解決する。依頼文は Write ツールでファイルへ書いてから渡す。差し戻しは `--resume-last` を足す（リポジトリ単位で直近スレッドを解決する）。
 
 ```bash
 P=$(ls -d ~/.claude/plugins/cache/openai-codex/codex/*/ | sort -V | tail -1)
@@ -12,12 +12,10 @@ ORDER=<scratchpad>/order.txt
 node "$P/scripts/codex-companion.mjs" task --write --model <モデルID> --effort <推論量> "$(cat "$ORDER")"
 ```
 
-差し戻しは `--resume-last` を足す。リポジトリ単位で直近スレッドを解決する。
-
 - **`--write` を必ず付ける**。付けないと sandbox が `read-only` になり、Codex はファイルを変更できない。調査のみを頼むときは意図して外す。
 - フォアグラウンド実行はしない。Bash の上限は10分だが実作業は20分を超えることがある。
 - 委任中にマシンを再起動するとジョブ記録ごと作業が失われる。
-- `/codex:rescue` を Skill ツール経由で呼ぶ方法は使わない（下記「なぜ Skill 経由を既定にしないか」）。
+- `/codex:rescue` を Skill ツール経由で呼ぶ方法は使わない（下記）。
 
 ペイン経路と比べて失うものは、動作の可視性と承認への復旧である。companion は非対話で走るため、承認が必要な操作は失敗として返る。
 
@@ -46,14 +44,12 @@ Bash 直接実行にはこの層がない。プロセス終了が Codex の完�
 
 ### 1. 進行中か完了かを見分ける
 
-Codex の実行ログは `~/.codex/sessions/<年>/<月>/<日>/rollout-<時刻>-<セッションUUID>.jsonl` にある。作業ツリーが未変更でも、このファイルが更新され続けていれば調査中で、正常な進行である。
+Codex の実行ログは `~/.codex/sessions/<年>/<月>/<日>/rollout-<時刻>-<セッションUUID>.jsonl` にある。作業ツリーが未変更でも、このファイルが更新され続けていれば調査中で、正常な進行である。最後に実行されたコマンド列を見れば、いま何をしているかが分かる。
 
 ```bash
 f=$(ls -t ~/.codex/sessions/*/*/*/rollout-*.jsonl | head -1)
 date; ls -lT "$f"; grep -o '"command":\[[^]]*\]' "$f" | tail -20
 ```
-
-最後に実行されたコマンド列を見れば、いま何をしているかが分かる。
 
 ### 2. 完了を検知する
 
@@ -76,7 +72,7 @@ echo "timed out waiting for codex"
 
 ### 3. 報告を回収する
 
-Skill 経由で報告を取り逃した場合、ログから Codex の最終メッセージを抽出する。
+Skill 経由で報告を取り逃した場合、ログから Codex の最終メッセージを抽出する。回収できた報告も、そのまま信用せず実際の差分と突き合わせる。
 
 ```bash
 f=$(ls -t ~/.codex/sessions/*/*/*/rollout-*.jsonl | head -1)
@@ -99,8 +95,6 @@ out = [t for t in texts if len(t) > 200]
 print(out[-1][:8000] if out else "(no long text found)")
 EOF
 ```
-
-回収できた報告も、そのまま信用せず実際の差分と突き合わせる。
 
 ## 注意
 
