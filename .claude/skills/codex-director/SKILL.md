@@ -63,7 +63,7 @@ herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300
 
 ## サンドボックスで実行できない検証
 
-Codex のサンドボックスはネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。workers プールも `wrangler dev` も起動せず、経路を変えてもこの制約は動かない。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む**（設定で解除できるが、採らない理由と見直す条件をそこに記録してある）。サーバー起動を伴う検証は委任せず、ディレクター側で実行する。
+Codex のサンドボックスは既定でネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。workers プールも `wrangler dev` も起動しない。サーバー起動を伴う検証は委任せず、ディレクター側で実行するのが既定である。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む。** ペイン起動時のフラグでそのセッションだけ開けられるが、外向き通信も同時に開くので、必要なときにユーザーの確認を取ってから使う。
 
 ## 基本規則
 

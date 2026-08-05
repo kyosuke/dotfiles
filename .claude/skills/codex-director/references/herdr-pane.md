@@ -31,6 +31,8 @@ herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
 
 ファイル変更にフラグは要らない。ユーザーの設定（`workspace-write`）で既定で書ける。調査だけを頼むなら `-s read-only` を付ける。
 
+ネットワークは既定で閉じており、`127.0.0.1` への listen も拒否される。`-c sandbox_workspace_write.network_access=true` を `--` 以降に足すとそのペインのセッションだけ開くが、外向き通信も同時に開く。既定では付けない。workers プールや `wrangler dev` を Codex 自身に走らせる必要が出たときだけ、ユーザーの確認を取ってから付ける（`sandbox-network.md`）。
+
 承認方針は既定の `on-request` のまま起動する。`-a untrusted` は `codex --help` にある正式な値だが、trusted 集合（`ls`・`cat`・`sed` など）の外にあるコマンドをすべて承認へ上げる（`find` も対象になった）。ディレクターは承認できないので、そのペインでは作業が進まない（下記）。
 
 ## 発注する
