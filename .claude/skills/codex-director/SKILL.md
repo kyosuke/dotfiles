@@ -69,7 +69,7 @@ test "${HERDR_ENV:-}" = 1
 herdr pane layout --pane "$HERDR_PANE_ID"
 herdr pane split --current --direction right --cwd "$PWD" --no-focus
 herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
-  -- --model <モデルID> -c model_reasoning_effort=<推論量>
+  -- --model <モデルID> -c model_reasoning_effort=<推論量> --no-alt-screen
 ```
 
 発注する。差し戻しも同じコマンドで、同じ名前へ送るだけで同じスレッドが続く。
@@ -82,7 +82,8 @@ herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300
 - ファイル変更の可否にフラグは要らない。ペインの Codex はユーザーの設定（`workspace-write`）で動くので既定で書ける。調査だけを頼むなら `-s read-only` を付けて起動する。
 - `blocked` は承認か質問のUIである。**ディレクターは承認を代行しない**。何を求められているかをユーザーへ伝えて待つ（`references/herdr-pane.md`）。
 - 実装を伴う依頼は20分を超えることがある。Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
-- 報告は `herdr agent read <名前> --source recent-unwrapped --lines 600` で回収する。0行で返るのは失敗ではない。出力が画面に収まっているとスクロールバックが空になるので、`--source visible` で読む。
+- **`--no-alt-screen` を必ず付ける**。TUI をインラインで描いて出力をスクロールバックへ残すので、報告の回収が確実になる。`blocked` の検知も表示も損なわない。
+- 報告は `herdr agent read <名前> --source recent-unwrapped --lines 600` で回収する。`--no-alt-screen` があればセッション開始まで遡れる。0行で返るのはフラグの付け忘れの症状で、対処は `references/herdr-pane.md`。
 - 依頼文に終端マーカーを入れない。完了は `--wait` が返すので二重になる。読み取りは下端が基準で、失われるのは先頭なので、終端マーカーでは取りこぼしも検出できない（`references/herdr-pane.md`）。
 - ペインに見えるのは Codex が描いた画面で、コマンドの生出力ではない。ツール出力は畳まれて読めない。検収は画面ではなく `git diff` で行う。
 - 終わったら `/quit` を送り、自分が作ったペインだけを閉じる。
