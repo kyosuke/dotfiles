@@ -1,75 +1,89 @@
 # サンドボックスのネットワークとローカルバインド
 
-`listen EPERM: operation not permitted 127.0.0.1` を見たとき、またはテスト実行を委任できるか迷ったときに読む。結論は「既定のまま（閉じたまま）運用し、ローカルにポートを開く検証はディレクター側で実行する」。この判断は2026-07-30に実測して決めた。同じ検討を繰り返さないための記録である。
+`listen EPERM: operation not permitted 127.0.0.1` を見たとき、またはテスト実行を委任できるか迷ったときに読む。結論は「既定は閉じたまま運用し、ローカルにポートを開く検証はディレクター側で実行する。必要なときだけペイン単位で開ける」。2026-07-30と2026-08-05の実測で決めた。同じ検討を繰り返さないための記録である。
 
 ## 何が起きるか
 
-Codex の workspace-write サンドボックスは既定でネットワークを閉じる。macOS の Seatbelt が `127.0.0.1` への bind まで拒否するため、ローカルにポートを開くツールが動かない。実際に止まったもの。
-
-- `@cloudflare/vitest-pool-workers` の workers プール（workerd がループバックを listen する）
-- `wrangler dev`
+Codex の workspace-write サンドボックスは既定でネットワークを閉じる。macOS の Seatbelt が `127.0.0.1` への bind まで拒否するため、`@cloudflare/vitest-pool-workers` の workers プール（workerd がループバックを listen する）と `wrangler dev` が動かない。
 
 失敗の見え方が厄介である。vitest は起動できたプールの件数だけを passed として表示するので、workers プールが落ちても「Tests 36 passed」と出る。Codex はこれを成功として報告した。
 
-## 唯一挙動が変わる設定と、採らない理由
+ペイン経路でも既定は同じである（2026-08-05に `LISTEN_FAIL EPERM` と外向きの `ENOTFOUND` を実測）。
 
-`~/.codex/config.toml` の `[sandbox_workspace_write] network_access = true` だけが実際に効く。companion はこの設定を素通しする（`codex app-server` を追加フラグなしで起動し、thread へはサンドボックスのモード文字列だけを渡すため、network の可否は config.toml から解決される）。
+## 挙動が変わるのは network_access だけ
+
+`sandbox_workspace_write.network_access = true` だけが実際に効く。`~/.codex/config.toml` に書けば全実行へ、CLI の `-c` で渡せばその実行だけへ届く。companion は config.toml を素通しする（`codex app-server` を追加フラグなしで起動し、thread へはサンドボックスのモード文字列だけを渡すため、network の可否は config.toml から解決される）。
 
 | 設定 | `127.0.0.1` への listen | `npm test`（workers プール込み） | 外向き通信 |
 |---|---|---|---|
 | 既定（未設定） | `EPERM` | pool startup error、サマリ行なし | DNS 解決不可 |
 | `network_access = true` | 成功 | 10ファイル / 121件 通過 | HTTP 200 |
 
-委任経路（companion の `task --write`）でも121件通過を確認した。つまり技術的には解決する。
+委任経路（companion の `task --write`）でも121件通過を確認した。技術的には解決する。
 
-それでも既定を閉じたままにするのは、得るものと払うものが釣り合わないからである。
+**config.toml へは書かない。** グローバルなので全 Codex 実行（TUI 含む、クライアント案件のリポジトリ含む）で外向きが開き、戻し忘れがそのまま恒久設定になる。開けるならペイン単位で開ける（下記）。
 
-- 払うもの: config.toml はグローバルなので、全 Codex 実行（TUI 含む、クライアント案件のリポジトリ含む）で外向き通信が開く。Codex は全ディスクの読み取りを持つため、1Password でマウント中の `.env` も読める。リポジトリ内容や取得ページ経由の prompt injection による持ち出し経路が増える。プロキシを併用しない限り通信先は制限されない。
-- 得るもの: Codex が自分でループバック依存のテストを走らせられること。ただしこの Skill は検収でディレクター側がフルスイートを独立に実行することを要求している。Codex の自己検証は二重確認の片方でしかない。
+どちらの書き方でも、開いている間の代償は同じである。Codex は全ディスクの読み取りを持つため、1Password でマウント中の `.env` も読める。リポジトリ内容や取得ページ経由の prompt injection による持ち出し経路が増える。プロキシを併用しない限り通信先は制限されない。得るものは、Codex が自分でループバック依存のテストを走らせられること。ただしこの Skill は検収でディレクター側がフルスイートを独立に実行することを要求しており、Codex の自己検証は二重確認の片方でしかない。
 
 ## ループバックだけを開ける方法は無い（実測）
 
 外向きを閉じたままローカルバインドだけ許す設定を探したが、0.145.0 には無い。
 
 - `sandbox_workspace_write.allow_local_binds` は存在しないフィールドとして拒否される。
-- `permissions.network.mode` / `.allow_local_binding` / `.domains` は config 検証を通る。しかし workspace-write の挙動を変えない（`allow_local_binding = true` を渡しても listen は `EPERM` のまま、外向きもブロックされたまま）。`[permissions]` はプロファイルを選んで使う系統で、companion からは選べない。
+- `permissions.network.mode` / `.allow_local_binding` / `.domains` は config 検証を通るが、workspace-write の挙動を変えない（`allow_local_binding = true` を渡しても listen は `EPERM`、外向きもブロックされたまま）。`[permissions]` はプロファイルを選んで使う系統で、companion からは選べない。
 - `features.network_proxy` は実在するフラグで、有効にすると実際に通信を遮断する（`curl: (56) CONNECT tunnel failed, response 403`）。ただし `network_access = true` と併用しても listen は `EPERM` のままだった。プロキシ経路にすると直接ソケットを失うため、必要なローカルバインドの方が消える。`permissions.network.domains` で許可したドメインも 403 になり、許可リストの表現も確立できなかった。
 
-Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、そのときは外向きを閉じたまま有効化する価値がある。
+Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、外向きを閉じたまま有効化する価値がある。
 
-## セッション単位の有効化は委任経路では効かない
+## ペイン単位で開ける（実測で成立）
 
-`codex -c 'sandbox_workspace_write.network_access=true'` は対話TUIには効くが、この Skill の委任には効かない。companion は `codex app-server` をフラグなしで起動するため（`scripts/lib/app-server.mjs`）、CLI の `-c` は届かない。プラグイン側は更新で上書きされるので手を入れない。
+既定の委任経路である herdr のペイン（`herdr-pane.md`）では、`herdr agent start` の `--` 以降に `-c sandbox_workspace_write.network_access=true` を渡すと、**そのペインのセッションだけ**ネットワークが開く。2026-08-05に 0.146.0 で確認した（`LISTEN OK` と `OUTBOUND OK 200`。同じ時刻に config.toml 未設定のまま `codex exec` を既定で走らせると `EPERM` / `ENOTFOUND` のままだったので、効果はセッションに閉じている）。
 
-どうしても1タスクだけ必要なら、config.toml を編集して発注し、終了後に戻す。実作業は20分を超えることがあるため、その間は全 Codex 実行で外向きが開く。戻し忘れると恒久設定と同じになる。使うなら、発注と同じターン内で戻すところまでを1セットとして扱う。
+config.toml のグローバル性に由来する事情はこれで消える。全 Codex 実行へ波及せず、戻し忘れも起きず、ペインを閉じれば効果も消える。ローカルバインドだけを開ける手段は無いままなので、外向きも同時に開く点は変わらない。
+
+運用は次のとおり。
+
+- 既定は付けない。実装とサンドボックス内で完結する検査までを委任する形を崩さない。
+- ループバックを要する検証（workers プール、`wrangler dev`）を Codex 自身に走らせる価値があるときだけ、ユーザーへ確認を取ってから付ける。外向きも開くことを確認の文面に含める。
+- 開けたペインは検証が終わったら閉じる。同じ作業の続きでも、ネットワークが要らなくなったら開いたまま使い回さない。
+- 露出を絞るなら専用 worktree のペインに限定する。
+- 開けた事実は報告に書く。ログにも残す（`SKILL.md` の試験運用の記録）。
+
+companion 経路には CLI の `-c` が届かない。`codex app-server` をフラグなしで起動するためである（`scripts/lib/app-server.mjs`）。プラグイン側は更新で上書きされるので手を入れない。companion 経路でどうしても必要なら、ペイン経路が使えないか先に見る。それも無理なら config.toml を編集して発注し、終了後に戻す。実作業は20分を超えることがあり、その間は全 Codex 実行で外向きが開くので、発注と戻しまでを同じターン内で1セットとして扱う。
+
+なお、Codex へ「サンドボックス外への権限昇格を要求して」と指示する発注は Claude Code のclassifierに止められる。設定で開けるかどうかと、Codex に昇格を求めさせることは別の話で、後者は経路として使えない。
 
 ## 通常の運用
 
-- ローカルにポートを開く検証（workers プール、`wrangler dev`、通し実行）は委任しない。実装とサンドボックス内で完結する検査までを委任し、これらはディレクター側で実行する。
-- 依頼文の `<verification>` には、サンドボックスで完走するコマンドだけを書く。workers プールを含むリポジトリなら `npm test` ではなく `npx vitest run --project node` を指定し、フルスイートはディレクター側で実行すると明記する。
-- テストを追加させたら件数を数える（`review-checklist.md`）。
+ローカルにポートを開く検証（workers プール、`wrangler dev`、通し実行）は、上の確認を取っていない限り委任しない。実装とサンドボックス内で完結する検査までを委任し、これらはディレクター側で実行する。依頼文の `<verification>` にはサンドボックスで完走するコマンドだけを書き（例: `npx vitest run --project node`）、フルスイートはディレクター側で実行すると明記する。テストを追加させたら件数を数える（`review-checklist.md`）。
 
 ## 設定の状態を確かめる
 
-疑わしいときは実測する。
+疑わしいときは実測する。既定の運用では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。下のコマンドは `-c` を渡していないので、`LISTEN OK` が返ったら config.toml に `network_access = true` が残っている。ペインで開けたセッションを確かめたいなら、同じスクリプトをそのペインの Codex に実行させる。
 
 ```bash
-cat > /tmp/listen-test.mjs <<'EOF'
+cat > /tmp/net-test.mjs <<'EOF'
 import net from "node:net";
 const s = net.createServer();
-s.on("error", (e) => { console.log("LISTEN FAIL:", e.code); process.exit(1); });
-s.listen(0, "127.0.0.1", () => { console.log("LISTEN OK", s.address().port); s.close(); process.exit(0); });
+s.on("error", (e) => { console.log("LISTEN FAIL:", e.code); outbound(); });
+s.listen(0, "127.0.0.1", () => { console.log("LISTEN OK", s.address().port); s.close(); outbound(); });
+async function outbound() {
+  try {
+    const r = await fetch("https://example.com", { signal: AbortSignal.timeout(8000) });
+    console.log("OUTBOUND OK", r.status);
+  } catch (e) {
+    console.log("OUTBOUND FAIL:", e.cause?.code || e.code || e.name);
+  }
+}
 EOF
 codex exec -s workspace-write -m gpt-5.6-luna -c model_reasoning_effort=none \
-  "Run exactly this once: node /tmp/listen-test.mjs — then reply with its output verbatim. Do not modify any files."
+  "Run exactly this once: node /tmp/net-test.mjs — then reply with its output verbatim. Do not modify any files."
 ```
 
-既定の運用では `LISTEN FAIL: EPERM` が正しい。`LISTEN OK` が返ったら config.toml に `network_access = true` が残っている。
-
-設定キーが実在するかを確かめたいときは、モデルを呼ばずに検証できる。未知のキーなら `unknown configuration field`、実在するキーなら別のエラー（`no rollout found for thread id`）が返る。
+設定キーが実在するかは、モデルを呼ばずに検証できる。未知のキーなら `unknown configuration field`、実在するキーなら別のエラー（`no rollout found for thread id`）が返る。
 
 ```bash
 codex exec --strict-config resume 00000000-0000-0000-0000-000000000000 -c '<key>=<value>' "ok"
 ```
 
-ただし、キーが受理されることは挙動が変わることを意味しない。`permissions.network.*` がその実例である。設定の効果は必ず上の listen テストで確かめる。
+ただし、キーが受理されることは挙動が変わることを意味しない（`permissions.network.*` がその実例）。設定の効果は必ず上の listen テストで確かめる。
