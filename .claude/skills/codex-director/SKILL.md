@@ -49,7 +49,9 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 ## Codex 委任コマンド
 
-委任は herdr のペインで Codex を起動して行う。動作がユーザーに見え、承認を求められても復旧でき、差し戻しが同じスレッドで続く。操作契約は `references/herdr-pane.md` にあり、発注前に読む。
+委任は herdr のペインで Codex を起動して行う。動作がユーザーに見え、承認を求められても復旧でき、差し戻しが同じスレッドで続く。
+
+**herdr の操作は公式スキルに従う。** Skill ツールで `herdr` を呼ぶ（無ければ `herdr --skill`）。ID の扱い、状態の意味、読み取り源、安全規則はそこにある。`references/herdr-pane.md` には、それを Codex への委任に当てはめて上書きする点と、実測で足りないと分かった点だけを書いてある。両方を発注前に読む。
 
 前提は herdr のペイン内で動いていることである。
 
@@ -61,7 +63,7 @@ test "${HERDR_ENV:-}" = 1
 
 **依頼文は Write ツールでファイルへ書いてから渡す。** ヒアドキュメントも直接埋め込みも使わない。二重引用符で埋め込むと、文中のバックティックがシェルのコマンド置換として実行され、その部分が依頼文から消える。実運用では `` `npm test` `` や `` `wrangler dev` `` が実際に走り（`wrangler dev` はサーバーとして残った）、ファイル名や `type: "RATE_LIMITED"` のような仕様の核が欠落した依頼文が Codex へ渡った。コード識別子やパスをバックティックで囲むのは自然な書き方なので、埋め込み方式を続ける限り再発する。
 
-ペインを用意して Codex を起動する。返った JSON から `pane_id` を読む。
+ペインを用意して Codex を起動する。分割方向は右を既定にする（理由と例外は `references/herdr-pane.md`）。
 
 ```bash
 herdr pane layout --pane "$HERDR_PANE_ID"
@@ -76,7 +78,7 @@ herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
 herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300000
 ```
 
-- `--wait` は `idle`・`done`・`blocked` のどれかで戻る。`agent get` を自分でポーリングしない。戻り値で分岐する。
+- `--wait` の戻り値で分岐する。`agent get` を自分でポーリングしない。状態の意味は herdr 公式スキルにある。
 - ファイル変更の可否にフラグは要らない。ペインの Codex はユーザーの設定（`workspace-write`）で動くので既定で書ける。調査だけを頼むなら `-s read-only` を付けて起動する。
 - `blocked` は承認か質問のUIである。**ディレクターは承認を代行しない**。何を求められているかをユーザーへ伝えて待つ（`references/herdr-pane.md`）。
 - 実装を伴う依頼は20分を超えることがある。Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
@@ -118,7 +120,8 @@ Codex のサンドボックスはネットワークを閉じており、`127.0.0
 
 ## 参照ファイル
 
-- `references/herdr-pane.md` — 既定の委任経路（herdr のペイン）の操作契約。発注前と、`blocked` が返ったときに読む。
+- herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`） — herdr そのものの操作規約。ペイン経路で発注する前に読む。
+- `references/herdr-pane.md` — 公式スキルを Codex 委任へ当てはめた差分。分割方向の上書き、起動フラグ、承認の境界、報告回収の実測。発注前と、`blocked` が返ったときに読む。
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
 - `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
