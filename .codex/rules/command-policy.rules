@@ -14,11 +14,13 @@
 # carry the prefix, but covering both forms keeps a rule correct whichever way
 # the command arrives.
 
-def command_rule(pattern, decision, justification):
+def command_rule(pattern, decision, justification, match = [], not_match = []):
     prefix_rule(
         pattern = pattern,
         decision = decision,
         justification = justification,
+        match = match,
+        not_match = not_match,
     )
     prefix_rule(
         pattern = ["rtk"] + pattern,
@@ -27,31 +29,96 @@ def command_rule(pattern, decision, justification):
     )
 
 
-# Claude Code permissions.allow
-command_rule(["ls"], "allow", "Read-only directory listing")
-command_rule(["git", "status"], "allow", "Read-only Git status inspection")
-command_rule(["git", ["diff", "log", "show"]], "allow", "Read-only Git inspection")
-command_rule(["git", "branch"], "allow", "Read-only branch listing; `git branch -D` stays forbidden below")
-command_rule(["pwd"], "allow", "Print the current directory")
-command_rule(["which"], "allow", "Resolve an executable on PATH")
-command_rule(["cat"], "allow", "Read file contents")
-command_rule(["wc"], "allow", "Count file contents")
-command_rule(["gh", "pr"], "allow", "GitHub pull request operations allowed by the Claude policy")
-command_rule(["gh", "issue"], "allow", "GitHub issue operations allowed by the Claude policy")
-command_rule(["gh", "run"], "allow", "GitHub Actions run operations allowed by the Claude policy")
-command_rule(["gh", "project"], "allow", "GitHub project operations allowed by the Claude policy")
-command_rule(["gh", "release"], "allow", "GitHub release operations allowed by the Claude policy")
+# Read-only commands and explicitly accepted local workflows. Keep GitHub
+# prefixes narrow: broad prefixes also cover commands that mutate remote state.
+command_rule(
+    ["ls"],
+    "allow",
+    "Read-only directory listing",
+    match = ["ls", "ls -la"],
+)
+command_rule(
+    ["git", "status"],
+    "allow",
+    "Read-only Git status inspection",
+    match = ["git status", "git status --short"],
+)
+command_rule(
+    ["git", ["diff", "log", "show"]],
+    "allow",
+    "Read-only Git inspection",
+    match = ["git diff --stat", "git log -5", "git show HEAD"],
+)
+command_rule(
+    ["git", "branch"],
+    "allow",
+    "Read-only branch listing; destructive deletion stays forbidden below",
+    match = ["git branch", "git branch --merged main"],
+)
+command_rule(["pwd"], "allow", "Print the current directory", match = ["pwd"])
+command_rule(["which"], "allow", "Resolve an executable on PATH", match = ["which codex"])
+command_rule(["cat"], "allow", "Read file contents", match = ["cat README.md"])
+command_rule(["wc"], "allow", "Count file contents", match = ["wc -l README.md"])
+command_rule(
+    ["gh", "pr", "view"],
+    "allow",
+    "Read-only GitHub pull request inspection",
+    match = ["gh pr view 123", "gh pr view 123 --json title"],
+    not_match = ["gh pr edit 123"],
+)
+command_rule(["gh", "pr", "list"], "allow", "List pull requests")
+command_rule(["gh", "pr", "status"], "allow", "Read-only pull request status")
+command_rule(["gh", "pr", "checks"], "allow", "Read-only pull request checks")
+command_rule(["gh", "pr", "diff"], "allow", "Read-only pull request diff")
+command_rule(
+    ["gh", "pr", "checkout"],
+    "allow",
+    "Check out a pull request branch locally",
+)
+command_rule(["gh", "issue", "view"], "allow", "Read-only GitHub issue inspection")
+command_rule(["gh", "issue", "list"], "allow", "List GitHub issues")
+command_rule(["gh", "issue", "status"], "allow", "Read-only GitHub issue status")
+command_rule(["gh", "run", "view"], "allow", "Read-only GitHub Actions run inspection")
+command_rule(["gh", "run", "list"], "allow", "List GitHub Actions runs")
+command_rule(["gh", "run", "watch"], "allow", "Watch a GitHub Actions run")
+command_rule(["gh", "project", "view"], "allow", "Read-only GitHub project inspection")
+command_rule(["gh", "project", "list"], "allow", "List GitHub projects")
+command_rule(["gh", "project", "item-list"], "allow", "List GitHub project items")
+command_rule(["gh", "project", "field-list"], "allow", "List GitHub project fields")
+command_rule(["gh", "release", "view"], "allow", "Read-only GitHub release inspection")
+command_rule(["gh", "release", "list"], "allow", "List GitHub releases")
+command_rule(["gh", "release", "download"], "allow", "Download release assets locally")
 command_rule(["gh", "repo", "view"], "allow", "Read-only GitHub repository inspection")
 command_rule(["gh", "status"], "allow", "Read-only GitHub status inspection")
 
 
-# Claude Code permissions.deny. The most restrictive matching Codex rule wins,
-# so these override the broader GitHub allow rules above.
+# Destructive operations. The most restrictive matching Codex rule wins.
 command_rule(["git", "push", "--force"], "forbidden", "Use a normal push or --force-with-lease after explicit review")
+command_rule(["git", "push", "--force-with-lease"], "prompt", "Force-pushing requires approval")
 command_rule(["git", "reset", "--hard"], "forbidden", "Use a non-destructive restore strategy")
 command_rule(["git", "checkout", "."], "forbidden", "Restore only explicitly reviewed paths")
+command_rule(
+    ["git", "checkout", "--", "."],
+    "forbidden",
+    "Restore only explicitly reviewed paths",
+    match = ["git checkout -- ."],
+    not_match = ["git checkout main"],
+)
+command_rule(
+    ["git", "restore", "."],
+    "forbidden",
+    "Restore only explicitly reviewed paths",
+    match = ["git restore ."],
+    not_match = ["git restore README.md"],
+)
+command_rule(
+    ["git", "restore", "--worktree", "."],
+    "forbidden",
+    "Restore only explicitly reviewed paths",
+)
 command_rule(["git", "clean"], "forbidden", "Remove untracked files selectively")
 command_rule(["git", "branch", "-D"], "forbidden", "Delete branches safely with -d after verifying merge state")
+command_rule(["rm", "-rf"], "prompt", "Recursive deletion requires approval")
 command_rule(["gh", "repo", "delete"], "forbidden", "Delete repositories manually after explicit review")
 command_rule(["gh", "pr", "merge"], "forbidden", "Merge pull requests manually after explicit review")
 command_rule(["gh", "issue", "delete"], "forbidden", "Close the issue instead of deleting it")
@@ -64,15 +131,44 @@ command_rule(["gh", "release", "delete-asset"], "forbidden", "Delete release ass
 command_rule(["gh", "issue", "transfer"], "forbidden", "Transfer issues manually after explicit review")
 
 
-# Claude Code permissions.ask
+# Remote mutations that require a decision. With approvals_reviewer =
+# "auto_review", these are reviewed automatically instead of blocking the user.
+# Keep `gh api` at prompt: a prefix rule cannot safely distinguish default GET
+# requests from POST/DELETE requests when options can appear in different places.
+command_rule(["gh", "api"], "prompt", "GitHub API calls may mutate remote state")
+command_rule(["gh", "pr", "comment"], "prompt", "Posting a pull request comment requires approval")
+command_rule(["gh", "pr", "edit"], "prompt", "Editing a pull request requires approval")
+command_rule(["gh", "pr", "review"], "prompt", "Submitting a pull request review requires approval")
+command_rule(["gh", "pr", "ready"], "prompt", "Changing pull request readiness requires approval")
 command_rule(["gh", "pr", "close"], "prompt", "Closing a pull request requires approval")
-command_rule(["gh", "release", "create"], "prompt", "Publishing a release requires approval")
+command_rule(["gh", "pr", "reopen"], "prompt", "Reopening a pull request requires approval")
+command_rule(["gh", "pr", "lock"], "prompt", "Locking a pull request requires approval")
+command_rule(["gh", "pr", "unlock"], "prompt", "Unlocking a pull request requires approval")
+command_rule(["gh", "issue", "create"], "prompt", "Creating an issue requires approval")
+command_rule(["gh", "issue", "comment"], "prompt", "Posting an issue comment requires approval")
+command_rule(["gh", "issue", "edit"], "prompt", "Editing an issue requires approval")
+command_rule(["gh", "issue", "close"], "prompt", "Closing an issue requires approval")
+command_rule(["gh", "issue", "reopen"], "prompt", "Reopening an issue requires approval")
+command_rule(["gh", "issue", "lock"], "prompt", "Locking an issue requires approval")
+command_rule(["gh", "issue", "unlock"], "prompt", "Unlocking an issue requires approval")
+command_rule(["gh", "issue", "pin"], "prompt", "Pinning an issue requires approval")
+command_rule(["gh", "issue", "unpin"], "prompt", "Unpinning an issue requires approval")
 command_rule(["gh", "run", "cancel"], "prompt", "Cancelling a workflow run requires approval")
+command_rule(["gh", "run", "rerun"], "prompt", "Rerunning a workflow requires approval")
+command_rule(["gh", "project", "create"], "prompt", "Creating a project requires approval")
+command_rule(["gh", "project", "copy"], "prompt", "Copying a project requires approval")
+command_rule(["gh", "project", "edit"], "prompt", "Editing a project requires approval")
+command_rule(["gh", "project", "item-add"], "prompt", "Adding a project item requires approval")
+command_rule(["gh", "project", "item-edit"], "prompt", "Editing a project item requires approval")
+command_rule(["gh", "project", "item-archive"], "prompt", "Archiving a project item requires approval")
+command_rule(["gh", "project", "field-create"], "prompt", "Creating a project field requires approval")
+command_rule(["gh", "project", "field-edit"], "prompt", "Editing a project field requires approval")
+command_rule(["gh", "release", "create"], "prompt", "Publishing a release requires approval")
+command_rule(["gh", "release", "edit"], "prompt", "Editing a release requires approval")
+command_rule(["gh", "release", "upload"], "prompt", "Uploading release assets requires approval")
 
 
 # Common dev-command approvals (not part of the Claude policy).
-command_rule(["gh", "api"], "allow", "Read-only GitHub API access")
-command_rule(["gh", "pr", "checkout"], "allow", "Check out a pull request branch locally")
 command_rule(["npm", "run", "dev"], "allow", "Run the local dev server")
 command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Fetch modern web guidance")
 command_rule(["npm", "audit", "fix"], "allow", "Apply non-breaking dependency security fixes")
