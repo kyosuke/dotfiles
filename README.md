@@ -20,6 +20,7 @@ script.
 | `.config/git/ignore` | Git global ignore | `~/.config/git/ignore` |
 | `.claude/` | Claude Code (settings, statusline, skills) | `~/.claude/…` |
 | `.codex/rules/command-policy.rules` | Codex CLI command policy | `~/.codex/rules/…` |
+| `scripts/check-codex-policy.sh` | Codex command-policy validation | Run manually from this repo |
 
 ## Requirements
 
@@ -52,3 +53,17 @@ without hard-coding install locations.
 this public repo ignores the directory by default and tracks only the files I
 chose to share: `settings.json`, the statusline script, and a few skills. See
 `.claude/.gitignore` for the allow-list.
+
+## Codex config scope
+
+This repository intentionally manages only the durable Codex command policy in
+`.codex/rules/command-policy.rules`. It does not link `~/.codex/config.toml`:
+the Codex app updates that file with machine-specific settings, plugin state,
+MCP configuration, project trust entries, and other generated values.
+
+If the global configuration is ever split into a stable public profile, the
+best candidates to manage are `approval_policy`, `approvals_reviewer`, and
+`sandbox_mode`. Keep model/reasoning preferences, plugin and MCP settings,
+project paths, notifications, desktop preferences, marketplaces, and hook
+state machine-local. Use `scripts/check-codex-policy.sh` after changing the
+command policy.
