@@ -65,9 +65,9 @@ herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300
 - **承認を代行しない**。`blocked` は承認か質問のUIなので、何を求められているかをユーザーへ伝えて待つ。
 - **検収は画面ではなく `git diff` で行う**。実装を伴う依頼は20分を超えることがあり、Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
 
-## サンドボックスで実行できない検証
+## サーバー起動を伴う検証
 
-Codex のサンドボックスは既定でネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。workers プールも `wrangler dev` も起動しない。サーバー起動を伴う検証は委任せず、ディレクター側で実行するのが既定である。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む。** ペイン起動時のフラグでそのセッションだけ開けられるが、外向き通信も同時に開くので、必要なときにユーザーの確認を取ってから使う。
+Codex のサンドボックスは既定でネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。そのままでは workers プールも `wrangler dev` も起動しない。ペイン起動時のフラグでそのセッションだけ開けられるので、**サーバー起動を伴う検証が発注に含まれるならフラグを付けて委任する**。**`listen EPERM` を見ても運用を想像で変えず、まず `references/sandbox-network.md` を読む。** 開けたことを理由に検収を省かない。逆に、開けられないことを理由に推論量やモデルを上げない（`references/model-routing.md`）。
 
 ## 基本規則
 
@@ -92,4 +92,4 @@ Codex のサンドボックスは既定でネットワークを閉じており�
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
 - `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
-- `references/sandbox-network.md` — サンドボックスのネットワーク設定と実測結果。`listen EPERM` を見たとき、テスト実行を委任できるか迷ったときに読む。
+- `references/sandbox-network.md` — サンドボックスのネットワーク設定と実測結果。`listen EPERM` を見たとき、ループバックを要する検証を委任するときに読む。
