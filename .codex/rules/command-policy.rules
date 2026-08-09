@@ -168,6 +168,69 @@ command_rule(["gh", "release", "edit"], "prompt", "Editing a release requires ap
 command_rule(["gh", "release", "upload"], "prompt", "Uploading release assets requires approval")
 
 
+# Jujutsu is excluded from RTK rewriting, so these rules intentionally cover
+# only the direct `jj` invocation.
+prefix_rule(
+    pattern = ["jj", ["st", "status"]],
+    decision = "allow",
+    justification = "Read-only Jujutsu status inspection",
+    match = ["jj st", "jj status"],
+)
+prefix_rule(
+    pattern = ["jj", ["log", "diff", "show"]],
+    decision = "allow",
+    justification = "Read-only Jujutsu inspection",
+    match = ["jj log -r @", "jj diff", "jj show @"],
+)
+prefix_rule(
+    pattern = ["jj", "op", "log"],
+    decision = "allow",
+    justification = "Read-only Jujutsu operation history inspection",
+    not_match = ["jj op restore 123"],
+)
+prefix_rule(
+    pattern = ["jj", "bookmark", "list"],
+    decision = "allow",
+    justification = "Read-only Jujutsu bookmark inspection",
+    not_match = ["jj bookmark delete main"],
+)
+prefix_rule(
+    pattern = ["jj", "config", "list"],
+    decision = "allow",
+    justification = "Read-only Jujutsu configuration inspection",
+)
+prefix_rule(
+    pattern = ["jj", ["new", "describe", "edit", "squash", "abandon", "rebase"]],
+    decision = "allow",
+    justification = "Reversible local Jujutsu change management",
+)
+prefix_rule(
+    pattern = ["jj", "bookmark", ["create", "set", "track"]],
+    decision = "allow",
+    justification = "Reversible local Jujutsu bookmark management",
+)
+prefix_rule(
+    pattern = ["jj", "undo"],
+    decision = "allow",
+    justification = "Reversible local Jujutsu operation rollback",
+)
+prefix_rule(
+    pattern = ["jj", "git", "fetch"],
+    decision = "allow",
+    justification = "Fetch Git data without changing the remote",
+)
+prefix_rule(
+    pattern = ["jj", "git", "push"],
+    decision = "prompt",
+    justification = "Pushing Jujutsu changes requires approval",
+)
+prefix_rule(
+    pattern = ["jj", "op", "restore"],
+    decision = "prompt",
+    justification = "Restoring a Jujutsu operation requires approval",
+)
+
+
 # Common dev-command approvals (not part of the Claude policy).
 command_rule(["npm", "run", "dev"], "allow", "Run the local dev server")
 command_rule(["npx", "-y", "modern-web-guidance@latest"], "allow", "Fetch modern web guidance")
