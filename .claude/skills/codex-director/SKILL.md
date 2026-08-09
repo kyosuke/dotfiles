@@ -36,7 +36,7 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 委任は herdr のペインで Codex を起動して行う。動作がユーザーに見え、承認を求められても復旧でき、差し戻しが同じスレッドで続く。**この経路が唯一の委任手段である。** 使えないときに別の経路へ退避しない。
 
-**発注前に2つ読む。** herdr そのものの操作規約は公式スキル（Skill ツールで `herdr`、無ければ `herdr --skill`）。それを Codex 委任へ当てはめた上書き、起動フラグ、承認の境界、報告の回収、待機中の判断は `references/herdr-pane.md`。以下は骨格だけで、注意点と実測はすべてそちらにある。
+**発注前に2つ読む。** herdr そのものの操作規約は公式スキル（Skill ツールで `herdr`、無ければ `herdr --skill`）。それを Codex 委任へ当てはめた上書き、起動フラグ、承認の境界、報告の回収、待機中の判断、詰まったときの復旧は `references/herdr-execution.md`。以下は骨格だけで、注意点と実測はすべてそちらにある。
 
 前提は herdr のペイン内にいること。まず確認する。
 
@@ -56,7 +56,7 @@ herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
 herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300000
 ```
 
-エージェントを複数立てるのはためらわない。2つ目以降は**最初のエージェントペインを下へ分割して積む**（`--pane <最初のエージェントのpane_id> --direction down`）。ディレクターのペイン幅を削らず、エージェントが1列にまとまる。同時に書かせる場合の作業ツリーの扱いは `references/herdr-pane.md`。
+エージェントを複数立てるのはためらわない。2つ目以降は**最初のエージェントペインを下へ分割して積む**（`--pane <最初のエージェントのpane_id> --direction down`）。ディレクターのペイン幅を削らず、エージェントが1列にまとまる。同時に書かせる場合の作業ツリーの扱いは `references/herdr-execution.md`。
 
 外せない4点だけをここに置く。
 
@@ -88,9 +88,8 @@ Codex のサンドボックスは既定でネットワークを閉じており�
 ## 参照ファイル
 
 - herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`） — herdr そのものの操作規約。発注前に読む。
-- `references/herdr-pane.md` — 公式スキルを Codex 委任へ当てはめた差分。分割方向、起動フラグ、承認の境界、報告回収、待機中の判断。発注前と、`blocked` が返ったときに読む。
+- `references/herdr-execution.md` — 公式スキルを Codex 委任へ当てはめた差分と、各工程で詰まったときの復旧。分割方向、起動フラグ、承認の境界、報告回収、待機中の判断、スレッドの再開。発注前に読み、`blocked` が返ったときや起動・発注・完了検知・報告回収が期待どおりに動かないときに戻る。
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
 - `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
 - `references/sandbox-network.md` — サンドボックスのネットワーク設定と実測結果。`listen EPERM` を見たとき、テスト実行を委任できるか迷ったときに読む。
-- `references/execution.md` — herdr 経路の復旧手順。Codex が起動しない、発注が通らない、`blocked` から進まない、完了を検知できない、報告を回収できないときに読む。

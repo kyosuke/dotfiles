@@ -37,7 +37,7 @@ Seatbelt 側にはループバック限定のルール（`(allow network-inbound
 
 ## ペイン単位で開ける（実測で成立）
 
-既定の委任経路である herdr のペイン（`herdr-pane.md`）では、`herdr agent start` の `--` 以降に `-c sandbox_workspace_write.network_access=true` を渡すと、**そのペインのセッションだけ**ネットワークが開く。2026-08-05に 0.146.0 で確認した（`LISTEN OK` と `OUTBOUND OK 200`。同じ時刻に config.toml 未設定のまま `codex exec` を既定で走らせると `EPERM` / `ENOTFOUND` のままだったので、効果はセッションに閉じている）。
+既定の委任経路である herdr のペイン（`herdr-execution.md`）では、`herdr agent start` の `--` 以降に `-c sandbox_workspace_write.network_access=true` を渡すと、**そのペインのセッションだけ**ネットワークが開く。2026-08-05に 0.146.0 で確認した（`LISTEN OK` と `OUTBOUND OK 200`。同じ時刻に config.toml 未設定のまま `codex exec` を既定で走らせると `EPERM` / `ENOTFOUND` のままだったので、効果はセッションに閉じている）。
 
 config.toml のグローバル性に由来する事情はこれで消える。全 Codex 実行へ波及せず、戻し忘れも起きず、ペインを閉じれば効果も消える。ローカルバインドだけを開ける手段は無いままなので、外向きも同時に開く点は変わらない。
 
