@@ -82,16 +82,9 @@
   },
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
-    "codex@openai-codex": true,
     "frontend-design@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "openai-codex": {
-      "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
-      }
-    },
     "chrome-devtools-plugins": {
       "source": {
         "source": "github",

@@ -12,14 +12,14 @@ Codex の workspace-write サンドボックスは既定でネットワークを
 
 ## 挙動が変わるのは network_access だけ
 
-`sandbox_workspace_write.network_access = true` だけが実際に効く。`~/.codex/config.toml` に書けば全実行へ、CLI の `-c` で渡せばその実行だけへ届く。companion は config.toml を素通しする（`codex app-server` を追加フラグなしで起動し、thread へはサンドボックスのモード文字列だけを渡すため、network の可否は config.toml から解決される）。
+`sandbox_workspace_write.network_access = true` だけが実際に効く。`~/.codex/config.toml` に書けば全実行へ、CLI の `-c` で渡せばその実行だけへ届く。
 
 | 設定 | `127.0.0.1` への listen | `npm test`（workers プール込み） | 外向き通信 |
 |---|---|---|---|
 | 既定（未設定） | `EPERM` | pool startup error、サマリ行なし | DNS 解決不可 |
 | `network_access = true` | 成功 | 10ファイル / 121件 通過 | HTTP 200 |
 
-委任経路（companion の `task --write`）でも121件通過を確認した。技術的には解決する。
+ファイル変更を許した委任実行でも121件通過を確認した。技術的には解決する。
 
 **config.toml へは書かない。** グローバルなので全 Codex 実行（TUI 含む、クライアント案件のリポジトリ含む）で外向きが開き、戻し忘れがそのまま恒久設定になる。開けるならペイン単位で開ける（下記）。
 
@@ -30,7 +30,7 @@ Codex の workspace-write サンドボックスは既定でネットワークを
 外向きを閉じたままローカルバインドだけ許す設定を探したが、0.145.0 には無い。
 
 - `sandbox_workspace_write.allow_local_binds` は存在しないフィールドとして拒否される。
-- `permissions.network.mode` / `.allow_local_binding` / `.domains` は config 検証を通るが、workspace-write の挙動を変えない（`allow_local_binding = true` を渡しても listen は `EPERM`、外向きもブロックされたまま）。`[permissions]` はプロファイルを選んで使う系統で、companion からは選べない。
+- `permissions.network.mode` / `.allow_local_binding` / `.domains` は config 検証を通るが、workspace-write の挙動を変えない（`allow_local_binding = true` を渡しても listen は `EPERM`、外向きもブロックされたまま）。`[permissions]` はプロファイルを選んで使う系統である。
 - `features.network_proxy` は実在するフラグで、有効にすると実際に通信を遮断する（`curl: (56) CONNECT tunnel failed, response 403`）。ただし `network_access = true` と併用しても listen は `EPERM` のままだった。プロキシ経路にすると直接ソケットを失うため、必要なローカルバインドの方が消える。`permissions.network.domains` で許可したドメインも 403 になり、許可リストの表現も確立できなかった。
 
 Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、外向きを閉じたまま有効化する価値がある。
@@ -47,9 +47,7 @@ config.toml のグローバル性に由来する事情はこれで消える。�
 - ループバックを要する検証（workers プール、`wrangler dev`）を Codex 自身に走らせる価値があるときだけ、ユーザーへ確認を取ってから付ける。外向きも開くことを確認の文面に含める。
 - 開けたペインは検証が終わったら閉じる。同じ作業の続きでも、ネットワークが要らなくなったら開いたまま使い回さない。
 - 露出を絞るなら専用 worktree のペインに限定する。
-- 開けた事実は報告に書く。ログにも残す（`SKILL.md` の試験運用の記録）。
-
-companion 経路には CLI の `-c` が届かない。`codex app-server` をフラグなしで起動するためである（`scripts/lib/app-server.mjs`）。プラグイン側は更新で上書きされるので手を入れない。companion 経路でどうしても必要なら、ペイン経路が使えないか先に見る。それも無理なら config.toml を編集して発注し、終了後に戻す。実作業は20分を超えることがあり、その間は全 Codex 実行で外向きが開くので、発注と戻しまでを同じターン内で1セットとして扱う。
+- 開けた事実は報告に書く。ログにも残す（`../SKILL.md` の試験運用の記録）。
 
 なお、Codex へ「サンドボックス外への権限昇格を要求して」と指示する発注は Claude Code のclassifierに止められる。設定で開けるかどうかと、Codex に昇格を求めさせることは別の話で、後者は経路として使えない。
 
