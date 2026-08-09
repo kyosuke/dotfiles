@@ -44,6 +44,11 @@ check prompt gh release upload v1 asset.zip
 check prompt rm -rf node_modules
 check prompt git push --force-with-lease origin main
 
+check forbidden brew install ripgrep
+check forbidden brew tap homebrew/cask
+check forbidden brew upgrade
+check forbidden rtk brew install ripgrep
+
 check forbidden gh pr merge 123
 check forbidden gh repo delete example/example
 check forbidden git reset --hard HEAD

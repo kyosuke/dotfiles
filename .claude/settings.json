@@ -27,6 +27,9 @@
       "WebFetch(domain:www.codegrid.net)"
     ],
     "deny": [
+      "Bash(brew install:*)",
+      "Bash(brew tap:*)",
+      "Bash(brew upgrade:*)",
       "Bash(git push --force:*)",
       "Bash(git reset --hard:*)",
       "Bash(git checkout .:*)",

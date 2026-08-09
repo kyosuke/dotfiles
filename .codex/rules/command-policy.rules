@@ -93,6 +93,24 @@ command_rule(["gh", "status"], "allow", "Read-only GitHub status inspection")
 
 
 # Destructive operations. The most restrictive matching Codex rule wins.
+command_rule(
+    ["brew", "install"],
+    "forbidden",
+    "Review package installation explicitly before changing Homebrew state",
+    match = ["brew install ripgrep"],
+)
+command_rule(
+    ["brew", "tap"],
+    "forbidden",
+    "Review repository additions explicitly before changing Homebrew state",
+    match = ["brew tap homebrew/cask"],
+)
+command_rule(
+    ["brew", "upgrade"],
+    "forbidden",
+    "Review package upgrades explicitly before changing Homebrew state",
+    match = ["brew upgrade"],
+)
 command_rule(["git", "push", "--force"], "forbidden", "Use a normal push or --force-with-lease after explicit review")
 command_rule(["git", "push", "--force-with-lease"], "prompt", "Force-pushing requires approval")
 command_rule(["git", "reset", "--hard"], "forbidden", "Use a non-destructive restore strategy")
