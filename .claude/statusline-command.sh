@@ -6,11 +6,44 @@ used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // ""')
 dirname=""
 branch_part=""
+
+# jj ワークスペースの位置表示。herdr サイドバーの $jj_bookmark と同じ文法で、
+# bookmark 上なら名前、その子孫なら "main:: @id"、bookmark がなければ "@id"。
+#   同居リポジトリでは git の HEAD が detached になり branch 表示が使えないため、
+#   git より先に引く。--ignore-working-copy でスナップショットを取らせない。
+jj_bookmark() {
+  bm='local_bookmarks.map(|b| b.name() ++ if(b.conflict(), "??", "")).join(" ")'
+  at=$(jj --no-pager --ignore-working-copy -R "$1" log -r @ --no-graph \
+    -T "if(divergent,\"1\",\"\") ++ \"|\" ++ change_id.shortest() ++ \"|\" ++ ${bm}" 2>/dev/null) || return 1
+  [ -n "$at" ] || return 1
+  divergent=${at%%|*}
+  rest=${at#*|}
+  changeid=${rest%%|*}
+  bookmark=${rest#*|}
+  if [ -n "$bookmark" ]; then
+    printf '%s' "$bookmark"
+    return 0
+  fi
+  nearest=$(jj --no-pager --ignore-working-copy -R "$1" log -r 'heads(::@ & bookmarks())' \
+    --no-graph -T "${bm} ++ \"\n\"" 2>/dev/null | grep -v '^$' | head -1)
+  if [ -n "$nearest" ]; then
+    printf '%s:: @%s' "$nearest" "$changeid"
+  else
+    printf '@%s' "$changeid"
+    [ -n "$divergent" ] && printf '??'
+  fi
+  return 0
+}
+
 if [ -n "$cwd" ]; then
   dirname=$(basename "$cwd")
-  branch=$(git -C "$cwd" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
-  if [ -n "$branch" ]; then
-    branch_part="󰘬 ${branch}  "
+  # アイコンで系統を分ける。jj は 󰜘 (source_commit)、git は 󰘬 (source_branch)。
+  # jj の単位は branch ではなく change なので、同じ branch アイコンは使わない。
+  if branch=$(jj_bookmark "$cwd"); then
+    branch_part="󰜘 ${branch}  "
+  else
+    branch=$(git -C "$cwd" --no-optional-locks rev-parse --abbrev-ref HEAD 2>/dev/null)
+    [ -n "$branch" ] && branch_part="󰘬 ${branch}  "
   fi
 fi
 
