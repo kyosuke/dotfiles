@@ -32,6 +32,8 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 既定は `gpt-5.6-luna` + `high`。モデルを先に選ばず、推論量を主なつまみにする。使える推論量は `none, low, medium, high, xhigh, max`（`minimal` は GPT-5.6 の API が 400 で拒否する）。実装は難度が高くても `luna` + `max` まで使い切り、モデルを上げるのは、探索の範囲を依頼文で決め切れない調査に限る。段の一覧と選択基準は `references/model-routing.md` にあり、発注設計の前に読む。
 
+**Fast モードはモデルで決まる。`luna` は `-c service_tier=priority`、`sol` は `-c service_tier=default`（Fast オフ）。** 起動時に必ず明示し、`~/.codex/config.toml` の値に任せない。Fast は 1.5 倍速と引き換えに使用量が増えるので、残量への影響が小さい `luna` では速度を買い、消費の速い `sol` では買わない。仕組みと検証結果は `references/model-routing.md`。
+
 ## Codex 委任コマンド
 
 委任は herdr のペインで Codex を起動して行う。動作がユーザーに見え、承認を求められても復旧でき、差し戻しが同じスレッドで続く。**この経路が唯一の委任手段である。** 使えないときに別の経路へ退避しない。
@@ -52,7 +54,8 @@ test "${HERDR_ENV:-}" = 1
 herdr pane layout --pane "$HERDR_PANE_ID"
 herdr pane split --current --direction right --cwd "$PWD" --no-focus
 herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
-  -- --model <モデルID> -c model_reasoning_effort=<推論量> --no-alt-screen
+  -- --model <モデルID> -c model_reasoning_effort=<推論量> \
+     -c service_tier=<luna なら priority / sol なら default> --no-alt-screen
 herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300000
 ```
 

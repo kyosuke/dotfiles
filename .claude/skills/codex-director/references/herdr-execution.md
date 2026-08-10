@@ -62,7 +62,7 @@ codex --version
 `--workspace` を省くと他のワークスペースのペインまで並ぶ。ペインIDはワークスペース修飾（`w3:pJ`）なので、取り違えると別のタブを操作する。
 
 - ペインIDが古い（閉じたペインを指している）。`pane split` からやり直す。
-- モデルIDや `-c` のキーが実在しない。`--` 以降は Codex のネイティブ引数なので、`codex --help` と `~/.codex/models_cache.json` で確かめる（`model-routing.md`）。
+- モデルIDや `-c` のキーが実在しない。`--` 以降は Codex のネイティブ引数なので、`codex --help` と `~/.codex/models_cache.json` で確かめる（`model-routing.md`）。`-c` のキーと取りうる値の出典は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) で、`models_cache.json` はモデル側が何に対応しているかの表にすぎない。両方を混同して片方だけ見ない。
 - 起動はしたが `--no-alt-screen` を付け忘れた。報告の回収で詰まるので、この時点で `/quit` して起動し直す。
 
 ## 発注する
@@ -218,11 +218,12 @@ EOF
 ```bash
 herdr pane split --current --direction right --cwd "$PWD" --no-focus
 herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
-  -- resume <セッションUUID> --model <モデルID> -c model_reasoning_effort=<推論量> --no-alt-screen
+  -- resume <セッションUUID> --model <モデルID> -c model_reasoning_effort=<推論量> \
+     -c service_tier=<luna なら priority / sol なら default> --no-alt-screen
 ```
 
 2026-08-09 に herdr 0.8.0 / Codex 0.146.0 で確認した。`agent start` は `--` 以降を素の argv として渡すので `codex resume <UUID> …` が起動し、前のスレッドの内容を保った状態で `agent_status: idle` になる。以後は通常どおり `agent prompt` で続けられる。
 
 UUID を省いて `--last` を使わない。直近のセッションはリポジトリも用途も違うことがある。UUID が分からないなら、rollout ログのファイル名から拾う（上記「完了を検知できないとき」）。
 
-モデルと推論量は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違う段で動く（2026-08-09 時点の既定は `gpt-5.6-luna` + `max`）。
+モデルと推論量、`service_tier` は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違う段で動く（2026-08-09 時点の既定は `gpt-5.6-luna` + `max`、`service_tier = "fast"`）。`service_tier` の値の決め方は `model-routing.md`。

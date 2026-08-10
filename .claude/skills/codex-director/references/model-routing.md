@@ -22,6 +22,36 @@ GPT-5.6 が使えなくなったら、`~/.codex/models_cache.json`（`visibility
 
 `max` は `luna` の最上段として段の並びに入っている（下記）。ただし所要時間と消費が伸びるので既定にはしない。`high` から始めて、難度に応じて上げる。
 
+## Fast モードはモデルで決まる（検証済み）
+
+Fast モードは Codex の `service_tier` である。`models_cache.json` の説明が "1.5x speed, increased usage" で、速度を使用量で買う設定になっている。**`luna` では買い、`sol` では買わない。** 残量の減り方が桁違いで、`luna` は Fast を付けても残量への影響が小さいのに対し、`sol` は素のままでも速く減る（単価は `sol` が `luna` の25倍。下記「コスト差の扱い」）。
+
+| モデル | 渡す値 | 意味 |
+|---|---|---|
+| `luna` | `-c service_tier=priority` | Fast オン |
+| `sol` | `-c service_tier=default` | Fast オフ |
+
+推論量と同じく、`herdr agent start` の `--` 以降で毎回明示する。`~/.codex/config.toml` の `service_tier` に任せない。TUI の Fast トグルがこのキーを書き戻すので、ユーザーが対話セッションで切り替えた状態が委任へ漏れてくる（2026-08-10 時点の値は `"fast"`）。
+
+**値の一覧は `models_cache.json` ではなく [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にある。** `service_tier` の記述は "Optional explicit service tier request id for new turns (for example `default`, `priority`, or `flex`; legacy `fast` also works)"（2026-08-10 参照）。2つのファイルは役割が違う。
+
+- `config.schema.json` — 設定として書ける値の語彙。オフを表す `default` はここにしか出てこない
+- `models_cache.json` — 各モデルが対応ティアとして載せている値。GPT-5.6 の4モデルはどれも `priority`（`service_tiers[].id`）と `fast`（`additional_speed_tiers`）だけで、この一覧に無い値を渡したときの警告はここが根拠になる
+
+オンに `fast` ではなく `priority` を渡すのは、`fast` がスキーマで legacy とされており、ワイヤ上はどちらも `priority` になるからである。`flex` はスキーマにあるが GPT-5.6 の4モデルの対応ティアに無いので、渡しても落ちる。
+
+送られる中身は 2026-08-10 に、ローカルの捕捉サーバーへ `-c model_providers.<名前>.base_url` で向けて実際のリクエスト本文を読んで確認した（`codex exec -m gpt-5.6-luna`）。
+
+| 渡す値 | 送られる `service_tier` | 警告 |
+|---|---|---|
+| `priority` | `"priority"` | なし |
+| `fast`（legacy） | `"priority"` | なし |
+| `default` | フィールドごと無し | なし |
+| `flex` / `standard` / `auto` / `scale` / `none` / 空文字 | フィールドごと無し | あり |
+| `false`（真偽値） | 起動しない | `Error loading config.toml: invalid type: boolean` |
+
+対応ティアに無い値でもオフになる結果は `default` と変わらないが、`warning: Configured service tier ... will be omitted from requests.` が毎回ペインに出るので使わない。警告の有無だけでは、送っていないのかモデル既定の `priority` へ解決されたのかを判別できない。値を変えるときはスキーマで語彙を確かめ、この方法でリクエスト本文まで読む。
+
 ## 既定は luna。推論量を主なつまみにする
 
 モデルを先に選ばない。`gpt-5.6-luna` + `high` を基本に置き、難度に応じて推論量を上下させる。実装は `luna` の最上段（`max`）まで使い切ってからでないとモデルを上げない。

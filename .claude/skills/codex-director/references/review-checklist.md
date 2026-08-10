@@ -96,5 +96,5 @@ node ~/.claude/skills/codex-director/scripts/compare-literals.mjs \
 - 合格しなかった箇所
 - 試した修正
 - 解決できなかった理由
-- 高性能モデル（`gpt-5.6-sol`）や一段上の推論量（`xhigh`）への切り替えで改善が見込めるか
+- 高性能モデル（`gpt-5.6-sol`）や一段上の推論量（`xhigh`）への切り替えで改善が見込めるか。`sol` へ切り替えるなら Fast も外す（`-c service_tier=default`。`model-routing.md`）
 - 人間の判断が必要な点
