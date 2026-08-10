@@ -19,6 +19,10 @@ row_gap = 1
 
 [ui.sidebar.spaces]
 row_gap = 1
+# 3行目が mroth.jj-status プラグインの提供トークン。1〜2行目は既定値のままで、
+# jj 管理下のワークスペースだけ bookmark と変更状況が追加で並ぶ。
+#   herdr plugin install mroth/herdr-jj-status
+rows = [["state_icon", "workspace"], ["branch", "git_status"], ["$jj_bookmark", "$jj_status"]]
 
 # jj (Jujutsu) ワークスペース連携。プラグイン本体は herdr のランタイム領域に
 # ビルド・保存されるためコミット対象外。新環境では次のコマンドで入れ直す。
