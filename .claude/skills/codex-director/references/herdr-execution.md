@@ -62,7 +62,7 @@ codex --version
 `--workspace` を省くと他のワークスペースのペインまで並ぶ。ペインIDはワークスペース修飾（`w3:pJ`）なので、取り違えると別のタブを操作する。
 
 - ペインIDが古い（閉じたペインを指している）。`pane split` からやり直す。
-- モデルIDや `-c` のキーが実在しない。`--` 以降は Codex のネイティブ引数なので、`codex --help` と `~/.codex/models_cache.json` で確かめる（`model-routing.md`）。`-c` のキーと取りうる値の出典は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) で、`models_cache.json` はモデル側が何に対応しているかの表にすぎない。両方を混同して片方だけ見ない。
+- モデルIDや `-c` のキーが実在しない。`--` 以降は Codex のネイティブ引数なので、`codex --help` と `~/.codex/models_cache.json` で確かめる。`-c` のキーと値の出典は公式スキーマで、`models_cache.json` とは役割が違う（`model-routing.md`）。
 - 起動はしたが `--no-alt-screen` を付け忘れた。報告の回収で詰まるので、この時点で `/quit` して起動し直す。
 
 ## 発注する
@@ -226,4 +226,4 @@ herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
 
 UUID を省いて `--last` を使わない。直近のセッションはリポジトリも用途も違うことがある。UUID が分からないなら、rollout ログのファイル名から拾う（上記「完了を検知できないとき」）。
 
-モデルと推論量、`service_tier` は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違う段で動く（2026-08-09 時点の既定は `gpt-5.6-luna` + `max`、`service_tier = "fast"`）。`service_tier` の値の決め方は `model-routing.md`。
+モデルと推論量、`service_tier` は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違う段で動く（2026-08-09 時点の既定モデルは `gpt-5.6-luna` + `max`）。
