@@ -48,7 +48,7 @@ test "${HERDR_ENV:-}" = 1
 
 **偽なら委任しない。** 発注も実装も始めず、「この Skill の委任経路は herdr のペインだけなので、herdr 内で実行してほしい」とユーザーへ伝えて止まる。ここで Claude が代わりに成果物を書くと、ディレクターと実装AIの分担も検収も成立しない。作業を Claude 自身で進めるかはユーザーの判断で、そう指示されたらこの Skill を離れて通常の作業として扱う。
 
-ペインを用意して Codex を起動し、依頼文を渡す。差し戻しも同じ名前へ送るだけで同じスレッドが続く。
+ペインを用意して Codex を起動し、依頼文を渡す。
 
 ```bash
 herdr pane layout --pane "$HERDR_PANE_ID"
@@ -58,6 +58,8 @@ herdr agent start <名前> --kind codex --pane <pane_id> --timeout 60000 \
      -c service_tier=<luna なら priority / sol なら default> --no-alt-screen
 herdr agent prompt <名前> "$(cat <scratchpad>/order.txt)" --wait --timeout 300000
 ```
+
+**依頼ごとに新しい Codex を立てるのを原則にする。** 依頼文は単体で完結する形で書くので、前のスレッドを引き継ぐ利点がない。残るのは前の依頼の調査結果や却下した案で、Codex はそれを現在の前提として扱う。同じスレッドへ続けて出すのは、それまでのやり取りが作業の前提になるとき（検収後の差し戻し、直前の変更を踏まえた続き）に限る。判断の目安と使い終わったエージェントの片付けは `references/herdr-execution.md`。
 
 エージェントを複数立てるのはためらわない。2つ目以降は**最初のエージェントペインを下へ分割して積む**（`--pane <最初のエージェントのpane_id> --direction down`）。ディレクターのペイン幅を削らず、エージェントが1列にまとまる。同時に書かせる場合の作業ツリーの扱いは `references/herdr-execution.md`。
 
@@ -93,7 +95,7 @@ Codex のサンドボックスは既定でネットワークを閉じており�
 ## 参照ファイル
 
 - herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`） — herdr そのものの操作規約。発注前に読む。
-- `references/herdr-execution.md` — 公式スキルを Codex 委任へ当てはめた差分と、各工程で詰まったときの復旧。分割方向、起動フラグ、承認の境界、報告回収、待機中の判断、スレッドの再開。発注前に読み、`blocked` が返ったときや起動・発注・完了検知・報告回収が期待どおりに動かないときに戻る。
+- `references/herdr-execution.md` — 公式スキルを Codex 委任へ当てはめた差分と、各工程で詰まったときの復旧。分割方向、起動フラグ、承認の境界、報告回収、待機中の判断、スレッドを分ける判断と再開。発注前に読み、`blocked` が返ったときや起動・発注・完了検知・報告回収が期待どおりに動かないときに戻る。
 - `references/model-routing.md` — モデルと推論量の選択基準。発注設計の前に読む。
 - `references/delegation-template.md` — 発注前の整理項目と依頼文テンプレート。依頼文を書く前に読む。
 - `references/review-checklist.md` — 検収の確認項目、移動が書き換えでないことの機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、差し戻しの進め方。Codex 完了後に読む。
