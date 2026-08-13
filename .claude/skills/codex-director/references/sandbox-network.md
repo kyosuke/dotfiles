@@ -91,11 +91,15 @@ herdr agent prompt net-test "$(cat <scratchpad>/order.txt)" --wait --timeout 120
 
 起動時に `-c` を渡していないので、`LISTEN OK` が返ったら config.toml に `network_access = true` が残っている。ペインで開けたセッションのほうを確かめたいなら、`-c sandbox_workspace_write.network_access=true` を足して同じ手順を踏む。
 
-設定キーが実在するかだけは、モデルを呼ばずに確かめられる。未知のキーなら `unknown configuration field`、実在するキーなら別のエラー（`no rollout found for thread id`）が返る。ターンを開始しないので承認も挟まらず、この形はヘッドレスのままでよい。
+設定キーが実在するかは、モデルを呼ばずに確かめられる。ペインで `--strict-config` を付けて起動すると、未知のキーなら Codex は起動せずに終わる。
 
 ```bash
-codex exec --strict-config resume 00000000-0000-0000-0000-000000000000 -c '<key>=<value>' "ok"
+herdr pane split --current --direction right --cwd "$PWD" --no-focus
+herdr agent start strict-test --kind codex --pane <返った pane_id> --timeout 45000 \
+  -- --strict-config -c '<key>=<value>' -m gpt-5.6-luna --no-alt-screen
 ```
+
+`agent start` は起動待ちのタイムアウトを返すので、理由はペインを読んで確かめる（2026-08-12実測: `Error loading config.toml: unknown configuration field 'bogus_key_xyz' in -c/--config override`）。実在するキーなら普通に起動するので、そのまま `/quit` して畳む。
 
 ただし、キーが受理されることは挙動が変わることを意味しない（`permissions.network.*` がその実例）。設定の効果は必ず上の listen テストで確かめる。
 
