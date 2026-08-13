@@ -101,13 +101,20 @@
   },
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true
+    "frontend-design@claude-plugins-official": true,
+    "esa@esa-skills": true
   },
   "extraKnownMarketplaces": {
     "chrome-devtools-plugins": {
       "source": {
         "source": "github",
         "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    },
+    "esa-skills": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/esaio/esa-skills.git"
       }
     }
   },
