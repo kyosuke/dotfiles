@@ -65,7 +65,8 @@
     "ask": [
       "Bash(gh pr close:*)",
       "Bash(gh release create:*)",
-      "Bash(gh run cancel:*)"
+      "Bash(gh run cancel:*)",
+      "Bash(codex exec:*)"
     ],
     "defaultMode": "auto"
   },
