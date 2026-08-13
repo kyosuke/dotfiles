@@ -61,7 +61,9 @@ config.toml のグローバル性に由来する事情はこれで消える。�
 
 ## 設定の状態を確かめる
 
-疑わしいときは実測する。既定の運用では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。下のコマンドは `-c` を渡していないので、`LISTEN OK` が返ったら config.toml に `network_access = true` が残っている。ペインで開けたセッションを確かめたいなら、同じスクリプトをそのペインの Codex に実行させる。
+疑わしいときは実測する。既定の運用では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。
+
+**検証もペインで行う。`codex exec` でヘッドレスに走らせない。** `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（2026-08-12、27分放置して確認）。ペインなら同じ状況が `blocked` として見え、ユーザーが答えられる。委任経路をペインに限る理由がそのまま検証にも当てはまる。
 
 ```bash
 cat > /tmp/net-test.mjs <<'EOF'
@@ -78,14 +80,31 @@ async function outbound() {
   }
 }
 EOF
-codex exec -s workspace-write -m gpt-5.6-luna -c model_reasoning_effort=none \
-  "Run exactly this once: node /tmp/net-test.mjs — then reply with its output verbatim. Do not modify any files."
+herdr pane split --pane <エージェントのpane_id> --direction down --cwd "$PWD" --no-focus
+herdr agent start net-test --kind codex --pane <返った pane_id> --timeout 60000 \
+  -- -s workspace-write -m gpt-5.6-luna -c model_reasoning_effort=none \
+     -c service_tier=priority --no-alt-screen
+herdr agent prompt net-test "$(cat <scratchpad>/order.txt)" --wait --timeout 120000
 ```
 
-設定キーが実在するかは、モデルを呼ばずに検証できる。未知のキーなら `unknown configuration field`、実在するキーなら別のエラー（`no rollout found for thread id`）が返る。
+依頼文には「`node /tmp/net-test.mjs` を1回だけ実行し、出力をそのまま報告する。ファイルは変更しない」とだけ書き、ファイルへ書いてから渡す（`herdr-execution.md`）。失敗しても回避策を試させない。失敗した事実が結果である。
+
+起動時に `-c` を渡していないので、`LISTEN OK` が返ったら config.toml に `network_access = true` が残っている。ペインで開けたセッションのほうを確かめたいなら、`-c sandbox_workspace_write.network_access=true` を足して同じ手順を踏む。
+
+設定キーが実在するかは、モデルを呼ばずに確かめられる。ペインで `--strict-config` を付けて起動すると、未知のキーなら Codex は起動せずに終わる。
 
 ```bash
-codex exec --strict-config resume 00000000-0000-0000-0000-000000000000 -c '<key>=<value>' "ok"
+herdr pane split --current --direction right --cwd "$PWD" --no-focus
+herdr agent start strict-test --kind codex --pane <返った pane_id> --timeout 45000 \
+  -- --strict-config -c '<key>=<value>' -m gpt-5.6-luna --no-alt-screen
 ```
 
+`agent start` は起動待ちのタイムアウトを返すので、理由はペインを読んで確かめる（2026-08-12実測: `Error loading config.toml: unknown configuration field 'bogus_key_xyz' in -c/--config override`）。実在するキーなら普通に起動するので、そのまま `/quit` して畳む。
+
 ただし、キーが受理されることは挙動が変わることを意味しない（`permissions.network.*` がその実例）。設定の効果は必ず上の listen テストで確かめる。
+
+## 書き込み範囲
+
+`workspace-write` が開けるのは作業ツリーだけではない。`/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。ペインで実測し、作業ツリー外のスクラッチパッド（`/private/tmp` 配下）へ承認なしで書き込めた。
+
+これを収集役の出力経路には使わない（`model-routing.md`）。書き込みを開けると同じ作業ツリーで並列に走らせられなくなり、調査のついでに repo を触る余地も残る。ここで確認したのは、開けた場合にどこまで届くかである。

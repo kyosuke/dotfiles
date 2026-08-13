@@ -133,6 +133,14 @@ echo "timed out waiting for codex"
 
 完了を待つ仕掛けを複数動かした場合、後から届く通知は既に検収済みのタスクのものかもしれない。最終報告後に通知が来たら、対象ファイルのチェックサムが検収時と一致するか確認し、変化がなければ追加対応は不要と判断する。
 
+## 段と残量を確かめる
+
+起動したペインの Codex へ `/status` を送ると、適用中のモデルと推論量、週次の残量が返る（`Model: gpt-5.6-luna (reasoning none, summaries auto)` / `Weekly limit: 93% left (resets 16:53 on 18 Aug)`）。ローカルのUIコマンドなのでターンを消費しない。
+
+**フッターの表示を段の確認に使わない。** `-c model_reasoning_effort=none` で起動したペインは、フッターに `gpt-5.6-luna default fast` と出た一方、`/status` は `reasoning none` を返した（2026-08-12実測）。渡した値が効いているかはフッターでは判定できない。起動直後のバナーは `/status` と一致する。
+
+週次の残量は `sol` の許可を求めるときの材料になる（`model-routing.md`）。委任の前後で読めば、その発注が実際にどれだけ使ったかも分かる。
+
 ## 報告を回収する
 
 ```bash

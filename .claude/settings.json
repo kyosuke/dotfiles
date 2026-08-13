@@ -60,7 +60,8 @@
       "Bash(gh project item-delete:*)",
       "Bash(gh release delete:*)",
       "Bash(gh release delete-asset:*)",
-      "Bash(gh issue transfer:*)"
+      "Bash(gh issue transfer:*)",
+      "Bash(codex exec:*)"
     ],
     "ask": [
       "Bash(gh pr close:*)",
