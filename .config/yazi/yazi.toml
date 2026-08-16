@@ -1,6 +1,5 @@
 [preview]
 wrap = "yes"
-max_width = 600
 
 [mgr]
 ratio = [1, 2, 4]
