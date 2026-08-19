@@ -5,6 +5,9 @@
 !/.gitignore
 !/settings.json
 !/statusline-command.sh
+!/hooks/
+/hooks/*
+!/hooks/herdr-claude-summary.sh
 !/skills/
 /skills/*
 !/skills/grill-me/

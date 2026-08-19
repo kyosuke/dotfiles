@@ -53,9 +53,13 @@ link "$DIR/.wezterm.lua" "$HOME/.wezterm.lua"
 link "$DIR/.zshenv" "$HOME/.zshenv"
 
 link "$DIR/.codex/rules/command-policy.rules" "$HOME/.codex/rules/command-policy.rules"
+link "$DIR/.codex/hooks.json" "$HOME/.codex/hooks.json"
+link "$DIR/.codex/herdr-codex-summary.py" "$HOME/.codex/herdr-codex-summary.py"
 
 link "$DIR/.claude/settings.json" "$HOME/.claude/settings.json"
 link "$DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
+# herdr が管理する herdr-agent-state.sh とは別ファイル。integration の再インストールで消えない。
+link "$DIR/.claude/hooks/herdr-claude-summary.sh" "$HOME/.claude/hooks/herdr-claude-summary.sh"
 relink_skill grill-me
 relink_skill dual-review
 relink_skill post-merge-cleanup

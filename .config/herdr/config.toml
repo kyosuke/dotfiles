@@ -16,6 +16,12 @@ agent_panel_sort = "spaces"
 
 [ui.sidebar.agents]
 row_gap = 1
+# Agent から報告された作業概要を名前の下に表示する。未報告なら行ごと消える。
+rows = [
+  ["state_icon", "workspace", "tab"],
+  ["agent"],
+  ["$summary"],
+]
 
 [ui.sidebar.spaces]
 row_gap = 1
