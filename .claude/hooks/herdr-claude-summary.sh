@@ -29,11 +29,13 @@ import random
 import re
 import socket
 import time
+import unicodedata
 
 SOURCE = "dotfiles:claude-summary"
 AGENT_SOURCE = "herdr:claude"
 TOKEN = "summary"
-MAX_CHARS = 80
+# Sidebar では全角10文字前後に収まるよう、表示幅を短く保つ。
+MAX_DISPLAY_WIDTH = 22
 
 pane_id = os.environ.get("HERDR_PANE_ID")
 socket_path = os.environ.get("HERDR_SOCKET_PATH")
@@ -77,6 +79,27 @@ LIST_MARK = re.compile(r"^\s*(?:[-*+]\s+|>\s*|#{1,6}\s+|\d+[.)]\s+)")
 SPACES = re.compile(r"\s+")
 
 
+def char_width(char):
+    if unicodedata.combining(char):
+        return 0
+    return 2 if unicodedata.east_asian_width(char) in ("W", "F") else 1
+
+
+def shorten(text):
+    if sum(char_width(char) for char in text) <= MAX_DISPLAY_WIDTH:
+        return text
+    ellipsis = "…"
+    budget = MAX_DISPLAY_WIDTH - char_width(ellipsis)
+    result = []
+    width = 0
+    for char in text:
+        width += char_width(char)
+        if width > budget:
+            break
+        result.append(char)
+    return "".join(result).rstrip() + ellipsis
+
+
 def normalize(text):
     if not isinstance(text, str) or not text.strip():
         return ""
@@ -94,9 +117,7 @@ def normalize(text):
     t = " ".join(lines)
     t = "".join(ch if ch.isprintable() else " " for ch in t)
     t = SPACES.sub(" ", t).strip()
-    if len(t) > MAX_CHARS:
-        t = t[: MAX_CHARS - 1].rstrip() + "…"
-    return t
+    return shorten(t)
 
 
 event = str(payload.get("hook_event_name") or "")

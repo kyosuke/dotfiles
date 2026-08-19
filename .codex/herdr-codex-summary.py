@@ -8,10 +8,12 @@ import re
 import socket
 import sys
 import time
+import unicodedata
 
 
 SOURCE = "dotfiles:codex-summary"
-MAX_CHARS = 80
+# Sidebar では全角10文字前後に収まるよう、表示幅を短く保つ。
+MAX_DISPLAY_WIDTH = 22
 
 FENCE = re.compile(r"```.*?```", re.S)
 OPEN_FENCE = re.compile(r"```.*\Z", re.S)
@@ -35,6 +37,27 @@ LIST_MARK = re.compile(r"^\s*(?:[-*+]\s+|>\s*|#{1,6}\s+|\d+[.)]\s+)")
 SPACES = re.compile(r"\s+")
 
 
+def char_width(char):
+    if unicodedata.combining(char):
+        return 0
+    return 2 if unicodedata.east_asian_width(char) in ("W", "F") else 1
+
+
+def shorten(text):
+    if sum(char_width(char) for char in text) <= MAX_DISPLAY_WIDTH:
+        return text
+    ellipsis = "…"
+    budget = MAX_DISPLAY_WIDTH - char_width(ellipsis)
+    result = []
+    width = 0
+    for char in text:
+        width += char_width(char)
+        if width > budget:
+            break
+        result.append(char)
+    return "".join(result).rstrip() + ellipsis
+
+
 def normalize(text):
     if not isinstance(text, str) or not text.strip():
         return ""
@@ -52,9 +75,7 @@ def normalize(text):
     value = " ".join(lines)
     value = "".join(char if char.isprintable() else " " for char in value)
     value = SPACES.sub(" ", value).strip()
-    if len(value) > MAX_CHARS:
-        value = value[: MAX_CHARS - 1].rstrip() + "…"
-    return value
+    return shorten(value)
 
 
 def report(payload):
