@@ -1,0 +1,5 @@
+[mgr]
+border_symbol = "┊ "
+
+[indicator]
+padding = { open = "", close = "" }
