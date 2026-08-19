@@ -10,15 +10,6 @@
             "type": "command"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "command": "python3 \"$HOME/.codex/herdr-codex-summary.py\"",
-            "timeout": 3,
-            "type": "command"
-          }
-        ]
       }
     ],
     "UserPromptSubmit": [
@@ -27,28 +18,6 @@
           {
             "command": "python3 \"$HOME/.codex/herdr-codex-summary.py\"",
             "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "python3 \"$HOME/.codex/herdr-codex-summary.py\"",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "command": "python3 \"$HOME/.codex/herdr-codex-summary.py\"",
-            "timeout": 3,
             "type": "command"
           }
         ]

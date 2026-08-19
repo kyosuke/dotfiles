@@ -20,8 +20,7 @@ cat >"$hook_input_file" 2>/dev/null || true
 [ -n "${HERDR_PANE_ID:-}" ] || exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 
-# UserPromptSubmit では stdout がそのままコンテキストへ差し戻される。
-# 標準出力・標準エラーとも捨て、フックの成否をセッションへ漏らさない。
+# UserPromptSubmit では標準出力・標準エラーとも捨て、フックの成否をセッションへ漏らさない。
 HERDR_HOOK_INPUT_FILE="$hook_input_file" python3 - <<'PY' >/dev/null 2>&1 || exit 0
 import json
 import os
@@ -34,8 +33,9 @@ import unicodedata
 SOURCE = "dotfiles:claude-summary"
 AGENT_SOURCE = "herdr:claude"
 TOKEN = "summary"
-# Sidebar では全角10文字前後に収まるよう、表示幅を短く保つ。
-MAX_DISPLAY_WIDTH = 22
+# summary は全角10文字・半角20文字相当の表示幅に収める。
+MAX_SUMMARY_CHARACTERS = 20
+MAX_SUMMARY_DISPLAY_WIDTH = 20
 
 pane_id = os.environ.get("HERDR_PANE_ID")
 socket_path = os.environ.get("HERDR_SOCKET_PATH")
@@ -86,17 +86,24 @@ def char_width(char):
 
 
 def shorten(text):
-    if sum(char_width(char) for char in text) <= MAX_DISPLAY_WIDTH:
+    display_width = sum(char_width(char) for char in text)
+    if (
+        len(text) <= MAX_SUMMARY_CHARACTERS
+        and display_width <= MAX_SUMMARY_DISPLAY_WIDTH
+    ):
         return text
     ellipsis = "…"
-    budget = MAX_DISPLAY_WIDTH - char_width(ellipsis)
+    budget = MAX_SUMMARY_DISPLAY_WIDTH - char_width(ellipsis)
     result = []
     width = 0
     for char in text:
-        width += char_width(char)
-        if width > budget:
+        if len(result) >= MAX_SUMMARY_CHARACTERS - 1:
+            break
+        next_width = width + char_width(char)
+        if next_width > budget:
             break
         result.append(char)
+        width = next_width
     return "".join(result).rstrip() + ellipsis
 
 
@@ -114,25 +121,56 @@ def normalize(text):
         line = LIST_MARK.sub("", line).replace("`", "").strip()
         if line:
             lines.append(line)
-    t = " ".join(lines)
-    t = "".join(ch if ch.isprintable() else " " for ch in t)
-    t = SPACES.sub(" ", t).strip()
-    return shorten(t)
+    candidate = lines[0]
+    sentence = re.match(r"^(.+?[。！？!?])", candidate)
+    if sentence:
+        candidate = sentence.group(1)
+    candidate = "".join(ch if ch.isprintable() else " " for ch in candidate)
+    candidate = SPACES.sub(" ", candidate).strip()
+    return shorten(candidate)
 
 
-event = str(payload.get("hook_event_name") or "")
-if event == "UserPromptSubmit":
-    summary = normalize(payload.get("prompt"))
-    if not summary:
-        raise SystemExit(0)
-elif event == "Stop":
-    # 応答本文が取れないターン（ツール実行だけで終わる等）は直前の表示を残す。
-    summary = normalize(payload.get("last_assistant_message"))
-    if not summary:
-        raise SystemExit(0)
-elif event in ("SessionStart", "SessionEnd"):
-    summary = None
-else:
+GENERIC_TITLES = {"bash", "claude code", "codex", "fish", "sh", "zsh"}
+
+
+def terminal_title(payload):
+    request = {
+        "id": "%s:%d:%06d" % (SOURCE, int(time.time() * 1000), random.randrange(1_000_000)),
+        "method": "pane.get",
+        "params": {"pane_id": pane_id},
+    }
+    try:
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(0.5)
+        client.connect(socket_path)
+        client.sendall((json.dumps(request) + "\n").encode())
+        response = client.recv(4096)
+        client.close()
+        envelope = json.loads(response.decode())
+        pane = envelope.get("result", {}).get("pane", {})
+        title = pane.get("terminal_title_stripped") or pane.get("terminal_title")
+    except Exception:
+        return ""
+    if not isinstance(title, str):
+        return ""
+    title = title.strip()
+    if not title or title.casefold() in GENERIC_TITLES:
+        return ""
+    if title.startswith(("~/", "/")) or re.search(r"\s-\s(?:bash|fish|sh|zsh)$", title, re.I):
+        return ""
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and title == os.path.basename(cwd.rstrip("/")):
+        return ""
+    return title
+
+
+if payload.get("hook_event_name") != "UserPromptSubmit":
+    raise SystemExit(0)
+
+# 依頼直後は Claude/Herdr が付けたタスク名だけを summary にする。
+summary = normalize(terminal_title(payload))
+if not summary:
+    # 汎用タイトルなら、古い summary を上書きしない。
     raise SystemExit(0)
 
 request = {

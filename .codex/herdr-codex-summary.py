@@ -12,8 +12,9 @@ import unicodedata
 
 
 SOURCE = "dotfiles:codex-summary"
-# Sidebar では全角10文字前後に収まるよう、表示幅を短く保つ。
-MAX_DISPLAY_WIDTH = 22
+# summary は全角10文字・半角20文字相当の表示幅に収める。
+MAX_SUMMARY_CHARACTERS = 20
+MAX_SUMMARY_DISPLAY_WIDTH = 20
 
 FENCE = re.compile(r"```.*?```", re.S)
 OPEN_FENCE = re.compile(r"```.*\Z", re.S)
@@ -44,17 +45,24 @@ def char_width(char):
 
 
 def shorten(text):
-    if sum(char_width(char) for char in text) <= MAX_DISPLAY_WIDTH:
+    display_width = sum(char_width(char) for char in text)
+    if (
+        len(text) <= MAX_SUMMARY_CHARACTERS
+        and display_width <= MAX_SUMMARY_DISPLAY_WIDTH
+    ):
         return text
     ellipsis = "…"
-    budget = MAX_DISPLAY_WIDTH - char_width(ellipsis)
+    budget = MAX_SUMMARY_DISPLAY_WIDTH - char_width(ellipsis)
     result = []
     width = 0
     for char in text:
-        width += char_width(char)
-        if width > budget:
+        if len(result) >= MAX_SUMMARY_CHARACTERS - 1:
+            break
+        next_width = width + char_width(char)
+        if next_width > budget:
             break
         result.append(char)
+        width = next_width
     return "".join(result).rstrip() + ellipsis
 
 
@@ -72,10 +80,47 @@ def normalize(text):
         line = LIST_MARK.sub("", line).replace("`", "").strip()
         if line:
             lines.append(line)
-    value = " ".join(lines)
-    value = "".join(char if char.isprintable() else " " for char in value)
-    value = SPACES.sub(" ", value).strip()
-    return shorten(value)
+    candidate = lines[0]
+    sentence = re.match(r"^(.+?[。！？!?])", candidate)
+    if sentence:
+        candidate = sentence.group(1)
+    candidate = "".join(char if char.isprintable() else " " for char in candidate)
+    candidate = SPACES.sub(" ", candidate).strip()
+    return shorten(candidate)
+
+
+GENERIC_TITLES = {"bash", "claude code", "codex", "fish", "sh", "zsh"}
+
+
+def terminal_title(payload, pane_id, socket_path):
+    request = {
+        "id": "%s:%d:%06d" % (SOURCE, int(time.time() * 1000), random.randrange(1_000_000)),
+        "method": "pane.get",
+        "params": {"pane_id": pane_id},
+    }
+    try:
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(0.5)
+        client.connect(socket_path)
+        client.sendall((json.dumps(request) + "\n").encode())
+        response = client.recv(4096)
+        client.close()
+        envelope = json.loads(response.decode())
+        pane = envelope.get("result", {}).get("pane", {})
+        title = pane.get("terminal_title_stripped") or pane.get("terminal_title")
+    except Exception:
+        return ""
+    if not isinstance(title, str):
+        return ""
+    title = title.strip()
+    if not title or title.casefold() in GENERIC_TITLES:
+        return ""
+    if title.startswith(("~/", "/")) or re.search(r"\s-\s(?:bash|fish|sh|zsh)$", title, re.I):
+        return ""
+    cwd = payload.get("cwd")
+    if isinstance(cwd, str) and title == os.path.basename(cwd.rstrip("/")):
+        return ""
+    return title
 
 
 def report(payload):
@@ -89,18 +134,13 @@ def report(payload):
     if not pane_id or not socket_path:
         return
 
-    event = str(payload.get("hook_event_name") or "")
-    if event == "UserPromptSubmit":
-        summary = normalize(payload.get("prompt"))
-        if not summary:
-            return
-    elif event == "Stop":
-        summary = normalize(payload.get("last_assistant_message"))
-        if not summary:
-            return
-    elif event in ("SessionStart", "SessionEnd"):
-        summary = ""
-    else:
+    if payload.get("hook_event_name") != "UserPromptSubmit":
+        return
+
+    # 依頼直後は Claude/Herdr が付けたタスク名だけを summary にする。
+    summary = normalize(terminal_title(payload, pane_id, socket_path))
+    if not summary:
+        # 汎用タイトルなら、古い summary を上書きしない。
         return
 
     request = {
