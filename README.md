@@ -20,6 +20,8 @@ script.
 | `.config/git/ignore` | Git global ignore | `~/.config/git/ignore` |
 | `.claude/` | Claude Code (settings, statusline, skills) | `~/.claude/…` |
 | `.codex/rules/command-policy.rules` | Codex CLI command policy | `~/.codex/rules/…` |
+| `.codex/hooks.json` | Codex CLI hooks (Herdr summary) | `~/.codex/hooks.json` |
+| `.codex/herdr-codex-summary.py` | Codex → Herdr summary hook | `~/.codex/herdr-codex-summary.py` |
 | `scripts/check-codex-policy.sh` | Codex command-policy validation | Run manually from this repo |
 
 ## Requirements
@@ -56,10 +58,14 @@ chose to share: `settings.json`, the statusline script, and a few skills. See
 
 ## Codex config scope
 
-This repository intentionally manages only the durable Codex command policy in
-`.codex/rules/command-policy.rules`. It does not link `~/.codex/config.toml`:
-the Codex app updates that file with machine-specific settings, plugin state,
-MCP configuration, project trust entries, and other generated values.
+This repository manages the durable Codex command policy and the Herdr summary
+hooks. It does not link `~/.codex/config.toml`: the Codex app updates that file
+with machine-specific settings, plugin state, MCP configuration, project trust
+entries, and other generated values.
+
+The linked `hooks.json` preserves Herdr's session-identity hook and adds a
+display-only summary hook. Codex may ask you to review and trust the new hook
+entries from `/hooks` after the first install or change.
 
 If the global configuration is ever split into a stable public profile, the
 best candidates to manage are `approval_policy`, `approvals_reviewer`, and
