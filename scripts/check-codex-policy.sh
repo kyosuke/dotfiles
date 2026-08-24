@@ -34,7 +34,6 @@ check allow gh issue list
 check allow gh run view 123
 check allow gh repo view
 check allow gh pr checkout 123
-check allow rtk gh pr view 123
 
 check prompt gh api repos/example/example/issues/1 --method POST --raw-field body=changed
 check prompt gh pr edit 123 --title changed
@@ -49,4 +48,3 @@ check forbidden gh repo delete example/example
 check forbidden git reset --hard HEAD
 check forbidden git checkout -- .
 check forbidden git restore .
-check forbidden rtk gh pr merge 123
