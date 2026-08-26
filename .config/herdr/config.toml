@@ -8,7 +8,7 @@ onboarding = false
 default_shell = "fish"
 
 [theme]
-name = "solarized"
+name = "one-dark"
 auto_switch = false
 
 [ui]

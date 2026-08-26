@@ -71,6 +71,7 @@
     "defaultMode": "auto"
   },
   "model": "opus[1m]",
+  "outputStyle": "Concise",
   "hooks": {
     "PreToolUse": [
       {
