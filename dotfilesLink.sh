@@ -38,6 +38,19 @@ relink_skill() {
     rm "$legacy"
   fi
   link "$DIR/.claude/skills/$name/SKILL.md" "$legacy/SKILL.md"
+  if [ -e "$DIR/.claude/skills/$name/cleanup.sh" ]; then
+    link "$DIR/.claude/skills/$name/cleanup.sh" "$legacy/cleanup.sh"
+  fi
+}
+
+relink_agent_skill() {
+  name=$1
+  legacy="$HOME/.agents/skills/$name"
+  if [ -L "$legacy" ]; then
+    rm "$legacy"
+  fi
+  link "$DIR/.claude/skills/$name/CODEX-SKILL.md" "$legacy/SKILL.md"
+  link "$DIR/.claude/skills/$name/cleanup.sh" "$legacy/cleanup.sh"
 }
 
 link "$DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
@@ -64,3 +77,4 @@ relink_skill grill-me
 relink_skill dual-review
 relink_skill post-merge-cleanup
 relink_skill pr-review-fix
+relink_agent_skill post-merge-cleanup

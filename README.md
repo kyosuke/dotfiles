@@ -19,6 +19,7 @@ script.
 | `.config/zellij/config.kdl` | Zellij (multiplexer) | `~/.config/zellij/config.kdl` |
 | `.config/git/ignore` | Git global ignore | `~/.config/git/ignore` |
 | `.claude/` | Claude Code (settings, statusline, skills) | `~/.claude/…` |
+| `.claude/skills/post-merge-cleanup/CODEX-SKILL.md` | Codex/agent skill | `~/.agents/skills/post-merge-cleanup/` |
 | `.codex/rules/command-policy.rules` | Codex CLI command policy | `~/.codex/rules/…` |
 | `.codex/hooks.json` | Codex CLI hooks (Herdr summary) | `~/.codex/hooks.json` |
 | `.codex/herdr-codex-summary.py` | Codex → Herdr summary hook | `~/.codex/herdr-codex-summary.py` |
