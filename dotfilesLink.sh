@@ -38,6 +38,44 @@ relink_skill() {
     rm "$legacy"
   fi
   link "$DIR/.claude/skills/$name/SKILL.md" "$legacy/SKILL.md"
+  if [ -e "$DIR/.claude/skills/$name/cleanup.sh" ]; then
+    link "$DIR/.claude/skills/$name/cleanup.sh" "$legacy/cleanup.sh"
+  fi
+}
+
+relink_agent_skill() {
+  name=$1
+  src="$DIR/.claude/skills/$name/codex"
+  legacy="$HOME/.agents/skills/$name"
+
+  if [ ! -d "$src" ]; then
+    warn "missing source: $src"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$legacy")"
+
+  if [ -L "$legacy" ]; then
+    rm "$legacy"
+  elif [ -d "$legacy" ]; then
+    # Migrate the previous file-link layout without removing user files.
+    if [ -L "$legacy/SKILL.md" ]; then
+      rm "$legacy/SKILL.md"
+    fi
+    if [ -L "$legacy/cleanup.sh" ]; then
+      rm "$legacy/cleanup.sh"
+    fi
+    if ! rmdir "$legacy" 2>/dev/null; then
+      warn "existing non-empty directory: $legacy"
+      return 0
+    fi
+  elif [ -e "$legacy" ]; then
+    warn "existing non-directory path: $legacy"
+    return 0
+  fi
+
+  ln -s "$src" "$legacy"
+  say "✔️  $legacy -> $src"
 }
 
 link "$DIR/.config/fish/config.fish" "$HOME/.config/fish/config.fish"
@@ -64,3 +102,4 @@ relink_skill grill-me
 relink_skill dual-review
 relink_skill post-merge-cleanup
 relink_skill pr-review-fix
+relink_agent_skill post-merge-cleanup

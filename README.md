@@ -19,6 +19,7 @@ script.
 | `.config/zellij/config.kdl` | Zellij (multiplexer) | `~/.config/zellij/config.kdl` |
 | `.config/git/ignore` | Git global ignore | `~/.config/git/ignore` |
 | `.claude/` | Claude Code (settings, statusline, skills) | `~/.claude/…` |
+| `.claude/skills/post-merge-cleanup/codex/` | Codex/agent skill | `~/.agents/skills/post-merge-cleanup/` |
 | `.codex/rules/command-policy.rules` | Codex CLI command policy | `~/.codex/rules/…` |
 | `.codex/hooks.json` | Codex CLI hooks (Herdr summary) | `~/.codex/hooks.json` |
 | `.codex/herdr-codex-summary.py` | Codex → Herdr summary hook | `~/.codex/herdr-codex-summary.py` |
@@ -26,9 +27,10 @@ script.
 
 ## Requirements
 
-macOS. This repo only links config files; it does not install anything, so the
-tools above must be installed separately. The terminal configs also expect the
-`PlemolJP35 Console` font and the fish `Pure` prompt.
+macOS. This repo only links config files and skill directories; it does not
+install anything, so the tools above must be installed separately. The
+terminal configs also expect the `PlemolJP35 Console` font and the fish `Pure`
+prompt.
 
 ## Install
 
@@ -37,9 +39,11 @@ chmod u+x dotfilesLink.sh
 ./dotfilesLink.sh
 ```
 
-The script symlinks the files from this repo into your home directory, so edits
-you make here take effect immediately. A missing source file is skipped with a
-warning instead of failing the whole run.
+The script symlinks the files and skill directories from this repo into your
+home directory, so edits you make here take effect immediately. A missing
+source is skipped with a warning instead of failing the whole run. Codex skill
+directories are linked as a whole so the required `SKILL.md` stays at the path
+Codex scans.
 
 ## Shell layout
 
