@@ -35,6 +35,8 @@
 
 GPT-5.6 の4モデルが対応ティアとして載せているのは `priority`（`service_tiers[].id`）と `fast`（`additional_speed_tiers`）だけである。
 
+**`fast` と `priority` が同じものかは未確認。** Paseo は Fast のトグルで `service_tier = "fast"` を渡し、ソースのコメントは「Codex Fast は API の priority 処理とは別」と書く（2026-09-12参照）。`ordering.md` が `priority` を指定しているのは上の実測（`priority` だけが警告なしでリクエストに載る）に基づくが、`fast` を渡したときのリクエスト本文は測っていない。Fast の扱いを詰めるなら、同じ捕捉サーバーの手順で `fast` を測ってから決める。
+
 ## サンドボックスのネットワーク
 
 **`network_access` の効果（2026-07-30 / 2026-08-05 実測）。** `sandbox_workspace_write.network_access = true` だけが実際に効く。
@@ -54,9 +56,11 @@ GPT-5.6 の4モデルが対応ティアとして載せているのは `priority`
 
 Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、外向きを閉じたまま有効化する価値がある。
 
-**書き込み範囲。** `workspace-write` は作業ツリー以外に `/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。ペインで実測し、`/private/tmp` 配下のスクラッチパッドへ承認なしで書き込めた。収集役の出力経路には使わない（書き込みを開けると同じ作業ツリーで並列に走らせられなくなる）。
+**書き込み範囲。** `workspace-write` は作業ツリー以外に `/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。委任で実測し、`/private/tmp` 配下のスクラッチパッドへ承認なしで書き込めた。収集役の出力経路には使わない（書き込みを開けると同じ作業ツリーで並列に走らせられなくなる）。
 
-## herdr のペイン運用（2026-08-05 / 08-09 / 08-12 実測）
+## ランナー越しの運用（2026-08-05 / 08-09 / 08-12 / 09-11 実測）
+
+herdr のペインで測った値。ランナーに依らない項目（所要時間、読み取り量、`codex exec` の挙動）は Paseo でもそのまま効く。
 
 - 幅81桁（325x98 のタブで兄弟ペインがある状態から右へ割った値）でも Codex の TUI は崩れず、237行規模の報告も欠落なく回収できた。単一ペインのタブなら162桁になる。
 - `--no-alt-screen` 付きで `recent-unwrapped` が262行（対象5ファイル全項目、冒頭のマーカーも残る）、81桁のペインでも213行を全項目そろって回収できた。同じ依頼を短い応答で走らせたときも40行返った。付け忘れた同構成では0行だった。
@@ -64,8 +68,23 @@ Seatbelt 側にはループバック限定のルール（`(allow network-inbound
 - 所要時間は読み取りだけの小さな依頼で12〜40秒、実装を伴う依頼は20分超。開始3分後はまだ調査中だった。
 - `-c model_reasoning_effort=none` で起動したペインは、フッターに `gpt-5.6-luna default fast` と出しながら `/status` は `reasoning none` を返した（2026-08-12）。
 - 承認プロンプトは `send-keys esc` で却下でき、ファイルは作られなかった。承認の代理入力はclassifierに止められる。
-- 素の shell の `codex resume` は herdr の管理外に出る。`agent start` の `--` 以降へ `resume <UUID>` を渡す形で復旧できた（2026-08-09、herdr 0.8.0 / Codex 0.146.0）。
+- 素の shell の `codex resume` はランナーの管理外に出る。起動引数として `resume <UUID>` を渡す形で復旧できた（2026-08-09、herdr 0.8.0 / Codex 0.146.0）。
 - `codex exec` をヘッドレスで走らせると、`approval_policy = on-request` では承認待ちのまま標準出力へ1バイトも出さずに固まる（2026-08-12、27分放置）。
+
+Paseo で確かめた差分（2026-09-11 / 09-12、Paseo 0.8.0 / Codex 0.153.4。公開されている[ドキュメント](https://github.com/getpaseo/paseo/blob/main/docs/providers.md)とソースで裏を取った）。
+
+- `paseo run` に `-c` 相当のフラグが無い。デーモンのAPIには `providerOptions`（Codex では `approval_policy` / `sandbox_mode` / `sandbox_workspace_write.*` / `web_search` / `features.*`）があるが、CLI から渡す口は無い。スキーマは strict で `service_tier` を含まないため、Fast はAPI経由でも指定できない。
+- Fast は Paseo のエージェント機能（`fast_mode`）として存在し、オンなら `service_tier` に `fast` を渡す。ただし `run` にも `agent update` にもフラグが無く、CLI からは切り替えられない（アプリの画面にはトグルがある）。指定しなければ `~/.codex/config.toml` の値が効き、`default`（オフ）のまま `luna` が走ったのを rollout ログで確認した。
+- 依頼文のスラッシュコマンドは効かない。Paseo が起動するのは `codex app-server` で、`/status` も `/fast` もただのテキストとして読まれた（Codex は「高速モードです。」と会話で返し、config.toml は不変）。
+- `--thinking none` は通る。`paseo provider models codex --json` の `thinkingOptionIds` には無いが CLI は検証せず、Codex のセッションへ `effort = "none"` として届いた。カタログに無いのでUIからは選べない。
+- モードは `auto`（Default Permissions）・`auto-review`・`full-access` の3つ。`--mode read-only` はデーモンが拒否する（`Invalid mode 'read-only' for provider 'codex'`）。ソースには `read-only` のプリセットがあるが公開されていない。
+- `full-access` は `approval_policy: never` と `sandbox_mode: danger-full-access` をまとめて当てる。ネットワークだけを開ける粒度は無い。
+- `--mode` を省いた実測では `auto` になった（プロバイダ既定の `auto-review` ではない）。
+- `run` の依頼文は位置引数で、`"$(cat <path>)"` 越しでもバックティックは再評価されずに届いた。`send` には `--prompt-file` がある。
+- `send` は既定で完了まで待ち、`wait` は状態をJSONで返す。消費は `inspect --json` の `LastUsage` で読める。
+- エージェント内から `paseo run` で作ったエージェントはサブエージェントになる（`ParentAgentId` が入る）。公式ドキュメントの記述どおりで、`PASEO_AGENT_ID` で親が判定される。
+- CLI にペインや分割を操作するコマンドは無い。画面へ出せるのは `agent open`（タブとして開くだけ）で、配置は指定できない。
+- アプリがタブで開いているエージェントを `delete` でハード削除すると、アプリが消えたIDへ `update_agent_request` を約2秒おきに投げ続け、`Agent not found`（`AgentManager.writeStoredMetadata`）で失敗してタブが閉じられなくなった。アプリの再起動で復帰。片付けは `archive` を使う。
 
 **ペインの記録が事実と食い違った例。** listen の可否を調べさせたとき、最終報告は `EPERM` と書いていたが、画面に見えていたのは `TIMEOUT` と `SERVER_CLOSED` で、畳まれた行（`… +464 lines`）に本当の出力があった。追試すると `EPERM` が事実で、`TIMEOUT` は Codex 自身のスクリプトに残ったタイマーの出力だった。
 
