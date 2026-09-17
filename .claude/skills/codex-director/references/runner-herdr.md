@@ -1,19 +1,6 @@
 # 委任ランナー: herdr
 
-`HERDR_ENV` が 1 のときに読む。Paseo で動いているなら `runner-paseo.md` を読み、このファイルは開かない。Codex 側の運用（承認の境界、並列の可否、スレッドの片付け）はランナーに依らないので `execution.md` にある。
-
-## 操作の対応
-
-ランナーが違っても骨格は同じで、満たすべき条件も変わらない。
-
-| 操作 | 満たすこと |
-|---|---|
-| 起動 | モデルと推論量を明示し、作業ツリーを指定する。既定値へ落とさない |
-| 発注 | 依頼文をファイル経由で渡す。シェルに評価させない |
-| 完了待ち | ランナーが返す状態で判定する。自前のポーリングを既定にしない |
-| 報告回収 | 報告の全文を取る。画面に見えた範囲で済ませない |
-| 承認 | 代行せず、何を求められているかをユーザーへ伝える |
-| 片付け | 自分が作ったエージェントだけ畳む |
+`HERDR_ENV` が 1 のときに読む。Paseo で動いているなら `runner-paseo.md` を読み、このファイルは開かない。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
 
 **herdr の操作は公式スキルに従う。** Skill ツールで `herdr` を呼ぶ（無ければ `herdr --skill` が同じ内容を出力する。バイナリが出力元なので本体の更新に追従する）。公式スキルの description は「ユーザーが herdr に言及したときだけ使う」と制限しているが、この委任経路は herdr のペイン操作そのものなので対象に入る。
 
@@ -25,7 +12,7 @@
 - **分割方向は右を優先する。** 公式スキルは「横に広ければ右、縦に長ければ下」と書くが、ユーザーの環境は横方向に余裕があり、左右に並べるほうが読みやすいという指定である。分割後の幅が80桁を下回るなら下へ切り替える（81桁でも TUI は崩れず報告も欠落しなかった実測がある）。
 - **2つ目以降のエージェントは、最初のエージェントペインを基準に下へ積む。** 右へ割り続けるとディレクターのペイン幅が削れる。幅は最初の分割で決まった値のまま維持されるので、80桁の判断は1回で済む。
 
-Codex のネイティブ引数は `agent start` の `--` 以降から本体へ直接届く。段・`service_tier`・サンドボックスの設定はここで渡す。値を検証して弾く層が間に無いので、Codex が受理する値はそのまま使える。
+Codex のネイティブ引数は `agent start` の `--` 以降から本体へ直接届く。プロファイルの値・`service_tier`・サンドボックスの設定はここで渡す。値を検証して弾く層が間に無いので、Codex が受理する値はそのまま使える。
 
 ## プロファイルを値で渡す
 
@@ -38,9 +25,13 @@ herdr にプロファイルの仕組みは無い。`../SKILL.md` で選んだプ
 | `dev-high` | `-m gpt-5.6-luna -c model_reasoning_effort=max -c service_tier=priority` |
 | `dev-max` | `-m gpt-6-astra -c model_reasoning_effort=low -c service_tier=default` |
 
-出典は `~/.paseo/config.json` の `daemon.agentProfiles`。プロファイルが増減したらこの表を直す。
+出典は `~/.paseo/config.json` の `daemon.agentProfiles`（写しは `../SKILL.md`）。プロファイルが増減したらこの表を直す。
 
 Paseo と違って中間の推論量（`none` / `medium` / `xhigh`）もそのまま渡せる。プロファイルから外れるときは理由を発注前報告へ書く（`ordering.md`）。
+
+### `service_tier` の語彙
+
+Fast は Codex の `service_tier` で、プロファイルの `fast_mode: true` を `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない。値を変えるならスキーマで語彙を確かめ、リクエスト本文まで読む（実測とその方法は `evidence.md`）。
 
 `service_tier` は起動時に必ず明示する。TUI のトグルが `~/.codex/config.toml` へこのキーを書き戻すので、省くと対話セッションの状態が委任へ漏れる。
 
@@ -48,9 +39,7 @@ Paseo と違って中間の推論量（`none` / `medium` / `xhigh`）もその�
 
 `-c sandbox_workspace_write.network_access=true` を渡すと、**そのセッションだけ**ネットワークが通る。書き込み範囲は `workspace-write` のままなので、Paseo で使うコマンド単位の昇格（サンドボックス外での実行）より露出が小さい。herdr ではこちらを使い、昇格を既定にしない。
 
-ループバックだけを開ける設定は無いので、外向きも同時に開く。運用の判断は `execution.md`。
-
-**`~/.codex/config.toml` へは書かない。** グローバルなので全 Codex 実行（TUI 含む、クライアント案件のリポジトリ含む）で外向きが開き、戻し忘れがそのまま恒久設定になる。
+ループバックだけを開ける設定は無いので、外向きも同時に開く。運用の判断と `~/.codex/config.toml` を触らない理由は `execution.md`。
 
 ## 読み取り専用で起動できる
 

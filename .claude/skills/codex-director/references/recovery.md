@@ -11,7 +11,7 @@ codex --version
 ```
 
 - 指した対象が古い（すでに閉じたエージェントや画面を指している）。作り直す。
-- モデルIDや設定キーが実在しない。Codex のネイティブ引数はランナーを素通りして本体へ届くので、`codex --help` と `~/.codex/models_cache.json` で確かめる。設定キーと値の出典は公式スキーマで、`models_cache.json` とは役割が違う（`ordering.md`）。
+- モデルIDや設定キーが実在しない。Codex のネイティブ引数はランナーを素通りして本体へ届くので、`codex --help` と `~/.codex/models_cache.json` で確かめる。設定キーと値の出典は公式スキーマで、`models_cache.json` とは役割が違う（`runner-herdr.md`）。
 - ランナーがその引数を渡せない。通らない設定と代替は使っているランナーの reference にある。
 - 報告を画面から読むランナーで、Codex をインライン描画で起動していない。回収で詰まるので、この時点で畳んで起動し直す（`runner-herdr.md`）。
 
@@ -100,13 +100,13 @@ PY
 
 UUID を省いて `--last` に当たる指定を使わない。直近のセッションはリポジトリも用途も違うことがある。UUID が分からないなら、rollout ログのファイル名から拾う（上記）。
 
-モデルと推論量、`service_tier` は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違う段で動く。
+モデルと推論量、`service_tier` は再開時にも明示する。省くと `~/.codex/config.toml` の既定が効き、元のスレッドと違うプロファイルで動く。
 
 ## `listen EPERM` を見たとき
 
 運用の判断は `execution.md` の「ネットワークとローカルバインド」にある。設定の状態が疑わしいときだけ実測する。サンドボックス内では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。ネットワークが要る発注でこれを見たなら、依頼文で昇格を許していないか、Codex が要求しないまま失敗を報告している。依頼文を直して出し直す。
 
-**検証もランナー越しに行う。`codex exec` でヘッドレスに走らせない。** `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（2026-08-12、27分放置して確認）。ランナー越しなら同じ状況が承認待ちとして見え、ユーザーが答えられる。
+**検証もランナー越しに行う。`codex exec` でヘッドレスに走らせない。** `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（実測は `evidence.md`）。ランナー越しなら同じ状況が承認待ちとして見え、ユーザーが答えられる。
 
 ```bash
 cat > /tmp/net-test.mjs <<'JS'
