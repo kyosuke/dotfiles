@@ -11,15 +11,14 @@
 | 高度 | `dev-high`（`luna` + `max`） | 構造の理解が要る、影響範囲が広い、`dev-default` で合格しなかった。正しさの判定が難しい実装（時刻ずれや有効期間の境界、並行処理、データ移行）や、新規ファイルを含む大きな実装で構成から組ませる場合 |
 | 難しい | `dev-max`（`gpt-6-astra` + `low`） | 実装ではなく、絞り込んだ材料からの判断。下記の条件に当たり、かつユーザーの許可を得たときだけ |
 
-プロファイルが4段しか持たないので、`none` / `medium` / `xhigh` は既定の選択肢から外れた。中間が要ると感じたら、まず上下のプロファイルで足りないかを考える。外れて指定するなら理由を発注前報告へ書く（Paseo の CLI 経路では Fast も落ちる。`runner-paseo.md`）。
+プロファイルは4段しか持たない。`none` / `medium` / `xhigh` が要ると感じたら、まず上下のプロファイルで足りないかを考える。外れて指定するなら理由を発注前報告へ書く（Paseo の CLI 経路では Fast も落ちる。`runner-paseo.md`）。
 
 `dev-max` の推論量を上げない。選ぶ理由は判断の質で、プロファイルはそれを `low` に置いている。足りなければ材料の絞り込みを疑う。
 
 ## モデルと推論量の前提
 
 - `gpt-5.6-luna`（`models_cache.json` で priority 3）を基本に置き、定型から高度な実装までこの1モデルで扱う。`~/.codex/config.toml` の既定モデルでもあるが、委任では常に明示して渡す。
-- `gpt-6-astra`（`dev-max`）は、絞り込んだ材料から結論を導く場面に限る。許可制（`../SKILL.md`）。かつて同じ位置に置いていた `gpt-5.6-sol` は、プロファイルの整備にあわせて外れた。
-- `gpt-5.6-terra`（priority 2）は中間段に置いていたが、実運用でほとんど選ばれなかったので段から外した。
+- `gpt-6-astra`（`dev-max`）は、絞り込んだ材料から結論を導く場面に限る。許可制（`../SKILL.md`）。
 - 実効レンジは `none, low, medium, high, xhigh, max`。「推論を最小に」は `none` を指す。**`minimal` は GPT-5.6 の API が 400（unsupported_value）で拒否する。**
 - 推論量と `service_tier` の渡し方はランナーで違う。Codex のネイティブ引数を渡せるランナーでは値を検証して弾く層が間に無いので、Codex が受理する値はそのまま使える。渡せないランナーでは `~/.codex/config.toml` の値が効く設定がある（`runner-paseo.md`）。
 - GPT-5.6 が使えなくなったら、`~/.codex/models_cache.json`（`visibility: list` かつ `supported_in_api: true`）から priority 順に2役を割り当て直し、選んだIDと理由をこの節へ反映する。

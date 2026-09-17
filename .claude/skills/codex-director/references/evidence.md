@@ -67,6 +67,8 @@ Seatbelt 側にはループバック限定のルール（`(allow network-inbound
 
 昇格時に Codex が発行したのは `tools.exec_command({..., sandbox_permissions: "require_escalated", justification: "...", prefix_rule: ["curl"]})`。`paseo permit ls` は空のままで、アプリにもダイアログは出ず、人は一度も答えていない。auto-reviewer が処理している。ユーザーの方針はこれを許容する（2026-09-18。「本当に危険な操作ならそこで弾かれる」）。
 
+`--mode full-access` は、この実測までディレクターの裁量で選べる運用になっていた。ユーザーの許可を取らないまま `danger-full-access` を当てた発注が3件ある（2026-09-11、09-17×2。いずれも member-results）。
+
 **Paseo のモードが当てる値（Paseo 0.8.0 のバンドル `MODE_PRESETS` で確認）。** `auto` = `on-request` + `workspace-write`、`auto-review` = それに `approvals_reviewer: auto_review`、`full-access` = `never` + `danger-full-access`。`read-only`（`on-request` + `read-only`）のプリセットは存在するが、マニフェストの公開モードと照合する検証で弾かれる。`providerOptions`（`sandbox_mode` / `sandbox_workspace_write.network_access` など）はモードのプリセットを上書きできるが、渡せるのは TypeScript SDK の `agents.create` だけで、CLI にも MCP の `create_agent` にも口が無い。昇格で足りるため、この経路は採らない。
 
 **プロファイルが持てる項目（同上、`AgentProfileSchema`）。** `provider` / `model` / `modeId` / `thinkingOptionId` / `featureValues` / `notes` のみ。Codex の `featureValues` は `fast_mode` と `plan_mode` の2つで、サンドボックスもネットワークもここには無い。スキーマは `passthrough` なので `providerOptions` を書き足しても保存はされるが、適用側が上の項目しか読まないので効かない。

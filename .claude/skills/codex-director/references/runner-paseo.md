@@ -84,15 +84,9 @@ A=$("$P" run "$(cat <scratchpad>/order.txt)" \
 
 **`--mode` は省かない。** プロバイダの既定は `auto-review` だが、エージェントの中から `paseo run` した実測では `auto` になった。どちらが効くかを起動時に確定させる。
 
-**ネットワークは昇格で取る。`--mode full-access` は使わない。** `auto-review` のまま、依頼文で `sandbox_permissions: require_escalated` の要求を許せば、そのコマンドだけがサンドボックス外で走る。2026-09-18 に `dev-default` 相当（`codex/gpt-5.6-luna` + `high` + `auto-review`）で実測した。
+**ネットワークは昇格で取る。`--mode full-access` は使わない。** `auto-review` のまま、依頼文で `sandbox_permissions: require_escalated` の要求を許せば、そのコマンドだけがサンドボックス外で走る。可否は `approvals_reviewer: auto_review` のサブエージェントが決め、`paseo permit` にもアプリにも出ない。auto-reviewer に任せ、承認を人へ上げ直す設定変更は提案しない。
 
-- 昇格なし: `curl https://api.github.com` は終了コード6 `Could not resolve host`、`127.0.0.1` への listen は `PermissionError: [Errno 1] Operation not permitted`
-- 昇格あり: 同じ `curl` が終了コード0、`200`。所要17秒
-- 承認は `paseo permit` へ来ず、アプリにも出ない。`approvals_reviewer: auto_review` のサブエージェントが処理する
-
-これはユーザーの方針である（2026-09-18）。auto-reviewer に任せ、承認を人へ上げ直す設定変更を提案しない。
-
-`full-access` を選ばないのは、ネットワークのついでに作業ツリー外への書き込みが開き、承認の判断が一度も入らなくなるからである。過去の運用ではこのモードを自分の裁量で選んでいたが、ユーザーの許可を取らないまま `danger-full-access` を当てていたことになる（2026-09-11 / 09-17 の3件）。
+`full-access` を選ばないのは、ネットワークのついでに作業ツリー外への書き込みが開き、承認の判断が一度も入らなくなるからである。実測値は `evidence.md`。
 
 **週次の残量は CLI から引けない。** Paseo のアプリ側には Codex の週次枠の表示があるが、CLI には出ていない。`dev-max` の許可を諮るときは、消費を `paseo inspect <agentId> --json` の `LastUsage`（`InputTokens` / `OutputTokens` / `CachedTokens`）で示し、残量はユーザーに見てもらう。
 
