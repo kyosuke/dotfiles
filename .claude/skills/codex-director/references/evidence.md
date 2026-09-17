@@ -56,6 +56,23 @@ GPT-5.6 の4モデルが対応ティアとして載せているのは `priority`
 
 Seatbelt 側にはループバック限定のルール（`(allow network-inbound (local ip "localhost:*"))`）が存在し、`CODEX_NETWORK_ALLOW_LOCAL_BINDING` という環境変数も binary に含まれる。将来この組み合わせが設定から届くようになったら、外向きを閉じたまま有効化する価値がある。
 
+**コマンド単位の昇格でネットワークが取れる（2026-09-18 実測）。** Paseo 0.8.0 / Codex 0.154.0、`codex/gpt-5.6-luna` + `high` + `--mode auto-review`、cwd は dotfiles。rollout の `turn_context` は `approval_policy: on-request` / `approvals_reviewer: auto_review` / `sandbox_policy: {workspace-write, network_access: false}` / `permission_profile.network: restricted`。
+
+| 試行 | 結果 |
+|---|---|
+| 昇格なし `curl https://api.github.com` | 終了コード6 `curl: (6) Could not resolve host` |
+| 昇格なし `curl https://registry.npmjs.org/` | 同上 |
+| 昇格なし `127.0.0.1` へ listen | `PermissionError: [Errno 1] Operation not permitted` |
+| 昇格あり `curl https://api.github.com` | 終了コード0、`200`。所要17秒 |
+
+昇格時に Codex が発行したのは `tools.exec_command({..., sandbox_permissions: "require_escalated", justification: "...", prefix_rule: ["curl"]})`。`paseo permit ls` は空のままで、アプリにもダイアログは出ず、人は一度も答えていない。auto-reviewer が処理している。ユーザーの方針はこれを許容する（2026-09-18。「本当に危険な操作ならそこで弾かれる」）。
+
+`--mode full-access` は、この実測までディレクターの裁量で選べる運用になっていた。ユーザーの許可を取らないまま `danger-full-access` を当てた発注が3件ある（2026-09-11、09-17×2。いずれも member-results）。
+
+**Paseo のモードが当てる値（Paseo 0.8.0 のバンドル `MODE_PRESETS` で確認）。** `auto` = `on-request` + `workspace-write`、`auto-review` = それに `approvals_reviewer: auto_review`、`full-access` = `never` + `danger-full-access`。`read-only`（`on-request` + `read-only`）のプリセットは存在するが、マニフェストの公開モードと照合する検証で弾かれる。`providerOptions`（`sandbox_mode` / `sandbox_workspace_write.network_access` など）はモードのプリセットを上書きできるが、渡せるのは TypeScript SDK の `agents.create` だけで、CLI にも MCP の `create_agent` にも口が無い。昇格で足りるため、この経路は採らない。
+
+**プロファイルが持てる項目（同上、`AgentProfileSchema`）。** `provider` / `model` / `modeId` / `thinkingOptionId` / `featureValues` / `notes` のみ。Codex の `featureValues` は `fast_mode` と `plan_mode` の2つで、サンドボックスもネットワークもここには無い。スキーマは `passthrough` なので `providerOptions` を書き足しても保存はされるが、適用側が上の項目しか読まないので効かない。
+
 **書き込み範囲。** `workspace-write` は作業ツリー以外に `/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。委任で実測し、`/private/tmp` 配下のスクラッチパッドへ承認なしで書き込めた。収集役の出力経路には使わない（書き込みを開けると同じ作業ツリーで並列に走らせられなくなる）。
 
 ## ランナー越しの運用（2026-08-05 / 08-09 / 08-12 / 09-11 実測）
