@@ -60,7 +60,7 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 選択基準と、下げてよいかの判断は `references/ordering.md`。
 
-**Fast はプロファイルが持つ。** `dev-low` / `dev-default` / `dev-high` は `fast_mode: true`、`dev-max` は持たない。プロファイルの値ごと渡せるのは MCP の `create_agent` だけで、`paseo run` には口が無く `~/.codex/config.toml` の `service_tier`（現状 `default` = オフ）が効く。Codex のネイティブ引数を渡せるランナーでは `-c service_tier=priority` を明示する。CLI で出して Fast が落ちるなら、発注前報告へ1行添える（`references/runners.md`）。
+**Fast はプロファイルが持つ。** `dev-low` / `dev-default` / `dev-high` は `fast_mode: true`、`dev-max` は持たない。渡し方はランナーで違うので、判定したほうの reference に従う。herdr は起動引数へ展開し、Paseo は MCP の `create_agent` なら値ごと届き、`paseo run` では落ちる。
 
 ## 委任の経路
 
@@ -81,15 +81,17 @@ printf 'PASEO_CLI=%s HERDR_ENV=%s\n' "${PASEO_CLI:-}" "${HERDR_ENV:-}"
 
 | 判定 | 操作の出典 |
 |---|---|
-| `PASEO_CLI` が空でない | `references/runners.md` の Paseo 節 |
-| `HERDR_ENV` が 1 | herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`）。この Skill からの上書きだけ `references/runners.md` にある |
+| `PASEO_CLI` が空でない | `references/runner-paseo.md` |
+| `HERDR_ENV` が 1 | herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`）。この Skill からの上書きは `references/runner-herdr.md` |
 | どちらでもない | 委任しない |
 
-Paseo では、MCP ツール（`create_agent` ほか）が見えているならそちらを優先する。プロファイルの値をそのまま渡せる唯一の経路である。見えないセッションでは CLI で出す（`references/runners.md`）。
+**判定したほうの reference だけを読む。** もう一方は制約も手段も違い、読むと混ざる。
+
+Paseo では、MCP ツール（`create_agent` ほか）が見えているならそちらを優先する。プロファイルの値をそのまま渡せる唯一の経路である。見えないセッションでは CLI で出す（`references/runner-paseo.md`）。
 
 **どちらでもないなら委任しない。** 発注も実装も始めず、「この Skill は Codex を動かすランナー（Paseo か herdr）の中でだけ使える」とユーザーへ伝えて止まる。ここで Claude が代わりに成果物を書くと分担も検収も成立しない。Claude 自身で進めるかはユーザーの判断で、そう指示されたらこの Skill を離れる。
 
-ランナーが違っても手順の骨格は変わらない。エージェントを起動し、依頼文を渡し、完了を待ち、報告を回収し、片付ける。コマンドの対応は `references/runners.md`。
+ランナーが違っても手順の骨格は変わらない。エージェントを起動し、依頼文を渡し、完了を待ち、報告を回収し、片付ける。コマンドの対応は判定したランナーの reference にある。
 
 **依頼ごとに新しい Codex を立てるのを原則にする。** 依頼文は単体で完結する形で書くので、前のスレッドを引き継ぐ利点がない。残るのは前の依頼の調査結果や却下した案で、Codex はそれを現在の前提として扱う。同じスレッドへ続けて出すのは、それまでのやり取りが作業の前提になるとき（検収後の差し戻し、直前の変更を踏まえた続き）に限る。
 
@@ -98,7 +100,7 @@ Paseo では、MCP ツール（`create_agent` ほか）が見えているなら�
 外せない4点だけをここに置く。
 
 - **依頼文は Write ツールでファイルへ書いてから渡す**。ヒアドキュメントも直接埋め込みも使わない。文中のバックティックがコマンド置換として実行され、その部分が依頼文から消える。
-- **起動フラグと報告回収の制約はランナーで違う**。骨格から外れる操作が要るなら、想像で補わず `references/runners.md` と、そのランナーのスキル・`--help` を引く。
+- **起動フラグと報告回収の制約はランナーで違う**。骨格から外れる操作が要るなら、想像で補わず判定したランナーの reference と、そのランナーのスキル・`--help` を引く。
 - **承認を代行しない**。承認要求は承認か質問のUIなので、何を求められているかをユーザーへ伝えて待つ。
 - **検収は画面ではなく `git diff` で行う**。実装を伴う依頼は20分を超えることがあり、Bash の上限は10分なので `run_in_background: true` で投げ、完了通知を受けてから読む。
 
@@ -108,11 +110,18 @@ Codex 側の運用（起動フラグの選び方、承認の境界、待機中�
 
 Codex のサンドボックスは既定でネットワークを閉じており、`127.0.0.1` への listen も EPERM で拒否する。workers プールも `wrangler dev` も、外部APIを叩く検証も、そのままでは通らない。
 
-**開けるのはサンドボックスではなく、コマンド単位の昇格である。** モードは `auto-review` のまま、依頼文で「ネットワークが要るコマンドは `sandbox_permissions: require_escalated` で昇格を要求してよい」と許す。Codex は justification を添えて要求し、auto-reviewer が可否を決める。2026-09-18 の実測では、昇格なしの `curl` が `Could not resolve host` で落ち、昇格を求めた同じ `curl` が HTTP 200 を返した（`references/evidence.md`）。
+**手段はランナーで違う。** 判定したランナーの reference に従う。
 
-**`--mode full-access` を使わない。** このモードは `approval_policy: never` と `sandbox_mode: danger-full-access` をまとめて当て、ネットワークだけでなく作業ツリー外への書き込みまで開き、承認の判断が一度も入らなくなる。ネットワークが要るだけなら昇格で足りる。
+| ランナー | 手段 |
+|---|---|
+| herdr | 起動時に `-c sandbox_workspace_write.network_access=true` を渡す。そのセッションのネットワークだけが開き、書き込み範囲は作業ツリーのまま |
+| Paseo | ネイティブ引数を渡せないので、依頼文でコマンド単位の昇格を許す。モードは `auto-review` のままで、auto-reviewer が可否を決める |
 
-開けられないことを理由に段を上げない。昇格が通ったことを「安全だった証拠」として読まない。何回・どのコマンドで昇格したかは検収で確かめる（`references/review.md`）。
+Paseo 側は 2026-09-18 に実測した。昇格なしの `curl` が `Could not resolve host` で落ち、昇格を求めた同じ `curl` が HTTP 200 を返している（`references/evidence.md`）。
+
+**`--mode full-access` を使わない。** このモードは `approval_policy: never` と `sandbox_mode: danger-full-access` をまとめて当て、ネットワークだけでなく作業ツリー外への書き込みまで開き、承認の判断が一度も入らなくなる。ネットワークが要るだけなら上の2つで足りる。
+
+開けられないことを理由に段を上げない。昇格が通ったことを「安全だった証拠」として読まない。開けた事実は検収で確かめる（`references/review.md`）。
 
 ## 基本規則
 
@@ -141,7 +150,8 @@ Codex のサンドボックスは既定でネットワークを閉じており�
 |---|---|
 | `references/ordering.md` | 発注設計のたび。段の一覧、下げる判断、`dev-max` の条件、収集と判断の分離、依頼文テンプレート、合格ラインの書き方と落とし穴 |
 | `references/review.md` | Codex 完了後。確認項目、証拠の扱い、機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、指摘の仕分けと差し戻し |
-| `references/runners.md` | 委任のたび。ランナーの判定、操作の対応、ランナーごとに通らない設定と代替 |
+| `references/runner-paseo.md` | Paseo で委任するたび。CLI と MCP の操作、モードの実体、プロファイルの材料化、ネットワーク、通らない設定と代替 |
+| `references/runner-herdr.md` | herdr で委任するたび。公式スキルへの上書き、ネイティブ引数、プロファイルの展開、ネットワーク、読み取り専用 |
 | `references/execution.md` | 上の骨格から外れる操作が要るとき。起動フラグ、承認の境界、並列の可否、報告回収の制約、ネットワーク、スレッドの分割と片付け |
 | `references/recovery.md` | 起動・発注・完了検知・報告回収が期待どおりに動かないとき。承認待ちの読み方、`listen EPERM` の実測手順、スレッドの再開 |
 | `references/evidence.md` | 運用の前提そのものを変えるとき。実測値、退けた選択肢、事故の記録 |
