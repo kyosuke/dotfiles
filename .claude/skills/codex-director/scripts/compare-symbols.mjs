@@ -2,7 +2,8 @@
 // Usage: node compare-symbols.mjs <old-file> <new-file...>
 import { readFileSync } from "node:fs";
 
-const declaration = /^(?:export\s+)?(?:declare\s+)?(?:async\s+)?(?:const|let|function|class|type|interface)\s+([A-Za-z0-9_$]+)/;
+// Anonymous `export default` and class methods are out of scope; read those by hand.
+const declaration = /^(?:export\s+)?(?:default\s+)?(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(?:const|let|var|function|class|type|interface|enum)\s+([A-Za-z0-9_$]+)/;
 
 const symbols = (path) => {
   const lines = readFileSync(path, "utf8").split("\n");
