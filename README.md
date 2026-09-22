@@ -20,7 +20,6 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.wezterm.lua` | WezTerm terminal |
 | `home/.config/ghostty/config` | Ghostty terminal |
 | `home/.config/herdr/config.toml` | herdr (multiplexer) |
-| `home/.config/zellij/config.kdl` | Zellij (multiplexer) |
 | `home/.config/hunk/config.toml` | Hunk (diff review) |
 | `home/.config/yazi/` | Yazi (file manager) |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
