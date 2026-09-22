@@ -56,7 +56,7 @@ date.
 Files under `home/` are linked one by one, so directories such as
 `~/.claude/skills/` can also hold skills installed by other tools. Codex skill
 directories are linked as a whole so the required `SKILL.md` stays at the path
-Codex scans.
+Codex scans: Codex does not load a skill whose `SKILL.md` is a file symlink.
 
 Do not pass `--force` while a directory in `~` is a symlink into this repo
 (for example `~/.claude/skills/<name>` from an older setup). mise writes the

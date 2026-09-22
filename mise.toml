@@ -1,5 +1,6 @@
 # home/ は ~ と同じ構造で置き、追跡中のファイルを1つずつリンクする。
-# Codex はスキルのディレクトリ自体をスキャンするので、agent-skills/ はディレクトリごとリンクする。
+# Codex は SKILL.md がファイルのシンボリックリンクだとスキルとして読み込まない（v0.155.1 で確認）。
+# そのため agent-skills/ は home/ に入れず、ディレクトリごとリンクする。
 # [!.]* は agent-skills/.gitignore をリンクしないため。glob のエントリーには exclude が効かない。
 [dotfiles]
 "~" = { source = "home", mode = "symlink-each", manifest = "git", exclude = [".gitignore"] }
