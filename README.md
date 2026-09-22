@@ -1,49 +1,67 @@
 # dotfiles
 
 Personal dotfiles for macOS. Configs for my terminal, shell, multiplexer, and
-AI coding tools (Claude Code, Codex), linked into place with a small shell
-script.
+AI coding tools (Claude Code, Codex), linked into place with
+[mise dotfiles](https://mise.jdx.dev/dotfiles.html).
 
 > These are tuned for my own machine and contain some hard-coded paths and
 > personal choices. Read and borrow freely, but don't expect them to work as-is.
 
 ## What's inside
 
-| Path | Tool | Linked to |
-|------|------|-----------|
-| `.config/fish/config.fish` | fish (interactive shell) | `~/.config/fish/config.fish` |
-| `.zshenv` | zsh (login shell, PATH setup) | `~/.zshenv` |
-| `.wezterm.lua` | WezTerm terminal | `~/.wezterm.lua` |
-| `.config/ghostty/config` | Ghostty terminal | `~/.config/ghostty/config` |
-| `.config/herdr/config.toml` | herdr (multiplexer) | `~/.config/herdr/config.toml` |
-| `.config/zellij/config.kdl` | Zellij (multiplexer) | `~/.config/zellij/config.kdl` |
-| `.config/git/ignore` | Git global ignore | `~/.config/git/ignore` |
-| `.claude/` | Claude Code (settings, statusline, skills) | `~/.claude/…` |
-| `.claude/skills/post-merge-cleanup/codex/` | Codex/agent skill | `~/.agents/skills/post-merge-cleanup/` |
-| `.codex/rules/command-policy.rules` | Codex CLI command policy | `~/.codex/rules/…` |
-| `.codex/hooks.json` | Codex CLI hooks (Herdr summary) | `~/.codex/hooks.json` |
-| `.codex/herdr-codex-summary.py` | Codex → Herdr summary hook | `~/.codex/herdr-codex-summary.py` |
-| `scripts/check-codex-policy.sh` | Codex command-policy validation | Run manually from this repo |
+`home/` mirrors `~`: every tracked file under it is linked to the same path in
+the home directory. `agent-skills/` holds skill directories for Codex and other
+agents, each linked to `~/.agents/skills/<name>`.
+
+| Path | Tool |
+|------|------|
+| `home/.config/fish/config.fish` | fish (interactive shell) |
+| `home/.zshenv` | zsh (login shell, PATH setup) |
+| `home/.wezterm.lua` | WezTerm terminal |
+| `home/.config/ghostty/config` | Ghostty terminal |
+| `home/.config/herdr/config.toml` | herdr (multiplexer) |
+| `home/.config/zellij/config.kdl` | Zellij (multiplexer) |
+| `home/.config/hunk/config.toml` | Hunk (diff review) |
+| `home/.config/yazi/` | Yazi (file manager) |
+| `home/.config/opencode/opencode.jsonc` | OpenCode |
+| `home/.config/git/ignore` | Git global ignore |
+| `home/.claude/` | Claude Code (settings, statusline, hooks, skills) |
+| `home/.codex/rules/command-policy.rules` | Codex CLI command policy |
+| `home/.codex/hooks.json` | Codex CLI hooks (Herdr summary) |
+| `home/.codex/herdr-codex-summary.py` | Codex → Herdr summary hook |
+| `agent-skills/post-merge-cleanup/` | Codex/agent skill |
+| `scripts/check-codex-policy.sh` | Codex command-policy validation (run from this repo) |
 
 ## Requirements
 
-macOS. This repo only links config files and skill directories; it does not
-install anything, so the tools above must be installed separately. The
-terminal configs also expect the `PlemolJP35 Console` font and the fish `Pure`
-prompt.
+macOS and [mise](https://mise.jdx.dev/). This repo only links config files and
+skill directories; it does not install anything, so the tools above must be
+installed separately. The terminal configs also expect the `PlemolJP35 Console`
+font and the fish `Pure` prompt.
 
 ## Install
 
 ```sh
-chmod u+x dotfilesLink.sh
-./dotfilesLink.sh
+mise trust
+mise dotfiles apply
 ```
 
-The script symlinks the files and skill directories from this repo into your
-home directory, so edits you make here take effect immediately. A missing
-source is skipped with a warning instead of failing the whole run. Codex skill
+Run these from this repo; the links are declared in its `mise.toml`. Edits you
+make here take effect immediately. After adding or removing a file under
+`home/` or `agent-skills/`, stage it with `git add` and run
+`mise dotfiles apply` again: only files in the Git index are linked, and links
+whose source has gone are removed. `mise dotfiles status` shows what is out of
+date.
+
+Files under `home/` are linked one by one, so directories such as
+`~/.claude/skills/` can also hold skills installed by other tools. Codex skill
 directories are linked as a whole so the required `SKILL.md` stays at the path
 Codex scans.
+
+Do not pass `--force` while a directory in `~` is a symlink into this repo
+(for example `~/.claude/skills/<name>` from an older setup). mise writes the
+file links through it and replaces the sources here with links to themselves.
+Remove such a directory symlink first.
 
 ## Shell layout
 
@@ -58,7 +76,8 @@ without hard-coding install locations.
 `~/.claude/` collects session history, transcripts, caches, and credentials, so
 this public repo ignores the directory by default and tracks only the files I
 chose to share: `settings.json`, the statusline script, and a few skills. See
-`.claude/.gitignore` for the allow-list.
+`home/.claude/.gitignore` for the allow-list. `.gitignore` files are excluded
+from linking.
 
 ## Codex config scope
 

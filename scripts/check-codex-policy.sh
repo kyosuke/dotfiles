@@ -3,7 +3,7 @@
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-RULES="$ROOT/.codex/rules/command-policy.rules"
+RULES="$ROOT/home/.codex/rules/command-policy.rules"
 
 command -v codex >/dev/null 2>&1 || {
   printf '%s\n' 'codex is required to validate the command policy' >&2

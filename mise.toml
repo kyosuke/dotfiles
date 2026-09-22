@@ -1,0 +1,5 @@
+# home/ は ~ と同じ構造で置き、追跡中のファイルを1つずつリンクする。
+# Codex はスキルのディレクトリ自体をスキャンするので、agent-skills/ はディレクトリごとリンクする。
+[dotfiles]
+"~" = { source = "home", mode = "symlink-each", manifest = "git", exclude = [".gitignore"] }
+"~/.agents/skills/*" = "agent-skills/*"
