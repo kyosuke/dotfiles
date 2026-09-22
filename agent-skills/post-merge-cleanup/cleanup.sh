@@ -1,1 +1,1 @@
-../cleanup.sh
+../../home/.claude/skills/post-merge-cleanup/cleanup.sh
