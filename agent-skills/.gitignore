@@ -1,0 +1,5 @@
+# 公開リポジトリのため、agent-skills/ も既定では非公開にする。
+# 共有すると決めたスキルだけを明示的に opt-in する。
+/*
+!/.gitignore
+!/post-merge-cleanup/

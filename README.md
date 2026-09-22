@@ -76,7 +76,8 @@ without hard-coding install locations.
 `~/.claude/` collects session history, transcripts, caches, and credentials, so
 this public repo ignores the directory by default and tracks only the files I
 chose to share: `settings.json`, the statusline script, and a few skills. See
-`home/.claude/.gitignore` for the allow-list. `.gitignore` files are excluded
+`home/.claude/.gitignore` for the allow-list; `agent-skills/.gitignore` works
+the same way for agent skills. `.gitignore` files are excluded
 from linking.
 
 ## Codex config scope

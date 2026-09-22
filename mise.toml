@@ -1,5 +1,6 @@
 # home/ は ~ と同じ構造で置き、追跡中のファイルを1つずつリンクする。
 # Codex はスキルのディレクトリ自体をスキャンするので、agent-skills/ はディレクトリごとリンクする。
+# [!.]* は agent-skills/.gitignore をリンクしないため。glob のエントリーには exclude が効かない。
 [dotfiles]
 "~" = { source = "home", mode = "symlink-each", manifest = "git", exclude = [".gitignore"] }
-"~/.agents/skills/*" = "agent-skills/*"
+"~/.agents/skills/[!.]*" = "agent-skills/[!.]*"
