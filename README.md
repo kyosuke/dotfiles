@@ -56,7 +56,6 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.codex/` | Codex CLI (command policy, Herdr summary hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
-| `scripts/uninstall-pkg.sh` | Removes the official fish and Node.js `.pkg` builds |
 | `docs/apps.md` | Apps installed outside mise, with download links |
 
 ## Adding or removing files
@@ -91,12 +90,9 @@ per-project tool versions apply.
 writes into the active Node.js version under `~/.local/share/mise` without
 `sudo`, and mise reshims afterwards, so no custom npm prefix is set. Those
 globals do not carry over to a new version, so CLIs meant to stay are declared
-as `npm:` tools in the mise config instead. Remove any official `.pkg` builds:
-macOS's `path_helper` puts `/usr/local/bin` ahead of the shims in login
-shells, so those copies would still win outside fish. Neither package ships an
-uninstaller; `scripts/uninstall-pkg.sh fish node` deletes only the files in
-their install receipts (run it with `DRY_RUN=1` first, then with `sudo`). Keep
-`~/.config/fish`, which the fish FAQ's manual steps would also remove.
+as `npm:` tools in the mise config instead. Do not install the official
+`.pkg` builds as well: macOS's `path_helper` puts `/usr/local/bin` ahead of the
+shims in login shells, so those copies would win outside fish.
 
 **Claude Code config is opt-in.** `~/.claude/` holds session history,
 transcripts, caches, and credentials, so this public repo ignores it by default
