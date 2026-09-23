@@ -9,8 +9,8 @@ AI coding tools (Claude Code, Codex), linked into place with
 
 ## Setting up a new Mac
 
-`mise bootstrap` links the config files, installs Node.js, pnpm, fish, herdr,
-Hunk, Yazi, and gh (`home/.config/mise/config.toml`), installs the npm CLIs listed in
+`mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
+herdr, Hunk, Yazi, and gh (`home/.config/mise/config.toml`), installs the npm CLIs listed in
 `home/.default-npm-packages` into that Node.js, and sets up the fish plugins.
 Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).

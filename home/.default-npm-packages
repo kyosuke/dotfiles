@@ -1,5 +1,4 @@
 @anthropic-ai/claude-code
-@openai/codex
 @esaio/esa-cli
 opencode-ai
 svgo
