@@ -32,10 +32,9 @@ otherwise [webi](https://webinstall.dev/).
    writes through the link, so commit the change here.
 3. Open a new terminal. `.zshenv` puts `~/.local/bin` and the mise shims on
    `PATH`, and the terminal starts fish through them.
-4. Install the apps the configs refer to:
-   - Terminals: WezTerm, Ghostty, and the `PlemolJP35 Console` font
-     (Ghostty uses the `NF` variant)
-   - Used by the Claude Code statusline and hooks: `jq`, `python3`
+4. Install the apps the configs refer to (Ghostty, WezTerm, Orca, and the
+   PlemolJP font) from their official sites, listed in
+   [docs/apps.md](docs/apps.md).
 5. Start Codex and trust the linked hooks from `/hooks`.
 
 ## What's inside
@@ -58,6 +57,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
 | `scripts/uninstall-pkg.sh` | Removes the official fish and Node.js `.pkg` builds |
+| `docs/apps.md` | Apps installed outside mise, with download links |
 
 ## Adding or removing files
 
