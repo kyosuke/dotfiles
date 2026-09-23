@@ -10,9 +10,9 @@ AI coding tools (Claude Code, Codex), linked into place with
 ## Setting up a new Mac
 
 `mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
-OpenCode, herdr, Hunk, Yazi, and gh (`home/.config/mise/config.toml`), installs the npm
-CLIs listed in `home/.default-npm-packages` into that Node.js, installs Claude
-Code with its native installer, and sets up the fish plugins.
+OpenCode, herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
+(`home/.config/mise/config.toml`), installs Claude Code with its native
+installer, and sets up the fish plugins.
 Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).
 
@@ -49,7 +49,6 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.zshenv` | zsh (login shell, PATH setup) |
 | `home/.config/fish/config.fish`, `fish_plugins` | fish (interactive shell, fisher plugins) |
 | `home/.config/mise/config.toml` | mise (Node.js, fish, and CLI versions) |
-| `home/.default-npm-packages` | npm CLIs installed into each Node.js version |
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
@@ -91,9 +90,8 @@ per-project tool versions apply.
 (`mise upgrade node`, then `mise prune` to drop old versions). `npm install -g`
 writes into the active Node.js version under `~/.local/share/mise` without
 `sudo`, and mise reshims afterwards, so no custom npm prefix is set. Those
-globals do not carry over to a new version; mise installs the packages in
-`~/.default-npm-packages` each time it installs Node.js, so list any CLI that
-should survive an upgrade there. Remove any official `.pkg` builds:
+globals do not carry over to a new version, so CLIs meant to stay are declared
+as `npm:` tools in the mise config instead. Remove any official `.pkg` builds:
 macOS's `path_helper` puts `/usr/local/bin` ahead of the shims in login
 shells, so those copies would still win outside fish. Neither package ships an
 uninstaller; `scripts/uninstall-pkg.sh fish node` deletes only the files in

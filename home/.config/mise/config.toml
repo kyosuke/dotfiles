@@ -1,5 +1,7 @@
 # レジストリにあるツールは短い名前で書く（codex・gh・yazi・herdr・hunk・opencode・pnpm はどれも既定が aqua バックエンド）。
 # aqua は upstream の公式リリースを落としてチェックサムを検証するだけで、再パッケージもビルドもしない。
+# JS で書かれた CLI は npm バックエンドで入れる。Node.js の版ごとのグローバルと違い、Node.js を上げても消えない。
+# esa-cli は esaio 公式だが週のダウンロード数が少なく、mise の安全策に弾かれるので明示的に許可する。
 # fish はレジストリに無いので aqua バックエンドを明示する（公式の .pkg を sudo なしで展開する）。
 # herdr と opencode の自己更新はインストール先を書き換えて mise の管理とずれるので、更新は mise up で行う。
 [tools]
@@ -12,3 +14,6 @@ opencode = "latest"
 pnpm = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
+"npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
+"npm:svgo" = "latest"
+"npm:wrangler" = "latest"
