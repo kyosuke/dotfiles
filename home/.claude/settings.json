@@ -38,7 +38,6 @@
       "Bash(gh repo view:*)",
       "Bash(gh status)",
       "Bash(rm -rf node_modules)",
-      "Bash(rm -rf */node_modules)",
       "Read",
       "Glob",
       "Grep",
@@ -72,7 +71,6 @@
     "disableBypassPermissionsMode": "disable"
   },
   "model": "opus[1m]",
-  "outputStyle": "Concise",
   "hooks": {
     "SessionStart": [
       {
@@ -265,6 +263,7 @@
       }
     }
   },
+  "outputStyle": "Concise",
   "effortLevel": "high",
   "tui": "fullscreen",
   "theme": "dark-daltonized",
