@@ -9,13 +9,13 @@ AI coding tools (Claude Code, Codex), linked into place with
 
 ## Setting up a new Mac
 
-mise links the config files and installs Node.js and fish
+mise links the config files and installs Node.js, fish, herdr, Yazi, and gh
 (`home/.config/mise/config.toml`). Everything else is installed without
 Homebrew: npm for anything published there, otherwise the official installer,
 otherwise [webi](https://webinstall.dev/).
 
 1. Install Git with the Command Line Tools: `xcode-select --install`
-2. Install mise, link the dotfiles, and install Node.js and fish:
+2. Install mise, link the dotfiles, and install the tools it manages:
 
    ```sh
    curl https://mise.run | sh
@@ -38,7 +38,7 @@ otherwise [webi](https://webinstall.dev/).
 5. Install the apps and CLIs the configs refer to:
    - Terminals: WezTerm, Ghostty, and the `PlemolJP35 Console` font
      (Ghostty uses the `NF` variant)
-   - Multiplexer and TUIs: herdr, Hunk, Yazi
+   - Diff review: Hunk
    - AI tools: Claude Code, Codex, OpenCode
    - Used by the Claude Code statusline and hooks: `jq`, `python3`, `rtk`
 6. Start Codex and trust the linked hooks from `/hooks`.
@@ -53,7 +53,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 |------|------|
 | `home/.zshenv` | zsh (login shell, PATH setup) |
 | `home/.config/fish/config.fish` | fish (interactive shell) |
-| `home/.config/mise/config.toml` | mise (Node.js and fish versions) |
+| `home/.config/mise/config.toml` | mise (Node.js, fish, and CLI versions) |
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |

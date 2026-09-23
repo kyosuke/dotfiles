@@ -1,4 +1,10 @@
-# fish は mise のレジストリに無いので aqua バックエンドで入れる（公式の .pkg を sudo なしで展開する）。
+# レジストリにあるツールは短い名前で書く（gh・yazi・herdr はどれも既定が aqua バックエンド）。
+# aqua は upstream の公式リリースを落としてチェックサムを検証するだけで、再パッケージもビルドもしない。
+# fish はレジストリに無いので aqua バックエンドを明示する（公式の .pkg を sudo なしで展開する）。
+# herdr の自己更新（herdr update）はインストール先を書き換えて mise の管理とずれるので、更新は mise up で行う。
 [tools]
+gh = "latest"
+herdr = "latest"
 node = "lts"
+yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
