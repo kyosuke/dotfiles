@@ -40,7 +40,7 @@ otherwise [webi](https://webinstall.dev/).
      (Ghostty uses the `NF` variant)
    - Diff review: Hunk
    - AI tools: Claude Code, Codex, OpenCode
-   - Used by the Claude Code statusline and hooks: `jq`, `python3`, `rtk`
+   - Used by the Claude Code statusline and hooks: `jq`, `python3`
 6. Start Codex and trust the linked hooks from `/hooks`.
 
 ## What's inside
