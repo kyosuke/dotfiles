@@ -1,32 +1,8 @@
+# PATH は .zshenv で組み立てる。ターミナルも herdr もログインシェル(zsh)を通して fish を起動するので、ここでは足さない。
+# fish_add_path はユニバーサル変数へ書き込み、設定から消した後も fish_variables にパスが残り続ける。
+
 # Editor
 set -gx EDITOR "code --wait"
-
-# Webi
-fish_add_path $HOME/.local/bin
-
-# pnpm
-set -gx PNPM_HOME $HOME/Library/pnpm
-fish_add_path $PNPM_HOME/bin
-
-# bun
-set -gx BUN_INSTALL $HOME/.bun
-test -d $BUN_INSTALL/bin; and fish_add_path $BUN_INSTALL/bin
-
-# deno
-set -gx DENO_INSTALL $HOME/.deno
-fish_add_path $DENO_INSTALL/bin
-
-# Turso
-fish_add_path $HOME/.turso
-
-# Emscripten (emsdk)
-set -gx EMSDK $HOME/GitHub/emscripten-core/emsdk
-fish_add_path $EMSDK
-fish_add_path $EMSDK/upstream/emscripten
-fish_add_path $EMSDK/python/3.13.3_64bit/bin
-
-# Rust (cargo)
-fish_add_path $HOME/.cargo/bin
 
 # mise（ディレクトリごとのツールのバージョンを反映させるため、PATH の先頭へ置けるよう最後に activate する）
 mise activate fish | source
