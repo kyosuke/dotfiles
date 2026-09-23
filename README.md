@@ -12,8 +12,8 @@ AI coding tools (Claude Code, Codex), linked into place with
 `mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
 OpenCode, herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
 (`home/.config/mise/config.toml`), installs Claude Code with its native
-installer, sets up the fish plugins, installs the PlemolJP35 Console NF and IBM
-Plex Sans JP fonts from GitHub, and turns the trackpad tracking speed and
+installer, sets up the fish plugins, installs the PlemolJP35 Console NF, IBM
+Plex Sans JP, and Noto Sans/Serif CJK JP fonts from GitHub, and turns the trackpad tracking speed and
 key repeat rate up to their maximum (applied after logging out).
 Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).

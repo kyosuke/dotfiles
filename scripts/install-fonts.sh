@@ -39,3 +39,12 @@ if [ ! -e "$FONTS/IBMPlexSansJP-Regular.otf" ]; then
   done
   mv "$tmp"/plex/*.otf "$FONTS/"
 fi
+
+# Noto Sans / Serif CJK JP の可変フォント。リリースのタグは Sans と Serif で別々に振られ、
+# 更新もまれなので、main から取る。
+for path in Sans/Variable/OTF/NotoSansCJKjp-VF.otf Serif/Variable/OTF/NotoSerifCJKjp-VF.otf; do
+  name=${path##*/}
+  [ -e "$FONTS/$name" ] && continue
+  curl -fsSL -o "$tmp/$name" "https://raw.githubusercontent.com/notofonts/noto-cjk/main/$path"
+  mv "$tmp/$name" "$FONTS/"
+done
