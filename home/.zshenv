@@ -12,5 +12,9 @@ export PATH="$EMSDK:$EMSDK/upstream/emscripten:$EMSDK/python/3.13.3_64bit/bin:$P
 # Rust (cargo)
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# webi
+# webi, mise
 export PATH="$HOME/.local/bin:$PATH"
+
+# mise のツール（node, fish）。対話シェルの fish は mise activate を使うが、
+# ターミナルが fish や herdr を起動する時点ではまだ activate されていないのでシムを通す。
+export PATH="$HOME/.local/share/mise/shims:$PATH"

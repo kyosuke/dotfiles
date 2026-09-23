@@ -5,7 +5,13 @@ onboarding = false
 [terminal]
 # fish を使う。ログインシェルは zsh のため、default_shell が空だと
 # $SHELL 経由で zsh が起動してしまうので明示する。
+# fish は mise で入れているのでパスを書かず名前で指定し、サーバーの PATH にある mise のシムから引く。
+# サーバーは起動時の PATH を持ち続けるため、.zshenv を変えたあとはサーバーを起動し直す。
 default_shell = "fish"
+# macOS の既定(auto)はログインシェルとして argv[0] を "-fish" で起動する。
+# mise のシムは argv[0] でツールを引くため "-fish is not a valid shim" で即終了してしまう。
+# config.fish はログインかどうかに依存しないので、非ログインで起動する。
+shell_mode = "non_login"
 
 [theme]
 name = "one-dark"

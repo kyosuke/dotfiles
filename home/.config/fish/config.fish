@@ -32,3 +32,5 @@ fish_add_path $EMSDK/python/3.13.3_64bit/bin
 # Rust (cargo)
 fish_add_path $HOME/.cargo/bin
 
+# mise（ディレクトリごとのツールのバージョンを反映させるため、PATH の先頭へ置けるよう最後に activate する）
+mise activate fish | source

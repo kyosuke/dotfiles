@@ -1,0 +1,4 @@
+# fish は mise のレジストリに無いので aqua バックエンドで入れる（公式の .pkg を sudo なしで展開する）。
+[tools]
+node = "lts"
+"aqua:fish-shell/fish-shell" = "latest"
