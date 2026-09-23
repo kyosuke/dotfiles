@@ -12,7 +12,8 @@ AI coding tools (Claude Code, Codex), linked into place with
 `mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
 OpenCode, herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
 (`home/.config/mise/config.toml`), installs Claude Code with its native
-installer, and sets up the fish plugins.
+installer, sets up the fish plugins, and turns the trackpad tracking speed and
+key repeat rate up to their maximum (applied after logging out).
 Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).
 
