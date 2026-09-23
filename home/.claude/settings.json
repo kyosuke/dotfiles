@@ -68,7 +68,8 @@
       "Bash(gh release create:*)",
       "Bash(gh run cancel:*)"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "disableBypassPermissionsMode": "disable"
   },
   "model": "opus[1m]",
   "outputStyle": "Concise",
@@ -83,6 +84,15 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -93,6 +103,140 @@
             "type": "command",
             "command": "bash \"$HOME/.claude/hooks/herdr-claude-summary.sh\"",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x \"$HOME/.orca/agent-hooks/claude-hook.sh\" ] && /bin/sh \"$HOME/.orca/agent-hooks/claude-hook.sh\" || true",
+            "timeout": 10
           }
         ]
       }
