@@ -28,12 +28,10 @@ otherwise [webi](https://webinstall.dev/).
 
 3. Open a new terminal. `.zshenv` puts `~/.local/bin`, the mise shims, and
    `~/.npm_global/bin` on `PATH`, and the terminal starts fish through them.
-4. Install the fish prompt:
-
-   ```fish
-   curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-   fisher install jorgebucaran/fisher pure-fish/pure
-   ```
+4. Install fisher and the fish plugins listed in
+   `home/.config/fish/fish_plugins`: run `mise run bootstrap` in this repo
+   (`mise bootstrap` runs the same task last). Add plugins with
+   `fisher install`; it writes through the link, so commit the change here.
 
 5. Install the apps and CLIs the configs refer to:
    - Terminals: WezTerm, Ghostty, and the `PlemolJP35 Console` font
@@ -52,7 +50,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | Path | Tool |
 |------|------|
 | `home/.zshenv` | zsh (login shell, PATH setup) |
-| `home/.config/fish/config.fish` | fish (interactive shell) |
+| `home/.config/fish/config.fish`, `fish_plugins` | fish (interactive shell, fisher plugins) |
 | `home/.config/mise/config.toml` | mise (Node.js, fish, and CLI versions) |
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |

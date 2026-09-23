@@ -5,3 +5,9 @@
 [dotfiles]
 "~" = { source = "home", mode = "symlink-each", manifest = "git", exclude = [".gitignore"] }
 "~/.agents/skills/[!.]*" = "agent-skills/[!.]*"
+
+# mise bootstrap の最後に走る。fish のプラグインは fish_plugins（home/ から ~/.config/fish へリンク）に書いた一覧へ揃える。
+# fisher 本体も一覧に載っているので、未導入のときだけ取ってきて source し、fisher update に自分自身を入れさせる。
+# fisher は標準入力が端末でないとそこから一覧を読もうとして止まるので、/dev/null をつなぐ。
+[tasks.bootstrap]
+run = "fish -c 'functions -q fisher; or curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source; and fisher update </dev/null'"
