@@ -5,4 +5,6 @@
 set -gx EDITOR "code --wait"
 
 # mise（ディレクトリごとのツールのバージョンを反映させるため、PATH の先頭へ置けるよう最後に activate する）
-mise activate fish | source
+# 非対話の fish はシムで足りるので activate しない。mise bootstrap の中で fish -c を呼ぶ時点では、
+# 新しい Mac だと .zshenv がまだ効いておらず mise が PATH に無い。
+status is-interactive; and mise activate fish | source
