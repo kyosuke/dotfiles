@@ -32,8 +32,8 @@ otherwise [webi](https://webinstall.dev/).
    It is safe to run again. The fish plugins come from
    `home/.config/fish/fish_plugins`; add more with `fisher install`, which
    writes through the link, so commit the change here.
-3. Install the apps the configs refer to (Ghostty, WezTerm, and Orca) from
-   their official sites, listed in
+3. Install 1Password and the apps the configs refer to (Ghostty, WezTerm, and
+   Orca) from their official sites, listed in
    [docs/apps.md](docs/apps.md).
 4. Open WezTerm or Ghostty. `.zshenv` puts `~/.local/bin` and the mise shims on
    `PATH`, and the terminal starts fish (WezTerm) or herdr (Ghostty) through

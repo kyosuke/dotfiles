@@ -1,17 +1,19 @@
 # Apps installed outside mise
 
-The configs in `home/` refer to these apps, but `mise bootstrap` does not
-install them. Download each from its official site. The apps update
+`mise bootstrap` does not install these apps: 1Password, which holds the
+credentials needed once the Mac is set up, and the apps the configs in `home/`
+refer to. Download each from its official site. The apps update
 themselves, except WezTerm, so reinstall WezTerm from the same page.
 
 mise can install Homebrew casks without Homebrew, but it creates `/opt/homebrew`
 with `sudo`, and a third-party tap such as Orca's needs Ruby 3 before the tools
 phase has run. The apps that update themselves gain nothing from it after the
-first install. The PlemolJP font both terminals use is installed by
-`mise bootstrap` from its GitHub release instead.
+first install. Fonts are installed by `mise bootstrap` from GitHub
+instead (`scripts/install-fonts.sh`).
 
 | App | Download | Notes |
 |-----|----------|-------|
+| [1Password](https://1password.com/) | <https://1password.com/downloads/mac> | Install first: little else works until it is signed in |
 | [Ghostty](https://ghostty.org/) | <https://ghostty.org/download> | Config: `home/.config/ghostty/config` |
 | [WezTerm](https://wezterm.org/) | <https://wezterm.org/install/macos.html> | Config: `home/.wezterm.lua` |
 | [Orca](https://www.onorca.dev/) | <https://github.com/stablyai/orca/releases/latest> (`orca-macos-arm64.dmg`) | See below |
