@@ -16,9 +16,20 @@
 # 再インストールで上書きされるためコミットしない。リンク越しに書く設定の差分はコミット済みで、
 # 何度実行しても変わらない。
 [tasks.bootstrap]
+depends = ["macos"]
 run = [
   "command -v claude >/dev/null || { set -o pipefail; curl -fsSL https://claude.ai/install.sh | bash; }",
   "herdr integration install claude",
   "herdr integration install codex",
   "fish -c 'functions -q fisher; or curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source; and fisher update </dev/null'",
+]
+
+# macOS の設定。defaults write は同じ値を書くだけなので何度実行してもよい。
+# 値はシステム設定のスライダーを最大にしたときのもの。トラックパッドの軌跡の速さは 3、
+# キーのリピート速度は 2（小さいほど速い）。defaults write は動いているアプリへ変更を伝えないので、
+# 反映はログアウト後。
+[tasks.macos]
+run = [
+  "defaults write -g com.apple.trackpad.scaling -float 3",
+  "defaults write -g KeyRepeat -int 2",
 ]
