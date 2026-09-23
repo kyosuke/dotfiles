@@ -16,7 +16,7 @@
 # 再インストールで上書きされるためコミットしない。リンク越しに書く設定の差分はコミット済みで、
 # 何度実行しても変わらない。
 [tasks.bootstrap]
-depends = ["macos"]
+depends = ["macos", "fonts"]
 run = [
   "command -v claude >/dev/null || { set -o pipefail; curl -fsSL https://claude.ai/install.sh | bash; }",
   "herdr integration install claude",
@@ -33,3 +33,6 @@ run = [
   "defaults write -g com.apple.trackpad.scaling -float 3",
   "defaults write -g KeyRepeat -int 2",
 ]
+
+[tasks.fonts]
+run = "scripts/install-fonts.sh"

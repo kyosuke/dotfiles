@@ -12,7 +12,8 @@ AI coding tools (Claude Code, Codex), linked into place with
 `mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
 OpenCode, herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
 (`home/.config/mise/config.toml`), installs Claude Code with its native
-installer, sets up the fish plugins, and turns the trackpad tracking speed and
+installer, sets up the fish plugins, installs the PlemolJP35 Console NF font
+from its GitHub release, and turns the trackpad tracking speed and
 key repeat rate up to their maximum (applied after logging out).
 Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).
@@ -31,8 +32,8 @@ otherwise [webi](https://webinstall.dev/).
    It is safe to run again. The fish plugins come from
    `home/.config/fish/fish_plugins`; add more with `fisher install`, which
    writes through the link, so commit the change here.
-3. Install the apps the configs refer to (Ghostty, WezTerm, Orca, and the
-   PlemolJP font) from their official sites, listed in
+3. Install the apps the configs refer to (Ghostty, WezTerm, and Orca) from
+   their official sites, listed in
    [docs/apps.md](docs/apps.md).
 4. Open WezTerm or Ghostty. `.zshenv` puts `~/.local/bin` and the mise shims on
    `PATH`, and the terminal starts fish (WezTerm) or herdr (Ghostty) through
@@ -58,6 +59,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.codex/` | Codex CLI (command policy, Herdr summary hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
+| `scripts/install-fonts.sh` | Installs the terminal font (run by `mise bootstrap`) |
 | `docs/apps.md` | Apps installed outside mise, with download links |
 
 ## Adding or removing files

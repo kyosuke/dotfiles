@@ -7,14 +7,14 @@ themselves, except WezTerm, so reinstall WezTerm from the same page.
 mise can install Homebrew casks without Homebrew, but it creates `/opt/homebrew`
 with `sudo`, and a third-party tap such as Orca's needs Ruby 3 before the tools
 phase has run. The apps that update themselves gain nothing from it after the
-first install.
+first install. The PlemolJP font both terminals use is installed by
+`mise bootstrap` from its GitHub release instead.
 
 | App | Download | Notes |
 |-----|----------|-------|
 | [Ghostty](https://ghostty.org/) | <https://ghostty.org/download> | Config: `home/.config/ghostty/config` |
 | [WezTerm](https://wezterm.org/) | <https://wezterm.org/install/macos.html> | Config: `home/.wezterm.lua` |
 | [Orca](https://www.onorca.dev/) | <https://github.com/stablyai/orca/releases/latest> (`orca-macos-arm64.dmg`) | See below |
-| [PlemolJP](https://github.com/yuru7/PlemolJP) | <https://github.com/yuru7/PlemolJP/releases/latest> | Install `PlemolJP35 Console` from `PlemolJP_v*.zip` (WezTerm) and `PlemolJP35 Console NF` from `PlemolJP_NF_v*.zip` (Ghostty) |
 
 `jq` and `python3`, which the Claude Code statusline and hooks use, come with
 macOS and the Command Line Tools, so they need no separate install.
