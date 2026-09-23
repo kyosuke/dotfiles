@@ -9,37 +9,33 @@ AI coding tools (Claude Code, Codex), linked into place with
 
 ## Setting up a new Mac
 
-mise links the config files and installs Node.js, fish, herdr, Yazi, and gh
-(`home/.config/mise/config.toml`). Everything else is installed without
-Homebrew: npm for anything published there, otherwise the official installer,
+`mise bootstrap` links the config files, installs Node.js, fish, herdr, Yazi,
+and gh (`home/.config/mise/config.toml`), installs the npm CLIs listed in
+`home/.default-npm-packages` into that Node.js, and sets up the fish plugins.
+Everything else is installed without Homebrew: the official installer,
 otherwise [webi](https://webinstall.dev/).
 
 1. Install Git with the Command Line Tools: `xcode-select --install`
-2. Install mise, link the dotfiles, and install the tools it manages:
+2. Install mise and run the bootstrap:
 
    ```sh
    curl https://mise.run | sh
    git clone https://github.com/kyosuke/dotfiles.git ~/GitHub/kyosuke/dotfiles
    cd ~/GitHub/kyosuke/dotfiles
    ~/.local/bin/mise trust
-   ~/.local/bin/mise dotfiles apply
-   ~/.local/bin/mise install
+   ~/.local/bin/mise bootstrap
    ```
 
-3. Open a new terminal. `.zshenv` puts `~/.local/bin`, the mise shims, and
-   `~/.npm_global/bin` on `PATH`, and the terminal starts fish through them.
-4. Install fisher and the fish plugins listed in
-   `home/.config/fish/fish_plugins`: run `mise run bootstrap` in this repo
-   (`mise bootstrap` runs the same task last). Add plugins with
-   `fisher install`; it writes through the link, so commit the change here.
-
-5. Install the apps and CLIs the configs refer to:
+   It is safe to run again. The fish plugins come from
+   `home/.config/fish/fish_plugins`; add more with `fisher install`, which
+   writes through the link, so commit the change here.
+3. Open a new terminal. `.zshenv` puts `~/.local/bin` and the mise shims on
+   `PATH`, and the terminal starts fish through them.
+4. Install the apps the configs refer to:
    - Terminals: WezTerm, Ghostty, and the `PlemolJP35 Console` font
      (Ghostty uses the `NF` variant)
-   - Diff review: Hunk
-   - AI tools: Claude Code, Codex, OpenCode
    - Used by the Claude Code statusline and hooks: `jq`, `python3`
-6. Start Codex and trust the linked hooks from `/hooks`.
+5. Start Codex and trust the linked hooks from `/hooks`.
 
 ## What's inside
 
@@ -52,6 +48,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.zshenv` | zsh (login shell, PATH setup) |
 | `home/.config/fish/config.fish`, `fish_plugins` | fish (interactive shell, fisher plugins) |
 | `home/.config/mise/config.toml` | mise (Node.js, fish, and CLI versions) |
+| `home/.default-npm-packages` | npm CLIs installed into each Node.js version |
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
@@ -90,8 +87,12 @@ through the mise shims in `.zshenv`; fish then runs `mise activate` so
 per-project tool versions apply.
 
 **Node.js and fish from mise.** Node.js follows the current LTS
-(`mise upgrade node`, then `mise prune` to drop old versions), and npm globals
-stay in `~/.npm_global` across upgrades. Remove any official `.pkg` builds:
+(`mise upgrade node`, then `mise prune` to drop old versions). `npm install -g`
+writes into the active Node.js version under `~/.local/share/mise` without
+`sudo`, and mise reshims afterwards, so no custom npm prefix is set. Those
+globals do not carry over to a new version; mise installs the packages in
+`~/.default-npm-packages` each time it installs Node.js, so list any CLI that
+should survive an upgrade there. Remove any official `.pkg` builds:
 macOS's `path_helper` puts `/usr/local/bin` ahead of the shims in login
 shells, so those copies would still win outside fish. Neither package ships an
 uninstaller; `scripts/uninstall-pkg.sh fish node` deletes only the files in

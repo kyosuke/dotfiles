@@ -8,10 +8,6 @@ fish_add_path $HOME/.local/bin
 set -gx PNPM_HOME $HOME/Library/pnpm
 fish_add_path $PNPM_HOME/bin
 
-# npm global
-set -gx NPM_CONFIG_PREFIX $HOME/.npm_global
-fish_add_path $HOME/.npm_global/bin
-
 # bun
 set -gx BUN_INSTALL $HOME/.bun
 test -d $BUN_INSTALL/bin; and fish_add_path $BUN_INSTALL/bin
