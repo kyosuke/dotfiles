@@ -12,3 +12,17 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !$HOME/.local/share/mise/shims/gh auth git-credential
+
+# コミット署名は Secure Enclave の鍵で行う（Mac mini 専用）。
+# 鍵は sc_auth で -t none で作ったので、Touch ID なしで署名でき、SSH 越しでも止まらない。
+# ssh-sign は SSH_SK_PROVIDER を付けて ssh-keygen を呼ぶだけのラッパー。
+[user]
+	signingkey = ~/.ssh/id_ecdsa_sk
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = ~/.local/bin/ssh-sign
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true
