@@ -27,11 +27,13 @@ run = [
 # macOS の設定。defaults write は同じ値を書くだけなので何度実行してもよい。
 # 値はシステム設定のスライダーを最大にしたときのもの。トラックパッドの軌跡の速さは 3、
 # キーのリピート速度は 2（小さいほど速い）。defaults write は動いているアプリへ変更を伝えないので、
-# 反映はログアウト後。
+# 反映はログアウト後。Dock だけは killall Dock で再起動させればその場で反映される。
 [tasks.macos]
 run = [
   "defaults write -g com.apple.trackpad.scaling -float 3",
   "defaults write -g KeyRepeat -int 2",
+  "defaults write com.apple.dock autohide -bool true",
+  "killall Dock",
 ]
 
 [tasks.fonts]
