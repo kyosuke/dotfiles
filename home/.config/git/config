@@ -1,0 +1,14 @@
+[user]
+	name = Kyosuke Nakamura
+	email = kyosuke@users.noreply.github.com
+
+# GitHub への認証は gh のログインを使う（gh auth setup-git と同じ内容）。
+# 空の helper で、システムの gitconfig にある osxkeychain を github.com では使わないようにする。
+# gh は mise の shim を絶対パスで呼ぶ。PATH を通さない GUI アプリから git が呼ばれても動き、
+# gh を更新してもパスが変わらない。
+[credential "https://github.com"]
+	helper =
+	helper = !$HOME/.local/share/mise/shims/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !$HOME/.local/share/mise/shims/gh auth git-credential

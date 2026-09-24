@@ -38,7 +38,11 @@ otherwise [webi](https://webinstall.dev/).
 4. Open WezTerm or Ghostty. `.zshenv` puts `~/.local/bin` and the mise shims on
    `PATH`, and the terminal starts fish (WezTerm) or herdr (Ghostty) through
    them.
-5. Start Codex and trust the linked hooks from `/hooks`.
+5. Run `gh auth login`. Git uses the gh login for GitHub
+   (`home/.config/git/config`), so `git push` works without other setup.
+   Machine-specific settings, and anything tools write with
+   `git config --global`, go to `~/.gitconfig`, which is not tracked.
+6. Start Codex and trust the linked hooks from `/hooks`.
 
 ## What's inside
 
@@ -54,7 +58,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
-| `home/.config/git/ignore` | Git global ignore |
+| `home/.config/git/config`, `ignore` | Git (user, GitHub auth through gh, global ignore) |
 | `home/.claude/` | Claude Code (settings, statusline, hooks, skills) |
 | `home/.codex/` | Codex CLI (command policy, Herdr summary hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
