@@ -1,0 +1,16 @@
+# Mac mini 専用のコミット署名。Secure Enclave の鍵で行う。
+# 使うマシンでは ~/.config/git/config.local に次の2行を書いて読み込む。
+#   [include]
+#   	path = ~/.config/git/signing-mac-mini
+# 鍵は sc_auth で -t none で作ったので、Touch ID なしで署名でき、SSH 越しでも止まらない。
+# ssh-sign は SSH_SK_PROVIDER を付けて ssh-keygen を呼ぶだけのラッパー。
+[user]
+	signingkey = ~/.ssh/id_ecdsa_sk
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = ~/.local/bin/ssh-sign
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true
