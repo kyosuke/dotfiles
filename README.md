@@ -38,11 +38,15 @@ otherwise [webi](https://webinstall.dev/).
 4. Open WezTerm or Ghostty. `.zshenv` puts `~/.local/bin` and the mise shims on
    `PATH`, and the terminal starts fish (WezTerm) or herdr (Ghostty) through
    them.
-5. Run `gh auth login`. Git uses the gh login for GitHub
+5. Orca keeps its settings in a state file with sessions and repos, so it is
+   not linked. In Settings → Terminal shell, choose Custom shell `/bin/zsh`,
+   and under Advanced → Shell arguments → Custom args enter one per line:
+   `-l`, `-c`, `exec fish -l`.
+6. Run `gh auth login`. Git uses the gh login for GitHub
    (`home/.config/git/config`), so `git push` works without other setup.
    Machine-specific settings, and anything tools write with
    `git config --global`, go to `~/.gitconfig`, which is not tracked.
-6. Start Codex and trust the linked hooks from `/hooks`.
+7. Start Codex and trust the linked hooks from `/hooks`.
 
 ## What's inside
 
@@ -88,7 +92,7 @@ Remove such a directory symlink first.
 
 **Shell layout.** zsh is the login shell and only sets up `PATH`; fish is the
 interactive shell. Terminals start a login shell first so `PATH` is resolved,
-then hand off to fish (WezTerm) or herdr (Ghostty), so neither config
+then hand off to fish (WezTerm, Orca) or herdr (Ghostty), so no config
 hard-codes where fish or herdr is installed. The login shell reaches fish
 through the mise shims in `.zshenv`; fish then runs `mise activate` so
 per-project tool versions apply.
