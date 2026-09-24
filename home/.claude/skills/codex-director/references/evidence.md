@@ -14,6 +14,8 @@
 | 2026-09-18 | `--mode full-access` を使わない。ネットワークが要るだけならランナーごとの手段で足りる | `execution.md` / `runner-paseo.md` |
 | 2026-09-18 | 権限の昇格は auto-reviewer に任せる。承認を人へ上げ直す設定変更を提案しない。「本当に危険な操作ならそこで弾かれる」 | `execution.md` |
 | 2026-09-18 | 試験運用を終了し、タスクごとの記録をやめる。残す価値のある観測は `evidence.md` へ | `../SKILL.md` |
+| 2026-09-24 | Orca を3つ目のランナーに加える | `../SKILL.md` / `runner-orca.md` |
+| 2026-09-24 | GPT-6 の公開を受け、`dev-low`〜`dev-high` を `gpt-5.6-luna` から `gpt-6-luna` へ、`dev-max` を `gpt-6-astra` + `low` から `gpt-6-sol` + `xhigh` へ替える。`max` はコストが跳ねるので1段下げる。Fast・許可制は据え置き | `../SKILL.md` / `ordering.md` / `runner-herdr.md` |
 
 ## 試験運用の記録（終了）
 
@@ -36,6 +38,18 @@
 **`luna` の報告の裏取り。** 既存の分岐が例外を再生成すると報告したが、実際は呼び出しが `try` の外にあり再生成されなかった。同種の食い違いを `sol` は前の発注で自力で3件見つけていた。
 
 **単価（2026-07-30 の値下げ後、2026-07-31 確認）。** 100万トークンあたりの出力単価は `luna` $1.2 / `terra` $12 / `sol` $30、入力は $0.2 / $2 / $5（[OpenAI の告知](https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/)）。`luna` は `sol` の25分の1で、推論量を `max` まで上げても桁が違う。倍率は入力にも同じだけ効くので、一次資料の通読や広域の走査を `sol` へ出すと週次リミットを1タスクで使い切る（2026-08-12、ユーザーからの指示）。
+
+**GPT-6 への切り替え（2026-09-24 確認）。** 100万トークンあたりの出力単価は `gpt-6-luna` $0.5 / `gpt-6-sol` $10 / `gpt-6-astra` $50、入力は $0.1 / $2 / $10。Fast はいずれも2倍（[OpenAI の料金表](https://developers.openai.com/api/docs/pricing)）。`gpt-6-luna` は `gpt-5.6-luna` の半額で、`gpt-6-sol` は `gpt-5.6-terra` より安い。`dev-max` は `astra` の5分の1になる `sol` を選んだ（ユーザーの判断）。
+
+**`dev-max` を `xhigh` に置いた根拠。** OpenAI 公表のグラフ（スコア / 1タスクあたりのコスト）。
+
+| ベンチマーク | `sol` + `high` | `sol` + `xhigh` | `sol` + `max` | `astra` + `low` |
+|---|---|---|---|---|
+| DeepSWE v1.1 | 65.3% / $0.64 | 66.6% / $1.00 | 68.8% / $2.74 | 67% / $1.60 |
+| OSWorld 2.0 | 58.3% / $1.64 | 60.5% / $2.21 | 64.4% / $3.25 | 62.2% / $2.55 |
+| AutomationBench 1.0.6 | 31.2% / $0.24 | 33.2% / $0.27 | 32% / $0.34 | 30.3% / $1.08 |
+
+`astra` + `low` を全項目で上回るのは `max` だけだが、DeepSWE では `xhigh` から `max` でスコア +2.2pt に対しコストが2.7倍になる。`xhigh` は DeepSWE で `astra` + `low` に 0.4pt 届かないがコストは6割強、OSWorld では 1.7pt 下でコストは9割弱、AutomationBench では上回る。FrontierCode では `sol` + `xhigh` 48.4% / $1.37 が `astra` + `medium` 48.8% / $2.43 とほぼ並ぶ。いったん `max` に置いた後、コストを見て `xhigh` に下げた（ユーザーの判断）。OpenAI 自身は GPT-5.6 Sol + `high` の後継に `astra` + `low` を勧めている（[Kingy AI の集計](https://kingy.ai/blog/gpt-6-sol-vs-astra-effort-pricing/)、[OpenAI Community](https://community.openai.com/t/set-astra-low-medium-as-a-replacement-for-5-6-sol-high/1395421)、2026-09-24参照）。
 
 ただし発注1件のコストは、差し戻し1回で発生するディレクター側の検収サイクル（差分の読み直し、テストの再実行、追加の依頼文）より小さい。安いから下げるのではなく、依頼文で迷う余地を消せたから下げる。単価は判定の順序を覆さない。`models_cache.json` に単価は載っていないので、この数値は確認日つきの参考であり、判断に効くほどの差を感じたら出典を引き直す。サブスクリプション経由の実行では、請求は単価ではなくクレジット消費になる。
 
@@ -149,3 +163,16 @@ Paseo で確かめた差分（2026-09-11 / 09-12、Paseo 0.8.0 / Codex 0.153.4�
 **節末の言い直し（2026-08-06、knowledge リポジトリ、`luna` + `high` 2本）。** 節末に前段の要約が積まれた（3節中2節と4節中3節、どちらも差し戻し1回で解消）。分量の下限を書かなかった2本目でも出たので、下限を外すだけでは足りない。
 
 **枠を増やすと継ぎ目が崩れる（2026-08-11、同リポジトリ、4件連続）。** 見出しを列挙して「これ以外の節を作らない」と書いた回は、節を増やす癖と同じ主張の重複が止まった。代わりに、地の文の句点の脱落、出典3要素を1文へ詰め込む、コードブロック直後に導入なしで始まる箇条書き、「対処は〜させる」の主述のねじれが出た。指定した項目は全部埋まっているのに、つなぎだけが雑になる。4件はいずれも事実関係と検査を初回で通し、落ちたのは文体だけで、差し戻し1〜2回で合格した。
+
+## Orca（2026-09-24 実測）
+
+Orca 1.4.210 / Codex 0.156.1、`gpt-6-luna` + `low` + `service_tier=priority` + `-s read-only`、cwd は dotfiles。読み取りだけの発注（SKILL.md の列挙、5件）と、ネットワークの昇格を求めさせる発注（`curl -sI`）を、同じターミナルで順に出した。
+
+- **`tui-idle` は完了を表さない。** 送信の直後に待つと、`send` の `stages` が `turn_started` まで進んでいるのに、`terminal wait --for tui-idle` は1〜2秒で `satisfied: true` を返した。その時点で Codex は作業中で、`terminal show` の `title` 先頭にはスピナーが回っていた。代替画面の有無に関係なく、2回とも同じだった。
+- **画面の読み取りは報告に使えない。** `terminal read` の `source` は `stream` で、PTY の生の出力を返す。報告の行の間に、再描画の断片（`WorkWorkWork…`、入力欄とフッターの繰り返し）が挟まる。`--no-alt-screen` の有無で差は無かった。
+- **実行ログは完全だった。** `$ORCA_CODEX_HOME/sessions/…/rollout-*.jsonl` の `task_complete.last_agent_message` が報告の全文を改行つきで持ち、`turn_context` には起動引数どおりの `model: gpt-6-luna` / `effort: low` / `approval_policy: on-request` / `sandbox_policy: read-only` が載った。`session_meta` にはターミナルのハンドルも Orca の変数も載らないので、ターミナルとログの対応は依頼文の本文で取る。
+- **承認待ちの見え方。** 昇格の要求で止まると、`title` が `[ ! ] Action Required | …` に、`agentWait` が `{source: prompt-text, reason: agent-interactive-prompt}` に変わった。`terminal read` の末尾にコマンド・理由・選択肢が出た。ESC を送って却下すると、実行ログに `turn_aborted` が残り、`title` は元に戻ったが、`agentWait` は同じ `since` のまま残った。
+- **`terminal close` の戻り値。** 3回とも `ok: false`（`terminal_stop_unverifiable`、`ptyKilled: false`）が返ったが、タブは `terminal list` から消え、`pgrep -f` でも起動コマンドは残っていなかった。
+- **Codex の設定の置き場所。** `ORCA_CODEX_HOME` は `~/Library/Application Support/orca/codex-runtime-home/home` で、`config.toml`・`models_cache.json`・`sessions/` を独自に持つ。`config.toml` はリンクではない複製で、Orca のフック（`hooks.json`）の設定が足されている。
+- **Orchestration を採らなかった理由。** `orchestration worker-start` は `--model` / `--effort` しか持たない（`--help`、1.4.210）。`worktree create --agent codex` はモデルや推論量の引数を受け付けない（`orca skills get orca-cli`）。
+

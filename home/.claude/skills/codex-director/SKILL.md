@@ -49,12 +49,12 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 | プロファイル | 中身 | 使う場面 |
 |---|---|---|
-| `dev-low` | `gpt-5.6-luna` + `low` + Fast | 対象が明示されている。軽い判断で足りる。収集役 |
-| `dev-default` | `gpt-5.6-luna` + `high` + Fast | 既定。迷ったらここ |
-| `dev-high` | `gpt-5.6-luna` + `max` + Fast | 構造の理解が要る、影響範囲が広い、正しさの判定が難しい実装 |
-| `dev-max` | `gpt-6-astra` + `low` | `luna` では抜けなかったとき。**毎回ユーザーの許可を取ってから出す** |
+| `dev-low` | `gpt-6-luna` + `low` + Fast | 対象が明示されている。軽い判断で足りる。収集役 |
+| `dev-default` | `gpt-6-luna` + `high` + Fast | 既定。迷ったらここ |
+| `dev-high` | `gpt-6-luna` + `max` + Fast | 構造の理解が要る、影響範囲が広い、正しさの判定が難しい実装 |
+| `dev-max` | `gpt-6-sol` + `xhigh` | `luna` では抜けなかったとき。**毎回ユーザーの許可を取ってから出す** |
 
-実体は `~/.paseo/config.json` の `daemon.agentProfiles` で、この表が Skill 内の唯一の写しである。MCP ツールが使えるなら `list_profiles` で読み、`notes` を見てから選ぶ。この表と設定の値が食い違ったら設定を優先し、表を直す。
+この表がプロファイルの定義である。herdr と Orca の reference は起動引数へ展開した表を持つので、プロファイルを変えたら3つとも直す。
 
 モードはどのプロファイルも `auto-review` で、これを上書きしない。選ぶのはプロファイルだけである。中間の推論量（`none` / `medium` / `xhigh`）が要ると感じたら、まず上下のプロファイルで足りないかを考える。外れて指定するなら、その理由を発注前報告へ書く。Fast はプロファイルの `fast_mode` が持ち、ランナーによって届き方が違う（判定したランナーの reference）。
 
@@ -74,18 +74,21 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 まずランナーを判定する。
 
 ```bash
-printf 'PASEO_CLI=%s HERDR_ENV=%s\n' "${PASEO_CLI:-}" "${HERDR_ENV:-}"
+printf 'PASEO_CLI=%s HERDR_ENV=%s ORCA_TERMINAL_HANDLE=%s\n' "${PASEO_CLI:-}" "${HERDR_ENV:-}" "${ORCA_TERMINAL_HANDLE:-}"
 ```
 
 | 判定 | 操作の出典 |
 |---|---|
 | `PASEO_CLI` が空でない | `references/runner-paseo.md`。MCP ツール（`create_agent` ほか）が見えているならそちらを使う |
 | `HERDR_ENV` が 1 | herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`）。この Skill からの上書きは `references/runner-herdr.md` |
-| どちらでもない | 委任しない |
+| `ORCA_TERMINAL_HANDLE` が空でない | Orca 本体のガイド（`orca skills get orca-cli`）。この Skill からの上書きは `references/runner-orca.md` |
+| どれでもない | 委任しない |
 
-**判定したほうの reference だけを読む。** もう一方は制約も手段も違い、読むと混ざる。
+上の行から順に判定し、最初に当たった行を使う。Orca のターミナルの中で Paseo や herdr を動かしているなら、内側のランナーが優先される。
 
-**どちらでもないなら委任しない。** 発注も実装も始めず、「この Skill は Codex を動かすランナー（Paseo か herdr）の中でだけ使える」とユーザーへ伝えて止まる。ここで Claude が代わりに成果物を書くと分担も検収も成立しない。Claude 自身で進めるかはユーザーの判断で、そう指示されたらこの Skill を離れる。
+**判定したランナーの reference だけを読む。** 他のランナーは制約も手段も違い、読むと混ざる。
+
+**どれでもないなら委任しない。** 発注も実装も始めず、「この Skill は Codex を動かすランナー（Paseo・herdr・Orca）の中でだけ使える」とユーザーへ伝えて止まる。ここで Claude が代わりに成果物を書くと分担も検収も成立しない。Claude 自身で進めるかはユーザーの判断で、そう指示されたらこの Skill を離れる。
 
 ランナーが違っても手順の骨格は変わらない。エージェントを起動し、依頼文を渡し、完了を待ち、報告を回収し、片付ける。ランナーに依らない Codex 側の運用（依頼文の渡し方、承認の境界、待機中の判断、報告回収の制約、ネットワークの開け方、スレッドの分割と片付け）は `references/execution.md` にまとめてあり、委任のたびに読む。期待どおりに動かないときは `references/recovery.md`。
 
@@ -119,6 +122,7 @@ printf 'PASEO_CLI=%s HERDR_ENV=%s\n' "${PASEO_CLI:-}" "${HERDR_ENV:-}"
 | `references/execution.md` | 委任のたび。依頼文の渡し方、承認の境界、待機中の判断、報告回収の制約、ネットワークの開け方、スレッドの分割と片付け |
 | `references/runner-paseo.md` | Paseo で委任するたび。MCP と CLI の操作、モードの実体、プロファイルの材料化、通らない設定と代替 |
 | `references/runner-herdr.md` | herdr で委任するたび。公式スキルへの上書き、プロファイルの引数展開、`service_tier` の語彙、ネットワーク、読み取り専用 |
+| `references/runner-orca.md` | Orca で委任するたび。Orchestration を使わない理由、プロファイルの引数展開、`$ORCA_CODEX_HOME`、実行ログでの完了判定と報告回収、承認待ちの見え方、片付け |
 | `references/review.md` | Codex 完了後。確認項目、証拠の扱い、機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、指摘の仕分けと差し戻し |
 | `references/recovery.md` | 起動・発注・完了検知・報告回収が期待どおりに動かないとき。承認待ちの読み方、`listen EPERM` の実測手順、スレッドの再開 |
 | `references/evidence.md` | 運用の前提そのものを変えるとき。実測値、退けた選択肢、事故の記録、ユーザーからの指示の履歴 |

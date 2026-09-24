@@ -1,6 +1,6 @@
 # 委任ランナー: Paseo
 
-`PASEO_CLI` が空でないときに読む。herdr で動いているなら `runner-herdr.md` を読み、このファイルは開かない。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
+`PASEO_CLI` が空でないときに読む。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
 
 自分自身も Paseo のエージェントとして動いているので、ここで作る Codex は同じワークスペースのサブエージェントになる（Paseo が `PASEO_AGENT_ID` で親を判定する）。サブエージェントは親の画面の Subagents track に出る。
 
@@ -12,7 +12,7 @@
 
 | 操作 | ツール | 備考 |
 |---|---|---|
-| プロファイルを読む | `list_profiles` | `notes` を見て選ぶ。`create_agent` に `profile` パラメータは無いので、値を写す |
+| プロファイルを読む | `list_profiles` | `notes` を見て選ぶ。`create_agent` に `profile` パラメータは無いので、値を写す。値が `../SKILL.md` の表と食い違ったら、どちらを使うかユーザーへ諮る |
 | 起動と発注 | `create_agent` | `provider` に `codex/<model>`、`settings.modeId` / `settings.thinkingOptionId` / `settings.features` にプロファイルの `modeId` / `thinkingOptionId` / `featureValues`。`initialPrompt` に依頼文の全文。`workspaceId` を省くと自分のワークスペースのサブエージェントになる |
 | 完了待ち | 完了通知（`notifyOnFinish`、既定で有効） | 完了・エラー・承認待ちのいずれかで届く。待たずに自分でポーリングしない |
 | 状態の確認 | `get_agent_status` | 通知が来ないときや、差し戻し前に待機状態かを確かめるとき |

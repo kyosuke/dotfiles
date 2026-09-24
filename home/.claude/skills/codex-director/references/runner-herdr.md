@@ -1,6 +1,6 @@
 # 委任ランナー: herdr
 
-`HERDR_ENV` が 1 のときに読む。Paseo で動いているなら `runner-paseo.md` を読み、このファイルは開かない。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
+`HERDR_ENV` が 1 のときに読む。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
 
 **herdr の操作は公式スキルに従う。** Skill ツールで `herdr` を呼ぶ（無ければ `herdr --skill` が同じ内容を出力する。バイナリが出力元なので本体の更新に追従する）。公式スキルの description は「ユーザーが herdr に言及したときだけ使う」と制限しているが、この委任経路は herdr のペイン操作そのものなので対象に入る。
 
@@ -20,14 +20,14 @@ herdr にプロファイルの仕組みは無い。`../SKILL.md` で選んだプ
 
 | プロファイル | herdr で渡す引数 |
 |---|---|
-| `dev-low` | `-m gpt-5.6-luna -c model_reasoning_effort=low -c service_tier=priority` |
-| `dev-default` | `-m gpt-5.6-luna -c model_reasoning_effort=high -c service_tier=priority` |
-| `dev-high` | `-m gpt-5.6-luna -c model_reasoning_effort=max -c service_tier=priority` |
-| `dev-max` | `-m gpt-6-astra -c model_reasoning_effort=low -c service_tier=default` |
+| `dev-low` | `-m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority` |
+| `dev-default` | `-m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority` |
+| `dev-high` | `-m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority` |
+| `dev-max` | `-m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default` |
 
-出典は `~/.paseo/config.json` の `daemon.agentProfiles`（写しは `../SKILL.md`）。プロファイルが増減したらこの表を直す。
+プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。
 
-Paseo と違って中間の推論量（`none` / `medium` / `xhigh`）もそのまま渡せる。プロファイルから外れるときは理由を発注前報告へ書く（`ordering.md`）。
+中間の推論量（`none` / `medium` / `xhigh`）もそのまま渡せる。プロファイルから外れるときは理由を発注前報告へ書く（`ordering.md`）。
 
 ### `service_tier` の語彙
 
@@ -37,7 +37,7 @@ Fast は Codex の `service_tier` で、プロファイルの `fast_mode: true` 
 
 ## ネットワークは起動時に開ける
 
-`-c sandbox_workspace_write.network_access=true` を渡すと、**そのセッションだけ**ネットワークが通る。書き込み範囲は `workspace-write` のままなので、Paseo で使うコマンド単位の昇格（サンドボックス外での実行）より露出が小さい。herdr ではこちらを使い、昇格を既定にしない。
+`-c sandbox_workspace_write.network_access=true` を渡すと、**そのセッションだけ**ネットワークが通る。書き込み範囲は `workspace-write` のままなので、コマンド単位の昇格（サンドボックス外での実行）より露出が小さい。こちらを使い、昇格を既定にしない。
 
 ループバックだけを開ける設定は無いので、外向きも同時に開く。運用の判断と `~/.codex/config.toml` を触らない理由は `execution.md`。
 
