@@ -20,8 +20,6 @@ bash ~/.claude/skills/post-merge-cleanup/cleanup.sh $ARGUMENTS
 
 マージ判定、squash/rebaseマージの見分け、upstream先行で `-d` が拒否るケースの切り分けは分岐が細かい。外したときの損失が未pushコミットの消失なので、指示の遵守に委ねず決定表をスクリプトへ置いた。`-D`（強制削除）と `stash` はスクリプトに存在しないため、そもそも実行され得ない。
 
-jj管理下なら `jj git fetch` と `jj new <デフォルトブックマーク>` だけで終える。jjでは作業ツリーが汚れる概念がなく、ブックマークもリモートで消えればfetchで追従するため、削除の判定が要らない。
-
 ## 終了コードの扱い
 
 | コード | 意味 | Claudeの動き |
