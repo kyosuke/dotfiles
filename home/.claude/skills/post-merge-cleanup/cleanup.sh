@@ -18,28 +18,8 @@ stop() {
   exit "$code"
 }
 
-# --- jj: fetch して新しい作業コミットをデフォルトブックマーク上へ作る -------------
-if jj root >/dev/null 2>&1; then
-  bookmarks=$(jj bookmark list 2>/dev/null)
-  default=""
-  for b in main master; do
-    if printf '%s\n' "$bookmarks" | grep -q "^${b}:"; then
-      default=$b
-      break
-    fi
-  done
-  [ -n "$default" ] || stop 2 "jjリポジトリだが main / master のブックマークが見つからない"
-
-  jj git fetch || stop 3 "jj git fetch が失敗した"
-  jj new "$default" || stop 3 "jj new $default が失敗した"
-
-  echo "jjリポジトリ: fetch して $default 上に新しい作業コミットを作成した"
-  echo "（jjではブックマークがリモートで消えればfetchで追従するため、個別の削除は行わない）"
-  exit 0
-fi
-
 # --- git ---------------------------------------------------------------------
-git rev-parse --git-dir >/dev/null 2>&1 || stop 2 "gitリポジトリでもjjリポジトリでもない"
+git rev-parse --git-dir >/dev/null 2>&1 || stop 2 "gitリポジトリではない"
 
 # 1. 作業ツリーの確認。汚れていたら触らない（pullや切り替えで失う恐れがあるため）
 if [ -n "$(git status --porcelain)" ]; then
