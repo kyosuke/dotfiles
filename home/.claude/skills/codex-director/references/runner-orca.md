@@ -16,10 +16,10 @@ Codex は `terminal create --command` で起動引数ごと立ち上げ、プロ
 
 | プロファイル | `--command` に書く Codex の起動 |
 |---|---|
-| `dev-low` | `codex -m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority` |
-| `dev-default` | `codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority` |
-| `dev-high` | `codex -m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority` |
-| `dev-max` | `codex -m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default` |
+| `dev-low` | `codex -m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-default` | `codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-high` | `codex -m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-max` | `codex -m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default -c approvals_reviewer=auto_review` |
 
 プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。
 
@@ -27,13 +27,15 @@ Fast は Codex の `service_tier` で、プロファイルの `fast_mode: true` 
 
 `service_tier` は必ず明示する。Orca から起動した Codex の設定は `~/.codex` ではなく `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）にあり、`config.toml` はリンクではなく独立した複製である。`execution.md` と `recovery.md` が `~/.codex/config.toml`・`~/.codex/models_cache.json`・`~/.codex/sessions` と書いている箇所は、このランナーでは `$ORCA_CODEX_HOME` 配下のファイルを指す。書き換えないという規則もこちらの複製に同じく当てはまる。
 
+`approvals_reviewer=auto_review` も必ず明示する。どちらの `config.toml` にも指定が無く、省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がる（2026-09-29 実測）。Paseo の `--mode auto-review` に当たるのはこの値で、`approval_policy` は既定の `on-request` のまま変えない。
+
 中間の推論量もそのまま渡せる。プロファイルから外れるときは、理由を発注前報告へ書く（`ordering.md`）。
 
 ## 起動する
 
 ```bash
 orca terminal create --worktree active --title <タスク名> \
-  --command 'codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority' --json
+  --command 'codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review' --json
 ```
 
 返ってきた `result.terminal.handle` を以降の宛先に使う。起動時刻も控えておき、実行ログの特定に使う（下記）。
@@ -92,7 +94,7 @@ jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent
 
 差し戻しを重ねたスレッドでは `task_complete` が複数行になるので、上の例のとおり最後のものを読む。報告の中身を信用しないこと、検収は `git diff` で行うことは他のランナーと同じである（`execution.md`・`review.md`）。
 
-**起動引数が効いたかも実行ログで確かめる。** `turn_context` に、実際に当たった `model`・`effort`・`approval_policy`・`sandbox_policy` が載る。消費は `token_count` の `info.total_token_usage` で見る。週次の残量は TUI の `/status` で見る。
+**起動引数が効いたかも実行ログで確かめる。** `turn_context` に、実際に当たった `model`・`effort`・`approval_policy`・`approvals_reviewer`・`sandbox_policy` が載る。消費は `token_count` の `info.total_token_usage` で見る。週次の残量は TUI の `/status` で見る。
 
 ## 片付ける
 
