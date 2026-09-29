@@ -20,10 +20,10 @@ herdr にプロファイルの仕組みは無い。`../SKILL.md` で選んだプ
 
 | プロファイル | herdr で渡す引数 |
 |---|---|
-| `dev-low` | `-m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority` |
-| `dev-default` | `-m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority` |
-| `dev-high` | `-m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority` |
-| `dev-max` | `-m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default` |
+| `dev-low` | `-m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-default` | `-m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-high` | `-m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-max` | `-m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default -c approvals_reviewer=auto_review` |
 
 プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。
 
