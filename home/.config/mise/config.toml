@@ -1,6 +1,8 @@
 # レジストリにあるツールは短い名前で書く（codex・dotenvx・gh・yazi・herdr・hunk・opencode・pnpm はどれも既定が aqua バックエンド）。
 # aqua は upstream の公式リリースを落としてチェックサムを検証するだけで、再パッケージもビルドもしない。
 # JS で書かれた CLI は npm バックエンドで入れる。Node.js の版ごとのグローバルと違い、Node.js を上げても消えない。
+# cf（Cloudflare 公式 CLI）はベータ中で、mise はプレリリース版を latest の候補に入れず古い 0.x を選ぶ。
+# そのため版を固定し、上げるときは手で書き換える。GA が出たら latest に戻す。
 # esa-cli は esaio 公式だが週のダウンロード数が少なく、mise の安全策に弾かれるので明示的に許可する。
 # fish はレジストリに無いので aqua バックエンドを明示する（公式の .pkg を sudo なしで展開する）。
 # herdr と opencode の自己更新はインストール先を書き換えて mise の管理とずれるので、更新は mise up で行う。
@@ -15,6 +17,7 @@ opencode = "latest"
 pnpm = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
+"npm:cf" = "1.0.0-beta.5"
 "npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
