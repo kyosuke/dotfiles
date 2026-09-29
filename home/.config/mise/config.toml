@@ -17,3 +17,6 @@ yazi = "latest"
 "npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]
