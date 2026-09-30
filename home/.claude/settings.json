@@ -68,6 +68,7 @@
     "disableBypassPermissionsMode": "disable"
   },
   "model": "opus[1m]",
+  "language": "japanese",
   "hooks": {
     "SessionStart": [
       {
