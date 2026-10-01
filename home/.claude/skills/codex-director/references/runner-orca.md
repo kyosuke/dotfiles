@@ -18,18 +18,19 @@ Codex は `terminal create --command` で起動引数ごと立ち上げ、プロ
 |---|---|
 | `dev-low` | `codex -m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
 | `dev-default` | `codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review` |
-| `dev-high` | `codex -m gpt-6-luna -c model_reasoning_effort=max -c service_tier=priority -c approvals_reviewer=auto_review` |
-| `dev-max` | `codex -m gpt-6-sol -c model_reasoning_effort=xhigh -c service_tier=default -c approvals_reviewer=auto_review` |
+| `dev-high` | `codex -m gpt-6.1-sol -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
+| `dev-xhigh` | `codex -m gpt-6.1-sol -c model_reasoning_effort=high -c service_tier=default -c approvals_reviewer=auto_review` |
+| `dev-max` | `codex -m gpt-6-astra -c model_reasoning_effort=xhigh -c service_tier=default -c approvals_reviewer=auto_review` |
 
 プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。
 
-Fast は Codex の `service_tier` で、プロファイルの `fast_mode: true` を `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない（実測は `evidence.md`）。
+Fast は Codex の `service_tier` で、プロファイルの Fast 有りを `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない（実測は `evidence.md`）。
 
 `service_tier` は必ず明示する。Orca から起動した Codex の設定は `~/.codex` ではなく `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）にあり、`config.toml` はリンクではなく独立した複製である。`execution.md` と `recovery.md` が `~/.codex/config.toml`・`~/.codex/models_cache.json`・`~/.codex/sessions` と書いている箇所は、このランナーでは `$ORCA_CODEX_HOME` 配下のファイルを指す。書き換えないという規則もこちらの複製に同じく当てはまる。
 
-`approvals_reviewer=auto_review` も必ず明示する。どちらの `config.toml` にも指定が無く、省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がる（2026-09-29 実測）。Paseo の `--mode auto-review` に当たるのはこの値で、`approval_policy` は既定の `on-request` のまま変えない。
+`approvals_reviewer=auto_review` も必ず明示する。どちらの `config.toml` にも指定が無く、省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がる（2026-09-29 実測）。`approval_policy` は既定の `on-request` のまま変えない。
 
-中間の推論量もそのまま渡せる。プロファイルから外れるときは、理由を発注前報告へ書く（`ordering.md`）。
+表に無い推論量もそのまま渡せる。プロファイルから外れるときは、理由を発注前報告へ書く（`ordering.md`）。
 
 ## 起動する
 
@@ -40,10 +41,31 @@ orca terminal create --worktree active --title <タスク名> \
 
 返ってきた `result.terminal.handle` を以降の宛先に使う。起動時刻も控えておき、実行ログの特定に使う（下記）。
 
-- **書き込みを伴う委任を並列に走らせるなら、worktree を分ける。** `orca worktree create --name <タスク名> --no-parent --json` で作り、`--worktree id:<返ってきた worktree.id>` を付けて `terminal create` する。この順だと最初に空のシェルができる。閉じるのは `terminal list` で使われていないと確かめてから。
 - **読み取り専用で起動できる。** `-s read-only` を付けると、実行ログの `turn_context.sandbox_policy` が `read-only` になった。収集役を同じ作業ツリーで並列に走らせる前提（`ordering.md`）は、このランナーでも成立する。
 - **ネットワークは起動時に開ける。** `-c sandbox_workspace_write.network_access=true` を渡すと、そのセッションだけネットワークが通る。書き込み範囲は `workspace-write` のままなので、コマンド単位の昇格（サンドボックス外での実行）より露出が小さい。こちらを使い、昇格を既定にしない。ループバックだけを開ける設定は無く、外向きも同時に開く（運用は `execution.md`）。
 - `--no-alt-screen` は付けなくてよい。報告は画面から読まない（下記）ので、効き目が無い。
+
+## worktree を分けて起動する
+
+並列に出してよいかの判断、起点、依存物、検収、取り込みは `execution.md` にある。ここには Orca の手順だけを置く。ガイドの「Worktrees」の節も読む。
+
+```bash
+orca worktree create --name <タスク名> --no-parent --base-branch <起点> --setup skip --json
+```
+
+- **`--agent codex` は使わない。** Orca の既定ランチャーで起動するので、プロファイルの起動引数を渡せない。作ってから、返ってきた `result.worktree.id` を丸ごと `--worktree id:<…>` に渡して `terminal create` する。`id` は `<repoId>::<パス>` の形で、repo の ID だけに縮めない。
+- **`--base-branch` は必ず付ける。** 省くと repo の既定ブランチから作られ、今いるブランチではなかった（2026-10-01、`main` から作られた）。
+- **`--setup` は repo の `orca.yaml` に setup フックがあるかで決める。** あれば `run` で依存物を入れさせ、無ければ `skip` にして、インストールは依頼文で Codex に頼む（`execution.md`）。
+- **最初に空のシェルが1つできる。** `startupTerminal` は `null` で返り、`terminal list` に fish のターミナルが1つ載っていた。`terminal list` で使われていないと確かめてから閉じる。
+- 作られる場所は `~/orca/workspaces/<repo>/<タスク名>`、ブランチは `<ユーザーのプレフィックス>/<タスク名>` だった。パスとブランチは決め打ちにせず、返り値の `result.worktree.path` / `branch` を使う。
+
+片付けは、その worktree のターミナルを閉じてから、まず `--force` なしで行う（`execution.md`）。
+
+```bash
+orca worktree rm --worktree id:<repoId>::<パス> --json
+```
+
+未コミットの変更が残っていると `runtime_error`（`Failed to delete worktree …`）で止まる。残った中身を `execution.md` の手順で確かめ、不要と判断できたときだけ `--force` を付けて消し直す。消えるとディレクトリとブランチの両方が消える（2026-10-01）。
 
 ## 依頼文を送る
 
@@ -100,4 +122,4 @@ jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent
 
 終わったら、自分が作ったターミナルだけを `terminal close --terminal <handle>` で閉じる。**`ok: false`（`terminal_stop_unverifiable`）が返っても、タブは消えていて、プロセスも終わっていた**（3回とも同じ）。閉じ直したり、別のホストに向けて再試行したりしない。`terminal list` から消えたことと、`pgrep -f` で起動コマンドが残っていないことを確かめて終える。
 
-この文書の挙動は Orca 1.4.210 / Codex 0.156.1 で実測した（`evidence.md`）。
+この文書の挙動は Orca 1.4.210 / Codex 0.156.1 で実測した（`evidence.md`）。worktree の手順は Orca 1.4.217 で確かめた。
