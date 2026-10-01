@@ -1,6 +1,6 @@
 # 詰まったときの復旧
 
-起動・発注・完了検知・報告回収が期待どおりに動かないときに読む。症状を見て運用を想像で変える前に、実際を確認する。通常の運用は `execution.md`、ランナーごとのコマンドは `runner-paseo.md`・`runner-herdr.md`・`runner-orca.md`（使っているものだけ）。
+起動・発注・完了検知・報告回収が期待どおりに動かないときに読む。症状を見て運用を想像で変える前に、実際を確認する。通常の運用は `execution.md`、ランナーごとのコマンドは `runner-herdr.md`・`runner-orca.md`（使っているものだけ）。
 
 ## 起動しない
 
@@ -95,8 +95,7 @@ PY
 
 **素の shell で `codex resume <UUID>` を叩かない。** ランナーがエージェントとして認識しないので、発注も報告回収も承認の検知も効かず、復旧したはずのスレッドが管理外に出る。ランナーの起動経路からセッションを引き継ぐ。
 
-- Codex のネイティブ引数を渡せるランナーでは、起動引数として `resume <セッションUUID>` を渡す。前のスレッドの内容を保った状態で待機に入る（2026-08-09、herdr 0.8.0 / Codex 0.146.0 で確認）。
-- 引数を渡せないランナーでは、既存のプロバイダセッションを取り込む経路を使う（Paseo は `paseo import <セッションID> --provider codex --cwd <作業ツリー>`。`runner-paseo.md`）。
+起動引数として `resume <セッションUUID>` を渡す。前のスレッドの内容を保った状態で待機に入る（2026-08-09、herdr 0.8.0 / Codex 0.146.0 で確認）。
 
 UUID を省いて `--last` に当たる指定を使わない。直近のセッションはリポジトリも用途も違うことがある。UUID が分からないなら、rollout ログのファイル名から拾う（上記）。
 
@@ -104,7 +103,7 @@ UUID を省いて `--last` に当たる指定を使わない。直近のセッ�
 
 ## `listen EPERM` を見たとき
 
-運用の判断は `execution.md` の「ネットワークとローカルバインド」にある。設定の状態が疑わしいときだけ実測する。サンドボックス内では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。ネットワークが要る発注でこれを見たなら、依頼文で昇格を許していないか、Codex が要求しないまま失敗を報告している。依頼文を直して出し直す。
+運用の判断は `execution.md` の「ネットワークとローカルバインド」にある。設定の状態が疑わしいときだけ実測する。サンドボックス内では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。ネットワークが要る発注でこれを見たなら、起動引数で開け忘れている。`network_access=true` を付けて起動し直す。
 
 **検証もランナー越しに行う。`codex exec` でヘッドレスに走らせない。** `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（実測は `evidence.md`）。ランナー越しなら同じ状況が承認待ちとして見え、ユーザーが答えられる。
 
@@ -127,8 +126,8 @@ JS
 
 `luna` + 最小の推論量でエージェントを立て、依頼文には「`node /tmp/net-test.mjs` を1回だけ実行し、出力をそのまま報告する。ファイルは変更しない」とだけ書いて、ファイルへ書いてから渡す。失敗しても回避策を試させない。失敗した事実が結果である。
 
-昇格していないのに `LISTEN OK` が返ったら、config.toml に `network_access = true` が残っている。
+開けていないのに `LISTEN OK` が返ったら、config.toml に `network_access = true` が残っている。
 
-設定キーが実在するかは、モデルを呼ばずに確かめられる。`--strict-config` を付けて起動すると、未知のキーなら Codex は起動せずに終わる（実測: `Error loading config.toml: unknown configuration field 'bogus_key_xyz' in -c/--config override`）。理由は画面かログで読む。実在するキーなら普通に起動するので、そのまま畳む。ネイティブ引数を渡せないランナーではこの確認ができないので、確かめたい設定があるならランナーを変えるか、`codex --help` とスキーマで済ませる。
+設定キーが実在するかは、モデルを呼ばずに確かめられる。`--strict-config` を付けて起動すると、未知のキーなら Codex は起動せずに終わる（実測: `Error loading config.toml: unknown configuration field 'bogus_key_xyz' in -c/--config override`）。理由は画面かログで読む。実在するキーなら普通に起動するので、そのまま畳む。
 
 ただし、キーが受理されることは挙動が変わることを意味しない（`permissions.network.*` がその実例。`evidence.md`）。設定の効果は必ず上の listen テストで確かめる。

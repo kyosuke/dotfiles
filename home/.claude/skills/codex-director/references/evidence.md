@@ -11,11 +11,15 @@
 | 2026-08-09 | Codex が検査を実行できないことをプロファイルの根拠にしない。ネットワークが要る検証は開けて走らせ、都度の確認は要らない | `ordering.md` / `execution.md` |
 | 2026-08-12 | 上位モデル（当時 `sol`、現在 `dev-max`）の発注は毎回許可を取る。消費が桁で違い、週次リミットに直接効く | `../SKILL.md` / `ordering.md` |
 | 2026-09-11 | `~/.codex/config.toml` は書き換えず、モデルと推論量だけを調整する | `execution.md` |
-| 2026-09-18 | `--mode full-access` を使わない。ネットワークが要るだけならランナーごとの手段で足りる | `execution.md` / `runner-paseo.md` |
+| 2026-09-18 | `--mode full-access` を使わない。ネットワークが要るだけならランナーごとの手段で足りる | `execution.md` |
 | 2026-09-18 | 権限の昇格は auto-reviewer に任せる。承認を人へ上げ直す設定変更を提案しない。「本当に危険な操作ならそこで弾かれる」 | `execution.md` |
 | 2026-09-18 | 試験運用を終了し、タスクごとの記録をやめる。残す価値のある観測は `evidence.md` へ | `../SKILL.md` |
 | 2026-09-24 | Orca を3つ目のランナーに加える | `../SKILL.md` / `runner-orca.md` |
 | 2026-09-24 | GPT-6 の公開を受け、`dev-low`〜`dev-high` を `gpt-5.6-luna` から `gpt-6-luna` へ、`dev-max` を `gpt-6-astra` + `low` から `gpt-6-sol` + `xhigh` へ替える。`max` はコストが跳ねるので1段下げる。Fast・許可制は据え置き | `../SKILL.md` / `ordering.md` / `runner-herdr.md` |
+| 2026-10-01 | Paseo をランナーから外す（今後使わない）。`runner-paseo.md` を削除し、Paseo 固有の実測もここから消す | `../SKILL.md` / `execution.md` / `recovery.md` |
+| 2026-10-01 | Codex のプラン変更と GPT-6.1 Sol の公開を受け、5段に組み替える。`dev-high` を `gpt-6.1-sol` + `low` + Fast、`dev-xhigh`（新設）を `gpt-6.1-sol` + `high`、`dev-max` を `gpt-6-astra` + `xhigh` にする。許可制は `dev-max` だけに残し、Sol までは許可なしで出す。`dev-low` は速さを買って `low` のまま残す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
+| 2026-10-01 | 書き込みを伴う委任を並列に出すときは、herdr・Orca それぞれの公式の手順で worktree を分ける。全体の速度を上げるため | `../SKILL.md` / `execution.md` / `runner-herdr.md` / `runner-orca.md` |
+| 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 
 ## 試験運用の記録（終了）
 
@@ -41,7 +45,7 @@
 
 **GPT-6 への切り替え（2026-09-24 確認）。** 100万トークンあたりの出力単価は `gpt-6-luna` $0.5 / `gpt-6-sol` $10 / `gpt-6-astra` $50、入力は $0.1 / $2 / $10。Fast はいずれも2倍（[OpenAI の料金表](https://developers.openai.com/api/docs/pricing)）。`gpt-6-luna` は `gpt-5.6-luna` の半額で、`gpt-6-sol` は `gpt-5.6-terra` より安い。`dev-max` は `astra` の5分の1になる `sol` を選んだ（ユーザーの判断）。
 
-**`dev-max` を `xhigh` に置いた根拠。** OpenAI 公表のグラフ（スコア / 1タスクあたりのコスト）。
+**`dev-max` を `gpt-6-sol` + `xhigh` に置いた根拠（2026-09-24、10-01 に置き換え）。** OpenAI 公表のグラフ（スコア / 1タスクあたりのコスト）。
 
 | ベンチマーク | `sol` + `high` | `sol` + `xhigh` | `sol` + `max` | `astra` + `low` |
 |---|---|---|---|---|
@@ -50,6 +54,32 @@
 | AutomationBench 1.0.6 | 31.2% / $0.24 | 33.2% / $0.27 | 32% / $0.34 | 30.3% / $1.08 |
 
 `astra` + `low` を全項目で上回るのは `max` だけだが、DeepSWE では `xhigh` から `max` でスコア +2.2pt に対しコストが2.7倍になる。`xhigh` は DeepSWE で `astra` + `low` に 0.4pt 届かないがコストは6割強、OSWorld では 1.7pt 下でコストは9割弱、AutomationBench では上回る。FrontierCode では `sol` + `xhigh` 48.4% / $1.37 が `astra` + `medium` 48.8% / $2.43 とほぼ並ぶ。いったん `max` に置いた後、コストを見て `xhigh` に下げた（ユーザーの判断）。OpenAI 自身は GPT-5.6 Sol + `high` の後継に `astra` + `low` を勧めている（[Kingy AI の集計](https://kingy.ai/blog/gpt-6-sol-vs-astra-effort-pricing/)、[OpenAI Community](https://community.openai.com/t/set-astra-low-medium-as-a-replacement-for-5-6-sol-high/1395421)、2026-09-24参照）。
+
+**5段への組み替え（2026-10-01 確認）。** `gpt-6.1-sol` は 2026-09-29 公開で、単価は `gpt-6-sol` と同じ（入力 $2 / 出力 $10、キャッシュ入力 $0.10）。`codex debug models` のカタログに載り、`priority` に対応する。速度は `gpt-6-luna` が約140〜157 tok/s、`gpt-6.1-sol` が約67 tok/s（`max`）で、Fast は1.5倍速・料金2倍。公表値と第三者の集計（スコア / 1タスクあたりのコスト）。
+
+| | DeepSWE v1.1 | OSWorld 2.0 | AutomationBench 1.0.6 |
+|---|---|---|---|
+| `luna` + `low` | 2.4% / $0.006 | 8.3% / $0.030 | 1.2% / $0.006 |
+| `luna` + `medium` | 44.5% / $0.052 | 31.5% / $0.062 | 9.4% / $0.016 |
+| `luna` + `high` | 59.3% / $0.084 | 41.4% / $0.12 | 14.5% / $0.021 |
+| `luna` + `xhigh` | 61.3% / $0.11 | 46.7% / $0.16 | 12.6% / $0.025 |
+| `luna` + `max` | 66.6% / $0.22 | 52.7% / $0.27 | 20.7% / $0.037 |
+| `6.1-sol` + `low` | 64.4% / $0.17 | — | — |
+| `6.1-sol` + `medium` | 73.0% / $0.42 | — | 31.7% / $0.19 |
+| `6.1-sol` + `high` | 75.2% / $0.65 | — | — |
+| `6.1-sol` + `xhigh` | 71.9% / $0.79 | — | — |
+| `6.1-sol` + `max` | 71.9% / $1.57 | 71.4% / $1.27 | — |
+| `astra` + `low` | 67.0% / — | — | — |
+| `astra` + `xhigh` | 74.1% / $4.43 | — | — |
+| `astra` + `max` | 73.2% / — | 73.5% / $9.3 | — |
+
+- `luna` は `high` → `xhigh` の上積みが小さく（DeepSWE +2pt、AutomationBench は低下）、既定は `high` のまま据え置いた。`low` は探索の要る課題ではほぼ解けないが、Hex DataBench で所要時間が `medium` の約半分（63秒 / 117秒）なので、判断の残らない作業向けに残した（ユーザーの判断）。
+- `6.1-sol` + `low` は `luna` + `max` とスコアもコストもほぼ並び、低い推論量での誤答率は 7.7%（`gpt-6-sol` は 11.4%）。遅いので Fast を付ける。
+- `6.1-sol` は `high` が最高点で、`xhigh` 以上はスコアが下がりコストが上がる。旧 `dev-max`（`gpt-6-sol` + `xhigh`、66.6% / $1.00）より安く高い。
+- `astra` は `low` だと `6.1-sol` + `high` を下回る。`xhigh` でも DeepSWE では上回らず、OSWorld や Artificial Analysis 指数（53 / $3.26、`6.1-sol` は 52 / $0.72）で僅かに上回る程度。逃げ道として `dev-max` に置き、許可制を残した。
+- `6.1-sol` + `high` の DeepSWE のコストは出典で $0.65 と約 $1.50 に割れる。`6.1-sol` の推論量に対する非単調さはノイズの可能性もある。
+
+出典（2026-10-01参照）: [Kingy AI（Luna）](https://kingy.ai/blog/gpt-6-sol-luna-specs-benchmarks-pricing-comparison/)、[Kingy AI（6.1 Sol）](https://kingy.ai/blog/gpt-6-1-sol-specs-benchmarks-pricing-task-costs/)、[Emergent](https://emergent.sh/learn/gpt-6-1-sol-benchmarks)、[Vellum](https://www.vellum.ai/blog/gpt-6-1-sol-benchmarks-explained)、[AI Agent Store](https://aiagentstore.ai/ai-models/reasoning-effort/gpt-6-luna)。
 
 ただし発注1件のコストは、差し戻し1回で発生するディレクター側の検収サイクル（差分の読み直し、テストの再実行、追加の依頼文）より小さい。安いから下げるのではなく、依頼文で迷う余地を消せたから下げる。単価は判定の順序を覆さない。`models_cache.json` に単価は載っていないので、この数値は確認日つきの参考であり、判断に効くほどの差を感じたら出典を引き直す。サブスクリプション経由の実行では、請求は単価ではなくクレジット消費になる。
 
@@ -102,15 +132,11 @@ Seatbelt 側にはループバック限定のルール（`(allow network-inbound
 
 `--mode full-access` は、この実測までディレクターの裁量で選べる運用になっていた。ユーザーの許可を取らないまま `danger-full-access` を当てた発注が3件ある（2026-09-11、09-17×2。いずれも member-results）。
 
-**Paseo のモードが当てる値（Paseo 0.8.0 のバンドル `MODE_PRESETS` で確認）。** `auto` = `on-request` + `workspace-write`、`auto-review` = それに `approvals_reviewer: auto_review`、`full-access` = `never` + `danger-full-access`。`read-only`（`on-request` + `read-only`）のプリセットは存在するが、マニフェストの公開モードと照合する検証で弾かれる。`providerOptions`（`sandbox_mode` / `sandbox_workspace_write.network_access` など）はモードのプリセットを上書きできるが、渡せるのは TypeScript SDK の `agents.create` だけで、CLI にも MCP の `create_agent` にも口が無い。昇格で足りるため、この経路は採らない。
-
-**プロファイルが持てる項目（同上、`AgentProfileSchema`）。** `provider` / `model` / `modeId` / `thinkingOptionId` / `featureValues` / `notes` のみ。Codex の `featureValues` は `fast_mode` と `plan_mode` の2つで、サンドボックスもネットワークもここには無い。スキーマは `passthrough` なので `providerOptions` を書き足しても保存はされるが、適用側が上の項目しか読まないので効かない。
-
 **書き込み範囲。** `workspace-write` は作業ツリー以外に `/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。委任で実測し、`/private/tmp` 配下のスクラッチパッドへ承認なしで書き込めた。収集役の出力経路には使わない（書き込みを開けると同じ作業ツリーで並列に走らせられなくなる）。
 
 ## ランナー越しの運用（2026-08-05 / 08-09 / 08-12 / 09-11 実測）
 
-herdr のペインで測った値。ランナーに依らない項目（所要時間、読み取り量、`codex exec` の挙動）は Paseo でもそのまま効く。
+herdr のペインで測った値。ランナーに依らない項目（所要時間、読み取り量、`codex exec` の挙動）は Orca でもそのまま効く。
 
 - 幅81桁（325x98 のタブで兄弟ペインがある状態から右へ割った値）でも Codex の TUI は崩れず、237行規模の報告も欠落なく回収できた。単一ペインのタブなら162桁になる。
 - `--no-alt-screen` 付きで `recent-unwrapped` が262行（対象5ファイル全項目、冒頭のマーカーも残る）、81桁のペインでも213行を全項目そろって回収できた。同じ依頼を短い応答で走らせたときも40行返った。付け忘れた同構成では0行だった。
@@ -120,21 +146,6 @@ herdr のペインで測った値。ランナーに依らない項目（所要�
 - 承認プロンプトは `send-keys esc` で却下でき、ファイルは作られなかった。承認の代理入力はclassifierに止められる。
 - 素の shell の `codex resume` はランナーの管理外に出る。起動引数として `resume <UUID>` を渡す形で復旧できた（2026-08-09、herdr 0.8.0 / Codex 0.146.0）。
 - `codex exec` をヘッドレスで走らせると、`approval_policy = on-request` では承認待ちのまま標準出力へ1バイトも出さずに固まる（2026-08-12、27分放置）。
-
-Paseo で確かめた差分（2026-09-11 / 09-12、Paseo 0.8.0 / Codex 0.153.4。公開されている[ドキュメント](https://github.com/getpaseo/paseo/blob/main/docs/providers.md)とソースで裏を取った）。
-
-- `paseo run` に `-c` 相当のフラグが無い。デーモンのAPIには `providerOptions`（Codex では `approval_policy` / `sandbox_mode` / `sandbox_workspace_write.*` / `web_search` / `features.*`）があるが、CLI から渡す口は無い。スキーマは strict で `service_tier` を含まないため、Fast はAPI経由でも指定できない。
-- Fast は Paseo のエージェント機能（`fast_mode`）として存在し、オンなら `service_tier` に `fast` を渡す。ただし `run` にも `agent update` にもフラグが無く、CLI からは切り替えられない（アプリの画面にはトグルがある）。指定しなければ `~/.codex/config.toml` の値が効き、`default`（オフ）のまま `luna` が走ったのを rollout ログで確認した。
-- 依頼文のスラッシュコマンドは効かない。Paseo が起動するのは `codex app-server` で、`/status` も `/fast` もただのテキストとして読まれた（Codex は「高速モードです。」と会話で返し、config.toml は不変）。
-- `--thinking none` は通る。`paseo provider models codex --json` の `thinkingOptionIds` には無いが CLI は検証せず、Codex のセッションへ `effort = "none"` として届いた。カタログに無いのでUIからは選べない。
-- モードは `auto`（Default Permissions）・`auto-review`・`full-access` の3つ。`--mode read-only` はデーモンが拒否する（`Invalid mode 'read-only' for provider 'codex'`）。ソースには `read-only` のプリセットがあるが公開されていない。
-- `full-access` は `approval_policy: never` と `sandbox_mode: danger-full-access` をまとめて当てる。ネットワークだけを開ける粒度は無い。
-- `--mode` を省いた実測では `auto` になった（プロバイダ既定の `auto-review` ではない）。
-- `run` の依頼文は位置引数で、`"$(cat <path>)"` 越しでもバックティックは再評価されずに届いた。`send` には `--prompt-file` がある。
-- `send` は既定で完了まで待ち、`wait` は状態をJSONで返す。消費は `inspect --json` の `LastUsage` で読める。
-- エージェント内から `paseo run` で作ったエージェントはサブエージェントになる（`ParentAgentId` が入る）。公式ドキュメントの記述どおりで、`PASEO_AGENT_ID` で親が判定される。
-- CLI にペインや分割を操作するコマンドは無い。画面へ出せるのは `agent open`（タブとして開くだけ）で、配置は指定できない。
-- アプリがタブで開いているエージェントを `delete` でハード削除すると、アプリが消えたIDへ `update_agent_request` を約2秒おきに投げ続け、`Agent not found`（`AgentManager.writeStoredMetadata`）で失敗してタブが閉じられなくなった。アプリの再起動で復帰。片付けは `archive` を使う。
 
 **ペインの記録が事実と食い違った例。** listen の可否を調べさせたとき、最終報告は `EPERM` と書いていたが、画面に見えていたのは `TIMEOUT` と `SERVER_CLOSED` で、畳まれた行（`… +464 lines`）に本当の出力があった。追試すると `EPERM` が事実で、`TIMEOUT` は Codex 自身のスクリプトに残ったタイマーの出力だった。
 
@@ -176,3 +187,13 @@ Orca 1.4.210 / Codex 0.156.1、`gpt-6-luna` + `low` + `service_tier=priority` + 
 - **Codex の設定の置き場所。** `ORCA_CODEX_HOME` は `~/Library/Application Support/orca/codex-runtime-home/home` で、`config.toml`・`models_cache.json`・`sessions/` を独自に持つ。`config.toml` はリンクではない複製で、Orca のフック（`hooks.json`）の設定が足されている。
 - **Orchestration を採らなかった理由。** `orchestration worker-start` は `--model` / `--effort` しか持たない（`--help`、1.4.210）。`worktree create --agent codex` はモデルや推論量の引数を受け付けない（`orca skills get orca-cli`）。
 
+## worktree（2026-10-01 実測）
+
+Orca 1.4.217、cwd は dotfiles（`feat/codex-director-gpt61` ブランチ、未コミットの変更あり）。Codex は起動せず、worktree の作成から削除までを確かめた。
+
+- `orca worktree create --name cd-wt-probe --no-parent --setup skip --json` は `result.worktree.id`（`<repoId>::<パス>`）・`path`（`~/orca/workspaces/dotfiles/cd-wt-probe`）・`branch`（`refs/heads/kyosuke/cd-wt-probe`）を返し、`startupTerminal` は `null` だった。`terminal list` には fish のターミナルが1つ載った。
+- 起点は今いるブランチではなく `main`（8c1e78a）で、元の作業ツリーの未コミットの変更は入っていなかった。
+- worktree で既存ファイルを変更し、新規ファイルを足して `git add -N .` → `git diff --binary` で取ったパッチは、元の作業ツリーで `git apply --check` を通った。
+- 変更が残ったままの `orca worktree rm` は `runtime_error` で止まり、`--force` を付けると通った。ディレクトリも、`git worktree list` の登録も、ブランチも消えた。`--force` は実験の後始末として使ったもので、運用では使わない（同日、ユーザーからの指示）。
+
+herdr（0.9.3）は、このセッションが Orca の中だったので実測していない。`runner-herdr.md` の手順は公式の CLI リファレンスとスキルに基づく。初回に使ったら、返り値の形と `worktree remove` のあとに残るものを確かめ、ここへ書く。
