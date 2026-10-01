@@ -5,8 +5,10 @@
 # そのため版を固定し、上げるときは手で書き換える。GA が出たら latest に戻す。
 # esa-cli は esaio 公式だが週のダウンロード数が少なく、mise の安全策に弾かれるので明示的に許可する。
 # fish はレジストリに無いので aqua バックエンドを明示する（公式の .pkg を sudo なしで展開する）。
+# 1password（op）は aqua だと配布元が GitHub でなく mise が版を一覧できないので、レジストリ既定の vfox プラグインで入れる。
 # herdr と opencode の自己更新はインストール先を書き換えて mise の管理とずれるので、更新は mise up で行う。
 [tools]
+1password = "latest"
 codex = "latest"
 dotenvx = "latest"
 gh = "latest"
