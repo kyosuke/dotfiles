@@ -85,23 +85,26 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 ```
 
-`satisfied: true` なら、実行ログで終わりの行が増えたかを確かめてから報告を読む（下記）。増えていなければもう一度待つ。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` は時間切れで、もう一度待つ。
+`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` は時間切れで、もう一度待つ。
 
-実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが終わると `event_msg` の `task_complete` が、却下や中断で終わると `turn_aborted` が1行足される。
+実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
 
-**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、名前（起動時刻が入っている）が最も新しいものを選ぶ。同じ依頼文を出し直したときも、これで新しいほうに当たる。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。パスに空白が入るので、必ず引用符で囲む。
+**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、名前（起動時刻が入っている）が最も新しいものを選ぶ。同じ依頼文を出し直したときも、これで新しいほうに当たる。依頼文が書き込まれるのは送信の後なので、探すのは `tui-idle` が返ってからにする。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。Bash の変数は呼び出しをまたいで残らないので、出たパスを以後のコマンドへそのまま書く。パスに空白が入るので、必ず引用符で囲む。
 
 ```bash
-H="$ORCA_CODEX_HOME/sessions/$(date +%Y/%m/%d)"
 KEY=$(head -1 <scratchpad>/order.txt | cut -c1-60)
-R=$(grep -lF "$KEY" "$H"/rollout-*.jsonl | sort | tail -1)
+grep -lF "$KEY" "$ORCA_CODEX_HOME/sessions/$(date +%Y/%m/%d)"/rollout-*.jsonl | sort | tail -1
 ```
 
-終わりの行の数は、送る直前に数えておく。`tui-idle` が返ったら同じ式で数え直し、`N` より増えていれば終わっている。差し戻しのときも、送る直前に数え直す。
+**最後のターンの状態で判定する。** ターンが始まるたびに `task_started` が足されるので、3種の行のうち最後のものを見れば、初回でも差し戻しでも今のターンの状態が分かる。数を数えて送信の前後で比べる必要はない。
 
 ```bash
-N=$(grep -cE '"type":"(task_complete|turn_aborted)"' "$R")
+jq -rs '[.[] | select(.type == "event_msg" and (.payload.type | IN("task_started", "task_complete", "turn_aborted")))] | last | .payload.type' "<ログのパス>"
 ```
+
+- `task_complete`: 終わった。報告を回収する（下記）
+- `task_started`: まだ作業中。もう一度 `tui-idle` で待つ
+- `turn_aborted`: 却下か中断で終わった。報告は回収しない。ログに残る最後の `task_complete` は前のターンの報告である
 
 ## 承認を求められたとき
 
@@ -114,10 +117,10 @@ N=$(grep -cE '"type":"(task_complete|turn_aborted)"' "$R")
 **報告は画面から読まず、実行ログから取る。** `terminal read` は既定で PTY の生の出力を返し、TUI の再描画の断片（`WorkWorkWork…`、プロンプト行の繰り返し）が報告の行に混ざる。`--screen` を付ければ描画された画面を読めるが、画面に収まる分しか取れない。実行ログの `task_complete.last_agent_message` は、Codex の最終メッセージを改行を保ったまま全文で持っている。
 
 ```bash
-jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent_message' "$R"
+jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent_message' "<ログのパス>"
 ```
 
-差し戻しを重ねたスレッドでは `task_complete` が複数行になるので、上の例のとおり最後のものを読む。報告の中身を信用しないこと、検収は `git diff` で行うことは他のランナーと同じである（`execution.md`・`review.md`）。
+差し戻しを重ねたスレッドでは `task_complete` が複数行になるので、上の例のとおり最後のものを読む。読むのは、最後のターンの状態が `task_complete` だったときだけである。報告の中身を信用しないこと、検収は `git diff` で行うことは他のランナーと同じである（`execution.md`・`review.md`）。
 
 **起動引数が効いたかも実行ログで確かめる。** `turn_context` に、実際に当たった `model`・`effort`・`approval_policy`・`approvals_reviewer`・`sandbox_policy` が載る。消費は `token_count` の `info.total_token_usage` で見る。週次の残量は TUI の `/status` で見る。
 
