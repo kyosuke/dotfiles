@@ -121,7 +121,7 @@ printf 'HERDR_ENV=%s ORCA_TERMINAL_HANDLE=%s\n' "${HERDR_ENV:-}" "${ORCA_TERMINA
 | `references/ordering.md` | 発注設計のたび。プロファイルの使い分け、下げる判断、`dev-max` の条件、収集と判断の分離、依頼文テンプレート、合格ラインの書き方と落とし穴 |
 | `references/execution.md` | 委任のたび。依頼文の渡し方、承認の境界、待機中の判断、worktree での並列化、報告回収の制約、ネットワークの開け方、スレッドの分割と片付け |
 | `references/runner-herdr.md` | herdr で委任するたび。公式スキルへの上書き、プロファイルの引数展開、`service_tier` の語彙、ネットワーク、読み取り専用 |
-| `references/runner-orca.md` | Orca で委任するたび。Orchestration を使わない理由、プロファイルの引数展開、`$ORCA_CODEX_HOME`、実行ログでの完了判定と報告回収、承認待ちの見え方、片付け |
+| `references/runner-orca.md` | Orca で委任するたび。Orchestration を使わない理由、プロファイルの引数展開、`$ORCA_CODEX_HOME`、`tui-idle` での完了待ち、実行ログでの報告回収、承認待ちの見え方、片付け |
 | `references/review.md` | Codex 完了後。確認項目、証拠の扱い、機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、指摘の仕分けと差し戻し |
 | `references/recovery.md` | 起動・発注・完了検知・報告回収が期待どおりに動かないとき。承認待ちの読み方、`listen EPERM` の実測手順、スレッドの再開 |
 | `references/evidence.md` | 運用の前提そのものを変えるとき。実測値、退けた選択肢、事故の記録、ユーザーからの指示の履歴 |
