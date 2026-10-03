@@ -194,6 +194,7 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 - **起動待ち。** `terminal create` の直後に `wait --for tui-idle --timeout-ms 60000` で待つと、2回とも約6秒で `satisfied: true` が返り、その時点で画面に `Ask Codex` が出ていた。続けて送った依頼は `turn_started` まで進んだ。`-a never` を足しても同じだった。
 - **完了待ち。** ターンの開始後に待つと、2回とも Codex の作業が終わるまで返らなかった（21秒と約2分半）。返った時点で実行ログの最後は `task_complete` だった。1.4.210 で見た、作業中に1〜2秒で返る挙動は再現しなかった。
 - **承認待ち。** `-a on-request` で昇格を求めて止まると、`wait` は `satisfied: false`、`blockedReason: agent-interactive-prompt` で返った。
+- **最後のターンの状態での判定（codex-director の手順で実測）。** `dev-low` + `-s read-only` の同じスレッドへ3ターン送った。完了したターンは最後の行が `task_complete` で、報告は実物と一致した。送信直後に ESC で中断したターンは `task_started` に続いて `turn_aborted` が足され、`tui-idle` も `satisfied: true` で返った。終わりの行の数を比べる旧方式ならこれを完了と取り違え、前のターンの `task_complete` を報告として読んでいた。中断の後に送ったターンは、作業中が `task_started`、待機後が `task_complete` になった。ログは送信後に依頼文の先頭行で特定でき、`turn_context` は起動引数どおりだった。
 - **画面の読み取り。** `terminal read --screen` は描画された画面を `source: screen` で返した。報告の全文は画面に収まらないことがあるので、回収は引き続き実行ログから取る。
 
 ## worktree（2026-10-01 実測）
