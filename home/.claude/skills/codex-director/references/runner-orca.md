@@ -79,9 +79,15 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 
 ## 完了を待つ
 
-**`tui-idle` を完了の判定に使わない。** ターンの開始後に待つと、Codex がまだ作業中なのに1〜2秒で `satisfied: true` を返した（2回とも同じ）。この条件が使えるのは、起動直後の入力待ちの確認だけである。
+**完了は `tui-idle` で待つ。** ガイドの規則どおりで、ターンが終わるまで返らない（Orca 1.4.219 で2回確かめた）。待機は Bash ツールの既定タイムアウト（120秒）を超えるので、`timeout` に `600000` を指定する。
 
-完了は Codex の実行ログで判定する。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが終わると `event_msg` の `task_complete` が、却下や中断で終わると `turn_aborted` が1行足される。
+```bash
+orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
+```
+
+`satisfied: true` なら、実行ログで終わりの行が増えたかを確かめてから報告を読む（下記）。増えていなければもう一度待つ。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` は時間切れで、もう一度待つ。
+
+実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが終わると `event_msg` の `task_complete` が、却下や中断で終わると `turn_aborted` が1行足される。
 
 **ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、名前（起動時刻が入っている）が最も新しいものを選ぶ。同じ依頼文を出し直したときも、これで新しいほうに当たる。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。パスに空白が入るので、必ず引用符で囲む。
 
@@ -91,14 +97,11 @@ KEY=$(head -1 <scratchpad>/order.txt | cut -c1-60)
 R=$(grep -lF "$KEY" "$H"/rollout-*.jsonl | sort | tail -1)
 ```
 
-待つには、終わりの行が増えるまで回す `until` ループを Bash の `run_in_background: true` で投げ、完了通知を受けてから読む。
+終わりの行の数は、送る直前に数えておく。`tui-idle` が返ったら同じ式で数え直し、`N` より増えていれば終わっている。差し戻しのときも、送る直前に数え直す。
 
 ```bash
 N=$(grep -cE '"type":"(task_complete|turn_aborted)"' "$R")
-until [ "$(grep -cE '"type":"(task_complete|turn_aborted)"' "$R")" -gt "$N" ]; do sleep 15; done
 ```
-
-差し戻しのときは、送る直前に `N` を数え直す。待つ間に承認を求められても、ループは終わらない。承認待ちは次の節の方法で見る。
 
 ## 承認を求められたとき
 
@@ -108,7 +111,7 @@ until [ "$(grep -cE '"type":"(task_complete|turn_aborted)"' "$R")" -gt "$N" ]; d
 
 ## 報告を回収する
 
-**報告は画面から読まず、実行ログから取る。** `terminal read` が返すのは PTY の生の出力で、TUI の再描画の断片（`WorkWorkWork…`、プロンプト行の繰り返し）が報告の行に混ざる。`--no-alt-screen` を付けても付けなくても同じだった。実行ログの `task_complete.last_agent_message` は、Codex の最終メッセージを改行を保ったまま全文で持っている。
+**報告は画面から読まず、実行ログから取る。** `terminal read` は既定で PTY の生の出力を返し、TUI の再描画の断片（`WorkWorkWork…`、プロンプト行の繰り返し）が報告の行に混ざる。`--screen` を付ければ描画された画面を読めるが、画面に収まる分しか取れない。実行ログの `task_complete.last_agent_message` は、Codex の最終メッセージを改行を保ったまま全文で持っている。
 
 ```bash
 jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent_message' "$R"
@@ -122,4 +125,4 @@ jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent
 
 終わったら、自分が作ったターミナルだけを `terminal close --terminal <handle>` で閉じる。**`ok: false`（`terminal_stop_unverifiable`）が返っても、タブは消えていて、プロセスも終わっていた**（3回とも同じ）。閉じ直したり、別のホストに向けて再試行したりしない。`terminal list` から消えたことと、`pgrep -f` で起動コマンドが残っていないことを確かめて終える。
 
-この文書の挙動は Orca 1.4.210 / Codex 0.156.1 で実測した（`evidence.md`）。worktree の手順は Orca 1.4.217 で確かめた。
+この文書の挙動は Orca 1.4.210 / Codex 0.156.1 で実測した（`evidence.md`）。worktree の手順は Orca 1.4.217、`tui-idle` での完了待ちは Orca 1.4.219 で確かめた。
