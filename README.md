@@ -68,6 +68,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
 | `scripts/install-fonts.sh` | Installs fonts from GitHub (run by `mise bootstrap`) |
+| `scripts/git-hooks/pre-commit` | Blocks commits that mention private pxgrid repo names (enabled by `mise bootstrap`) |
 | `docs/apps.md` | Apps installed outside mise, with download links |
 
 ## Adding or removing files

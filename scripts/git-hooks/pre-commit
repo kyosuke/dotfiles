@@ -1,0 +1,25 @@
+#!/bin/sh
+# 公開リポジトリへ pxgrid の private リポジトリ名を入れないよう、ステージした追加行とパスを照合する。
+# 名前の一覧はコミットのたびに gh で取り、このリポジトリには置かない。
+# 英単語と同じ名前（辞書にあるもの）は誤検知になるので外す。それ以外に外す名前は、名前そのものを
+# 公開しないよう .git/info/allowed-repo-names（1行1件、コミットしない）に書く。
+
+set -eu
+
+names=$(gh repo list pxgrid --visibility private --limit 1000 --json name -q '.[].name') || {
+  echo "pre-commit: gh で pxgrid のリポジトリ一覧を取れなかった。確認済みなら git commit --no-verify で通す。" >&2
+  exit 1
+}
+allow="$(git rev-parse --git-dir)/info/allowed-repo-names"
+[ -f "$allow" ] || allow=/dev/null
+names=$(printf '%s\n' "$names" | grep -vixF -f /usr/share/dict/words | grep -vxF -f "$allow" || true)
+[ -n "$names" ] || exit 0
+
+hits=$( { git diff --cached -U0 --no-color | grep '^+' | grep -v '^+++' || true; git diff --cached --name-only; } \
+  | grep -nowF -e "$names" || true)
+[ -z "$hits" ] && exit 0
+
+echo "pre-commit: private リポジトリの名前が含まれている（行番号は追加行とパスを並べたときの通し番号）:" >&2
+printf '%s\n' "$hits" | sort -u -t: -k2 >&2
+echo "伏せて書き直す。誤検知なら .git/info/allowed-repo-names に足すか、git commit --no-verify で通す。" >&2
+exit 1
