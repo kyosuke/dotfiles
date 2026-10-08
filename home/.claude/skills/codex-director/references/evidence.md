@@ -41,6 +41,10 @@
 
 **`luna` の報告の裏取り。** 既存の分岐が例外を再生成すると報告したが、実際は呼び出しが `try` の外にあり再生成されなかった。同種の食い違いを `sol` は前の発注で自力で3件見つけていた。
 
+**`luna` が全体の監査を浅く済ませた例（2026-10-07）。** 社内の TypeScript リポジトリのテスト整理（37ファイル・約18,000行・宣言507件、目標は宣言の1割＝51件の削除）で、候補の洗い出しを `dev-default` に出した。手順・目標・止める条件・候補ごとに求める根拠は依頼文で決め切っていた。返った候補は5件で、すべて1ファイルの約200行の範囲に集まっていた。届かない理由は領域ごとの一般論で、個々のテストを照合した記述は無かった。根拠の付いた候補の故障実験は実際に通っており、手を抜いたのは走査の範囲である。同じ目的の依頼文を `dev-xhigh` へ出すと、37ファイルそれぞれの約束を書き出したうえで20件を削除し、9件の故障実験まで行った（ディレクター側でも4件を壊して確かめ、すべて検出された）。所要は約40分。ユーザーの見立ては「やることが明確なただの作業なら `luna` で問題ない」で、対象を列挙せず全体から選ばせる依頼が射程の外にある。`ordering.md` の「判断を任せる条件」には、こうした発注を一括で出す前にユーザーへ諮るとあり、このときは諮らずに `dev-default` で出していた。
+
+**削除の代わりのテストを、条件を厳しくする変異だけで確かめた抜け（2026-10-08）。** 上の `dev-xhigh` は、JST 週境界のテストを消す根拠に「`>=` を `>` に変えると代わりのテストが落ちる」を挙げ、ディレクターも同じ向きで確かめて通した。条件を外す変異（下限を消す）では、代わりのテストは落ちなかった。後段にも期間外を除く処理があり、広がった分を吸収していたためである。後のレビュー（`gpt-6.1-sol` + `high`）がこれを指摘し、1本を戻した。範囲や権限の条件を検証するテストを消すときは、条件を厳しくする変異と緩める変異の両方を入れる。
+
 **単価（2026-07-30 の値下げ後、2026-07-31 確認）。** 100万トークンあたりの出力単価は `luna` $1.2 / `terra` $12 / `sol` $30、入力は $0.2 / $2 / $5（[OpenAI の告知](https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/)）。`luna` は `sol` の25分の1で、推論量を `max` まで上げても桁が違う。倍率は入力にも同じだけ効くので、一次資料の通読や広域の走査を `sol` へ出すと週次リミットを1タスクで使い切る（2026-08-12、ユーザーからの指示）。
 
 **GPT-6 への切り替え（2026-09-24 確認）。** 100万トークンあたりの出力単価は `gpt-6-luna` $0.5 / `gpt-6-sol` $10 / `gpt-6-astra` $50、入力は $0.1 / $2 / $10。Fast はいずれも2倍（[OpenAI の料金表](https://developers.openai.com/api/docs/pricing)）。`gpt-6-luna` は `gpt-5.6-luna` の半額で、`gpt-6-sol` は `gpt-5.6-terra` より安い。`dev-max` は `astra` の5分の1になる `sol` を選んだ（ユーザーの判断）。
@@ -130,7 +134,7 @@ Seatbelt 側にはループバック限定のルール（`(allow network-inbound
 
 昇格時に Codex が発行したのは `tools.exec_command({..., sandbox_permissions: "require_escalated", justification: "...", prefix_rule: ["curl"]})`。`paseo permit ls` は空のままで、アプリにもダイアログは出ず、人は一度も答えていない。auto-reviewer が処理している。ユーザーの方針はこれを許容する（2026-09-18。「本当に危険な操作ならそこで弾かれる」）。
 
-`--mode full-access` は、この実測までディレクターの裁量で選べる運用になっていた。ユーザーの許可を取らないまま `danger-full-access` を当てた発注が3件ある（2026-09-11、09-17×2。いずれも member-results）。
+`--mode full-access` は、この実測までディレクターの裁量で選べる運用になっていた。ユーザーの許可を取らないまま `danger-full-access` を当てた発注が3件ある（2026-09-11、09-17×2。いずれも社内リポジトリ）。
 
 **書き込み範囲。** `workspace-write` は作業ツリー以外に `/tmp` 配下も既定で書ける（`sandbox_workspace_write.exclude_slash_tmp` の既定が `false`。[`config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)、2026-08-12参照）。委任で実測し、`/private/tmp` 配下のスクラッチパッドへ承認なしで書き込めた。収集役の出力経路には使わない（書き込みを開けると同じ作業ツリーで並列に走らせられなくなる）。
 
@@ -153,7 +157,7 @@ herdr のペインで測った値。ランナーに依らない項目（所要�
 
 **脆い手段を選ばれた2件。** 生成バンドルを読む検査で「バンドラ生成の識別子に依存しない形にする」と差し戻したら、依存先が `default: () => ident` という出力形状へ移り、ブレースを数える手書きのパーサ100行が入った（検査を取り下げ、依存バージョンの固定へ振り替えた）。エラーメッセージが呼び出し側の引数名を指すことだけを条件にしたら、上流の Error を `replace(/\bfrom\b/g, "startDate").replace(/\bto\b/g, "endDate")` で書き換える実装が来た（"to" は英文に普遍的に現れるので、上流の文言が増えるだけで別の箇所が壊れる）。どちらも条件の照合だけでは合格になる。
 
-**範囲を広げたgrep。** `grep -rn "対象Project外" src scripts tests` を検収条件にしたところ、消したかった箇所とは別に、本番の別経路の表示名として使われていた文字列まで消えた。条件の照合では指示どおりに見え、`git diff` の通読で発見した（team-activity-observer、2026-08-06、4回発注のうち1回）。
+**範囲を広げたgrep。** `grep -rn "対象Project外" src scripts tests` を検収条件にしたところ、消したかった箇所とは別に、本番の別経路の表示名として使われていた文字列まで消えた。条件の照合では指示どおりに見え、`git diff` の通読で発見した（社内の TypeScript リポジトリ、2026-08-06、4回発注のうち1回）。
 
 **型定義と実データのずれ。** `projects: Array<...>` が必須の型定義を根拠に依頼したところ、DBの実データにはプロパティ自体がなく、新規スクリプトが `Cannot read properties of undefined` で落ちた。本番コードはvalibotのパースで `?? []` を通るため無傷だった（同上、別の1回）。
 
@@ -196,6 +200,14 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 - **承認待ち。** `-a on-request` で昇格を求めて止まると、`wait` は `satisfied: false`、`blockedReason: agent-interactive-prompt` で返った。
 - **最後のターンの状態での判定（codex-director の手順で実測）。** `dev-low` + `-s read-only` の同じスレッドへ3ターン送った。完了したターンは最後の行が `task_complete` で、報告は実物と一致した。送信直後に ESC で中断したターンは `task_started` に続いて `turn_aborted` が足され、`tui-idle` も `satisfied: true` で返った。終わりの行の数を比べる旧方式ならこれを完了と取り違え、前のターンの `task_complete` を報告として読んでいた。中断の後に送ったターンは、作業中が `task_started`、待機後が `task_complete` になった。ログは送信後に依頼文の先頭行で特定でき、`turn_context` は起動引数どおりだった。
 - **画面の読み取り。** `terminal read --screen` は描画された画面を `source: screen` で返した。報告の全文は画面に収まらないことがあるので、回収は引き続き実行ログから取る。
+
+## Orca の実行ログと起動（2026-10-07 実測）
+
+`dev-default` と `dev-xhigh` をネットワークを開けて社内の TypeScript リポジトリで起動した。
+
+- **auto-reviewer のログ。** `approvals_reviewer=auto_review` で動くと、auto-reviewer が依頼文を含む自分の rollout を、本体と同じ起動時刻（ファイル名の時刻部分が同じ）で書いた。依頼文の先頭行で探して名前の最新を取るとこちらを掴み、`task_complete.last_agent_message` は審査結果の JSON（`{"risk_level":"low",…}`）だった。`turn_context.model` が `codex-auto-review`、`sandbox_policy` が `read-only` なので、それで除ける。
+- **時間切れの返り値。** `wait --for tui-idle --timeout-ms 560000` が時間切れで返ったとき、`satisfied` は `false` ではなく `null` だった（3回）。実行ログの最後は `task_started` のままだった。
+- **初回のワークスペース信頼。** Codex を初めて起動した repo では、`tui-idle` が `satisfied: false`、`blockedReason: agent-trust-workspace` で返り、画面にフォルダを信頼するかの確認が出た。ユーザーが画面で答えると、次の待機は `satisfied: true` になった。2回目の起動では出なかった。
 
 ## worktree（2026-10-01 実測）
 

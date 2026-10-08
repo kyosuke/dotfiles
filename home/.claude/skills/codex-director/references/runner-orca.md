@@ -85,15 +85,17 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 ```
 
-`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` は時間切れで、もう一度待つ。
+`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` と、`satisfied: null`（2026-10-07 の時間切れはこちらで返った）は時間切れで、もう一度待つ。
 
 実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
 
-**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、名前（起動時刻が入っている）が最も新しいものを選ぶ。同じ依頼文を出し直したときも、これで新しいほうに当たる。依頼文が書き込まれるのは送信の後なので、探すのは `tui-idle` が返ってからにする。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。Bash の変数は呼び出しをまたいで残らないので、出たパスを以後のコマンドへそのまま書く。パスに空白が入るので、必ず引用符で囲む。
+**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、`turn_context.model` が `codex-auto-review` でないもので、名前（起動時刻が入っている）が最も新しいものを選ぶ。auto-reviewer は依頼文を含む自分のログを同じ起動時刻で書くので、名前だけで選ぶとそちらを掴む（2026-10-07、`task_complete` が審査結果の JSON だった）。同じ依頼文を出し直したときも、これで新しいほうに当たる。依頼文が書き込まれるのは送信の後なので、探すのは `tui-idle` が返ってからにする。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。Bash の変数は呼び出しをまたいで残らないので、出たパスを以後のコマンドへそのまま書く。パスに空白が入るので、必ず引用符で囲む。
 
 ```bash
 KEY=$(head -1 <scratchpad>/order.txt | cut -c1-60)
-grep -lF "$KEY" "$ORCA_CODEX_HOME/sessions/$(date +%Y/%m/%d)"/rollout-*.jsonl | sort | tail -1
+grep -lF "$KEY" "$ORCA_CODEX_HOME/sessions/$(date +%Y/%m/%d)"/rollout-*.jsonl | sort | while read -r f; do
+  jq -e -s 'map(select(.type=="turn_context")) | last | .payload.model != "codex-auto-review"' "$f" >/dev/null && echo "$f"
+done | tail -1
 ```
 
 **最後のターンの状態で判定する。** ターンが始まるたびに `task_started` が足されるので、3種の行のうち最後のものを見れば、初回でも差し戻しでも今のターンの状態が分かる。数を数えて送信の前後で比べる必要はない。
