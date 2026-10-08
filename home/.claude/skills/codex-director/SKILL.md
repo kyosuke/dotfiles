@@ -108,6 +108,8 @@ printf 'HERDR_ENV=%s ORCA_TERMINAL_HANDLE=%s\n' "${HERDR_ENV:-}" "${ORCA_TERMINA
 
 環境の制約や運用の失敗に気づいたら、その場の報告で終わらせない。同じ状況で再発するものは、結論を運用側（`ordering.md` / `execution.md` / `review.md` / ランナーの reference）へ、観測と根拠を `references/evidence.md` へ書く。タスクごとの記録は付けない（試験運用の記録は 2026-09-18 に終了。経緯は `evidence.md`）。
 
+このスキルは公開リポジトリ（github.com/kyosuke/dotfiles）にあり、書いた内容はそのまま公開される。作業先のリポジトリ名・ファイル名・パス・業務内容は書かず、「社内の TypeScript リポジトリ」のように種類と規模だけ残す。
+
 失敗1件につき依頼文の禁止事項を1行足す形にはしない。積み上げた列挙は Codex が字面で満たせるので、防いだつもりの失敗が別の形で出る（`references/ordering.md`）。文体や粒度のように判断が要る領域で落ちたなら、依頼文ではなく検収の読み方を足す。
 
 この Skill ディレクトリは dotfiles リポジトリ配下なので、ユーザーの許可なく記録ファイルを追加しない。
