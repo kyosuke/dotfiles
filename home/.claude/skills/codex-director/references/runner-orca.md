@@ -41,6 +41,12 @@ orca terminal create --worktree active --title <タスク名> \
 
 返ってきた `result.terminal.handle` を以降の宛先に使う。起動時刻も控えておき、実行ログの特定に使う（下記）。
 
+PRのブランチのために起動したターミナルを、マージまで残すことがあるなら記録する。マージ後に post-merge-cleanup が閉じる。PRに関係しない調査では記録しない。
+
+```bash
+echo "<ブランチ名> orca <handle>" >> "$(git rev-parse --git-common-dir)/review-terminals"
+```
+
 - **読み取り専用で起動できる。** `-s read-only` を付けると、実行ログの `turn_context.sandbox_policy` が `read-only` になった。収集役を同じ作業ツリーで並列に走らせる前提（`ordering.md`）は、このランナーでも成立する。
 - **ネットワークは起動時に開ける。** `-c sandbox_workspace_write.network_access=true` を渡すと、そのセッションだけネットワークが通る。書き込み範囲は `workspace-write` のままなので、コマンド単位の昇格（サンドボックス外での実行）より露出が小さい。こちらを使い、昇格を既定にしない。ループバックだけを開ける設定は無く、外向きも同時に開く（運用は `execution.md`）。
 - `--no-alt-screen` は付けなくてよい。報告は画面から読まない（下記）ので、効き目が無い。
