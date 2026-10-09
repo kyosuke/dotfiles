@@ -19,7 +19,7 @@ opencode = "latest"
 pnpm = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
-"npm:cf" = "1.0.0-beta.10"
+"npm:cf" = "1.0.0-beta.13"
 "npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
