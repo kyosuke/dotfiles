@@ -18,6 +18,12 @@ keybind = super+shift+[=unbind
 keybind = ctrl+tab=unbind
 keybind = ctrl+shift+tab=unbind
 
+# 分割は Ghostty ではなく herdr で行う。herdr の prefix(ctrl+b) と分割キーを送る。
+# ⌘D は左右分割(split_vertical = prefix+v)、⌘⇧D は上下分割(split_horizontal = prefix+minus)。
+# herdr 側で cmd を直接バインドするより、端末のキー転送に依存しないこちらを選んだ。
+keybind = super+d=text:\x02v
+keybind = super+shift+d=text:\x02-
+
 # フルスクリーンはデフォルトの cmd+ctrl+f が残るので、そちらを使う。
 keybind = super+enter=unbind
 
