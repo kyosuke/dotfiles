@@ -10,11 +10,39 @@ shell-integration = fish
 # タブバーが出る。herdr 運用では基本1タブなので表示されない。
 macos-titlebar-style = transparent
 
-# タブ関連のキーバインドを無効化（herdr 運用での誤爆やキー衝突を防ぐ）。
-# ctrl 系はとくに unbind することで herdr や TUI 側へパススルーされる。
-keybind = super+t=unbind
-keybind = super+shift+]=unbind
-keybind = super+shift+[=unbind
+# タブと分割の ⌘ キーは Ghostty ではなく herdr を操作する。herdr の prefix(ctrl+b) とキーを送る。
+# herdr 側で cmd を直接バインドするより、端末のキー転送に依存しないこちらを選んだ。
+# prefix を変えたら \x02 も直す。
+keybind = super+t=text:\x02c
+keybind = super+shift+]=text:\x02n
+keybind = super+shift+[=text:\x02p
+keybind = super+d=text:\x02v
+keybind = super+shift+d=text:\x02-
+keybind = super+digit_1=text:\x021
+keybind = super+digit_2=text:\x022
+keybind = super+digit_3=text:\x023
+keybind = super+digit_4=text:\x024
+keybind = super+digit_5=text:\x025
+keybind = super+digit_6=text:\x026
+keybind = super+digit_7=text:\x027
+keybind = super+digit_8=text:\x028
+keybind = super+digit_9=text:\x029
+keybind = super+[=text:\x02\x1b[Z
+keybind = super+]=text:\x02\t
+keybind = super+alt+arrow_left=text:\x02h
+keybind = super+alt+arrow_down=text:\x02j
+keybind = super+alt+arrow_up=text:\x02k
+keybind = super+alt+arrow_right=text:\x02l
+keybind = super+shift+enter=text:\x02z
+# herdr はペインとタブを確認なしで閉じる（confirm_close はワークスペースだけ）。
+keybind = super+w=text:\x02x
+keybind = super+alt+w=text:\x02X
+
+# clear_screen は Ghostty の画面を消すだけで、herdr が描き直すため効かない。
+# ペインへ ctrl+l を送ってシェルにクリアさせる。
+keybind = super+k=text:\x0c
+
+# ctrl 系は unbind して herdr や TUI 側へパススルーする。
 keybind = ctrl+tab=unbind
 keybind = ctrl+shift+tab=unbind
 
