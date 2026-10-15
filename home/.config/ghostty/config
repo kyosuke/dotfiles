@@ -34,6 +34,9 @@ keybind = super+alt+arrow_down=text:\x02j
 keybind = super+alt+arrow_up=text:\x02k
 keybind = super+alt+arrow_right=text:\x02l
 keybind = super+shift+enter=text:\x02z
+# herdr はペインとタブを確認なしで閉じる（confirm_close はワークスペースだけ）。
+keybind = super+w=text:\x02x
+keybind = super+alt+w=text:\x02X
 
 # clear_screen は Ghostty の画面を消すだけで、herdr が描き直すため効かない。
 # ペインへ ctrl+l を送ってシェルにクリアさせる。
