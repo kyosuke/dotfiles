@@ -27,6 +27,13 @@ keybind = super+digit_6=text:\x026
 keybind = super+digit_7=text:\x027
 keybind = super+digit_8=text:\x028
 keybind = super+digit_9=text:\x029
+keybind = super+[=text:\x02\x1b[Z
+keybind = super+]=text:\x02\t
+keybind = super+alt+arrow_left=text:\x02h
+keybind = super+alt+arrow_down=text:\x02j
+keybind = super+alt+arrow_up=text:\x02k
+keybind = super+alt+arrow_right=text:\x02l
+keybind = super+shift+enter=text:\x02z
 
 # ctrl 系は unbind して herdr や TUI 側へパススルーする。
 keybind = ctrl+tab=unbind
