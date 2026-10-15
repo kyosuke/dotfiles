@@ -64,7 +64,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
 | `home/.config/git/config`, `ignore` | Git (user, GitHub auth through gh, global ignore) |
 | `home/.claude/` | Claude Code (settings, statusline, hooks, skills) |
-| `home/.codex/` | Codex CLI (command policy, Herdr summary hooks) |
+| `home/.codex/` | Codex CLI (command policy, hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
 | `scripts/install-fonts.sh` | Installs fonts from GitHub (run by `mise bootstrap`) |

@@ -92,16 +92,6 @@
     ],
     "UserPromptSubmit": [
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/herdr-claude-summary.sh\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "hooks": [
           {
             "type": "command",

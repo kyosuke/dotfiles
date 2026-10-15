@@ -1,5 +1,5 @@
 {
-  "description": "Codex hooks for Herdr session identity and sidebar summaries.",
+  "description": "Codex hooks for Herdr and Orca agent state.",
   "hooks": {
     "SessionStart": [
       {
@@ -22,15 +22,6 @@
       }
     ],
     "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "python3 \"$HOME/.codex/herdr-codex-summary.py\"",
-            "timeout": 5,
-            "type": "command"
-          }
-        ]
-      },
       {
         "hooks": [
           {
