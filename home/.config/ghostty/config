@@ -5,6 +5,9 @@
 command = /bin/zsh --login -c "exec herdr"
 shell-integration = fish
 
+# herdr のセッションは Ghostty を閉じても残るので、終了・クローズ時の確認は出さない。
+confirm-close-surface = false
+
 # タブは使わない（多重化は herdr 側で行う）。
 # transparent だと macOS ネイティブのタブ扱いになり、2タブ以上のときだけ
 # タブバーが出る。herdr 運用では基本1タブなので表示されない。
