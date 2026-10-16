@@ -1,44 +1,13 @@
 {
   "description": "Codex hooks for Herdr and Orca agent state.",
   "hooks": {
-    "SessionStart": [
+    "Interrupt": [
       {
         "hooks": [
           {
-            "command": "bash '/Users/kyosuke/.codex/herdr-agent-state.sh' session",
-            "timeout": 10,
+            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 3,
             "type": "command"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
           }
         ]
       }
@@ -47,9 +16,9 @@
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
@@ -58,31 +27,40 @@
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
     ],
-    "SubagentStart": [
+    "PreToolUse": [
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
     ],
-    "SubagentStop": [
+    "SessionStart": [
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/kyosuke/.codex/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
@@ -91,20 +69,42 @@
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 10
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
     ],
-    "Interrupt": [
+    "SubagentStart": [
       {
         "hooks": [
           {
-            "type": "command",
             "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
-            "timeout": 3
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": ": orca-agent-hook-form=1; if [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -f \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${ORCA_AGENT_HOOK_ROOT-}/agent-hooks/codex-hook.sh\" || :; elif [ -z \"${ORCA_AGENT_HOOK_ROOT-}\" ] && [ -n \"${ORCA_PANE_KEY-}\" ] && [ -n \"${ORCA_AGENT_HOOK_PORT-}\" ] && [ -f \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" ]; then /bin/sh \"${HOME-}/.orca/agent-hooks/codex-hook.sh\" || :; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10,
+            "type": "command"
           }
         ]
       }
