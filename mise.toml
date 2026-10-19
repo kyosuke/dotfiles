@@ -1,20 +1,14 @@
 # home/ は ~ と同じ構造で置き、追跡中のファイルを1つずつリンクする。
-# Codex は SKILL.md がファイルのシンボリックリンクだとスキルとして読み込まない（v0.155.1 で確認）。
-# そのため agent-skills/ は home/ に入れず、ディレクトリごとリンクする。
-# [!.]* は agent-skills/.gitignore をリンクしないため。glob のエントリーには exclude が効かない。
+# agent-skills/ はディレクトリごとリンクする。Codex はファイルへのシンボリックリンクの SKILL.md を読まない（v0.155.1）。
+# [!.]* は .gitignore を外すため（glob のエントリーには exclude が効かない）。
 [dotfiles]
 "~" = { source = "home", mode = "symlink-each", manifest = "git", exclude = [".gitignore"] }
 "~/.agents/skills/[!.]*" = "agent-skills/[!.]*"
 
-# mise bootstrap の最後に走る。Claude Code は公式が推奨するネイティブインストーラーで入れる。
-# mise や npm で入れると自己更新が別の場所へ書き込み、実際に起動する版が古いまま残る。
-# sh はパイプの終了コードを bash のものにするので、pipefail がないと取得に失敗しても成功扱いで先へ進む。
-# fish のプラグインは fish_plugins（home/ から ~/.config/fish へリンク）に書いた一覧へ揃える。
-# fisher 本体も一覧に載っているので、未導入のときだけ取ってきて source し、fisher update に自分自身を入れさせる。
-# fisher は標準入力が端末でないとそこから一覧を読もうとして止まるので、/dev/null をつなぐ。
-# herdr の状態通知 hook は herdr が書くスクリプトを呼ぶので、ここで書かせる。スクリプト自体は
-# 再インストールで上書きされるためコミットしない。リンク越しに書く設定の差分はコミット済みで、
-# 何度実行しても変わらない。
+# Claude Code は公式インストーラーで入れる。mise や npm で入れると自己更新が別の場所へ書き、古い版が起動する。
+# pipefail がないと curl の失敗が成功扱いになる。
+# fisher は未導入なら取得し、fisher update で fish_plugins に揃える（自身も一覧にある）。標準入力が端末でないと止まるので /dev/null をつなぐ。
+# herdr の hook スクリプトは再インストールで上書きされるのでコミットせず、ここで書かせる。
 [tasks.bootstrap]
 depends = ["macos", "fonts", "git-hooks"]
 run = [
@@ -24,10 +18,7 @@ run = [
   "fish -c 'functions -q fisher; or curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source; and fisher update </dev/null'",
 ]
 
-# macOS の設定。defaults write は同じ値を書くだけなので何度実行してもよい。
-# 値はシステム設定のスライダーを最大にしたときのもの。トラックパッドの軌跡の速さは 3、
-# キーのリピート速度は 2（小さいほど速い）。defaults write は動いているアプリへ変更を伝えないので、
-# 反映はログアウト後。Dock だけは killall Dock で再起動させればその場で反映される。
+# 値はシステム設定のスライダー最大（KeyRepeat は小さいほど速い）。反映はログアウト後、Dock だけ killall で即時。
 [tasks.macos]
 run = [
   "defaults write -g com.apple.trackpad.scaling -float 3",

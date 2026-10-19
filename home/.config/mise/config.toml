@@ -1,14 +1,10 @@
-# レジストリにあるツールは短い名前で書く（codex・dotenvx・gh・yazi・herdr・hunk・pnpm はどれも既定が aqua バックエンド）。
-# aqua は upstream の公式リリースを落としてチェックサムを検証するだけで、再パッケージもビルドもしない。
-# JS で書かれた CLI は npm バックエンドで入れる。Node.js の版ごとのグローバルと違い、Node.js を上げても消えない。
-# cf（Cloudflare 公式 CLI）はベータ中で、mise はプレリリース版を latest の候補に入れず古い 0.x を選ぶ。
-# そのため版を固定し、上げるときは手で書き換える。GA が出たら latest に戻す。
-# esa-cli は esaio 公式だが週のダウンロード数が少なく、mise の安全策に弾かれるので明示的に許可する。
-# fish はレジストリに無いので aqua バックエンドを明示する（公式の .pkg を sudo なしで展開する）。
-# 1password（op）は aqua だと配布元が GitHub でなく mise が版を一覧できないので、レジストリ既定の vfox プラグインで入れる。
-# opencode は 2 系から npm の @opencode/cli で配られる（GitHub リリースと aqua は 1 系のまま）。
-# 環境に合うバイナリを postinstall で置くので、そのパッケージだけスクリプトの実行を許可する。
-# herdr と opencode の自己更新はインストール先を書き換えて mise の管理とずれるので、更新は mise up で行う。
+# 短い名前のツールはレジストリ既定（多くは aqua: 公式リリースをチェックサム検証して入れる）。
+# JS 製 CLI は npm バックエンドで入れる。Node.js を上げても消えない。
+# cf はベータ中で latest だと古い 0.x になるので版を固定する。GA が出たら latest に戻す。
+# esa-cli はダウンロード数が少なく弾かれるので allow_low_downloads で許可する。
+# fish はレジストリに無いので aqua を明示する。1password は aqua だと版を一覧できないので既定の vfox で入れる。
+# opencode 2 系は npm だけで配られ、postinstall でバイナリを置くので allow_builds で許可する。
+# herdr と opencode は自己更新すると mise の管理とずれるので、mise up で更新する。
 [tools]
 1password = "latest"
 codex = "latest"
@@ -20,7 +16,7 @@ node = "lts"
 pnpm = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
-"npm:cf" = "1.0.0-beta.13"
+"npm:cf" = "1.0.0-beta.18"
 "npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
 "npm:@opencode/cli" = { version = "latest", allow_builds = ["@opencode/cli"] }
 "npm:svgo" = "latest"
