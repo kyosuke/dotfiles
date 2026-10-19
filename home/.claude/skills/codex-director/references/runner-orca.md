@@ -26,7 +26,7 @@ Codex は `terminal create --command` で起動引数ごと立ち上げ、プロ
 
 Fast は Codex の `service_tier` で、プロファイルの Fast 有りを `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない（実測は `evidence.md`）。
 
-`service_tier` は必ず明示する。Orca から起動した Codex の設定は `~/.codex` ではなく `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）にあり、`config.toml` はリンクではなく独立した複製である。`execution.md` と `recovery.md` が `~/.codex/config.toml`・`~/.codex/models_cache.json`・`~/.codex/sessions` と書いている箇所は、このランナーでは `$ORCA_CODEX_HOME` 配下のファイルを指す。書き換えないという規則もこちらの複製に同じく当てはまる。
+`service_tier` は必ず明示する。Orca から起動した Codex の設定は `~/.codex` ではなく `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）にあり、`config.toml` はリンクではなく独立した複製である。`execution.md` と `recovery.md` が `~/.codex/config.toml`・`~/.codex/models_cache.json` と書いている箇所は、このランナーでは `$ORCA_CODEX_HOME` 配下のファイルを指す。実行ログ（`sessions/`）は `$ORCA_CODEX_HOME` 側にも `~/.codex` 側にも書かれたことがあるので、両方を探す（下記）。ディレクターのシェルでは `ORCA_CODEX_HOME` が空のことがあり、そのときは上の既定パスを使う。書き換えないという規則もこちらの複製に同じく当てはまる。
 
 `approvals_reviewer=auto_review` も必ず明示する。どちらの `config.toml` にも指定が無く、省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がる（2026-09-29 実測）。`approval_policy` は既定の `on-request` のまま変えない。
 
@@ -91,15 +91,18 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 ```
 
-`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。それ以外の `false` と、`satisfied: null`（2026-10-07 の時間切れはこちらで返った）は時間切れで、もう一度待つ。
+`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。`agent-trust-workspace` なら、その repo での初回起動でフォルダを信頼するかを聞かれている。発注を送る前に返ることが多い。ユーザーが Orca の画面で答えるまで発注を送れないので、そう伝えて待つ。ディレクターは代行しない。それ以外の `false` と、`satisfied: null`（2026-10-07 の時間切れはこちらで返った）は時間切れで、もう一度待つ。
 
-実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
+実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` か `~/.codex/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
 
-**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、`turn_context.model` が `codex-auto-review` でないもので、名前（起動時刻が入っている）が最も新しいものを選ぶ。auto-reviewer は依頼文を含む自分のログを同じ起動時刻で書くので、名前だけで選ぶとそちらを掴む（2026-10-07、`task_complete` が審査結果の JSON だった）。同じ依頼文を出し直したときも、これで新しいほうに当たる。依頼文が書き込まれるのは送信の後なので、探すのは `tui-idle` が返ってからにする。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。Bash の変数は呼び出しをまたいで残らないので、出たパスを以後のコマンドへそのまま書く。パスに空白が入るので、必ず引用符で囲む。
+**ログは依頼文の本文で特定する。** 最新のファイルを拾うと、並列に走っている別の Codex のログを掴む。依頼文の先頭行を含むファイルのうち、`turn_context.model` が `codex-auto-review` でないもので、名前（起動時刻が入っている）が最も新しいものを選ぶ。auto-reviewer は依頼文を含む自分のログを同じ起動時刻で書くので、名前だけで選ぶとそちらを掴む（2026-10-07、`task_complete` が審査結果の JSON だった）。同じ依頼文を出し直したときも、これで新しいほうに当たる。2か所を合わせて名前で比べるため、並べ替えはファイル名だけで行う。依頼文が書き込まれるのは送信の後なので、探すのは `tui-idle` が返ってからにする。ファイル名の UUID は `codex resume` にそのまま使える（`recovery.md`）。Bash の変数は呼び出しをまたいで残らないので、出たパスを以後のコマンドへそのまま書く。パスに空白が入るので、必ず引用符で囲む。
 
 ```bash
 KEY=$(head -1 <scratchpad>/order.txt | cut -c1-60)
-grep -lF "$KEY" "$ORCA_CODEX_HOME/sessions/$(date +%Y/%m/%d)"/rollout-*.jsonl | sort | while read -r f; do
+D=$(date +%Y/%m/%d)
+find "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions/$D" "$HOME/.codex/sessions/$D" \
+  -name 'rollout-*.jsonl' -exec grep -lF "$KEY" {} + 2>/dev/null |
+  awk -F/ '{print $NF "\t" $0}' | sort | cut -f2- | while read -r f; do
   jq -e -s 'map(select(.type=="turn_context")) | last | .payload.model != "codex-auto-review"' "$f" >/dev/null && echo "$f"
 done | tail -1
 ```

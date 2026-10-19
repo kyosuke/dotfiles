@@ -209,6 +209,15 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 - **時間切れの返り値。** `wait --for tui-idle --timeout-ms 560000` が時間切れで返ったとき、`satisfied` は `false` ではなく `null` だった（3回）。実行ログの最後は `task_started` のままだった。
 - **初回のワークスペース信頼。** Codex を初めて起動した repo では、`tui-idle` が `satisfied: false`、`blockedReason: agent-trust-workspace` で返り、画面にフォルダを信頼するかの確認が出た。ユーザーが画面で答えると、次の待機は `satisfied: true` になった。2回目の起動では出なかった。
 
+## Orca の実行ログの場所（2026-10-19 実測）
+
+社内の Astro サイトで、`orca terminal create --command 'codex -m gpt-6-luna …'` で起動した。
+
+- **ログは `~/.codex/sessions` に書かれた。** `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）には `config.toml`・`auth.json`・`logs_2.sqlite` などはあったが `sessions/` が無かった。2026-09-24 は `$ORCA_CODEX_HOME/sessions` だったので、どちらに書かれるかは決め打ちしない。
+- **`ORCA_CODEX_HOME` が空だった。** ディレクター側の Claude Code のシェルには `ORCA_TERMINAL_HANDLE` はあったが `ORCA_CODEX_HOME` が無く、`"$ORCA_CODEX_HOME/sessions/…"` が `/sessions/…` に展開されて no matches で落ちた。
+- ログの選び方（依頼文の先頭行で探し、`turn_context.model` が `codex-auto-review` でないもの）は `~/.codex/sessions` でもそのまま効いた。起動引数（`gpt-6-luna`・`high`・`approvals_reviewer=auto_review`）も効いていた。
+- 初回起動では今回も `agent-trust-workspace` が `tui-idle` から即座に返った。
+
 ## worktree（2026-10-01 実測）
 
 Orca 1.4.217、cwd は dotfiles（`feat/codex-director-gpt61` ブランチ、未コミットの変更あり）。Codex は起動せず、worktree の作成から削除までを確かめた。
