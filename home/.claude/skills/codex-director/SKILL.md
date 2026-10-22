@@ -52,7 +52,7 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 | `dev-low` | `gpt-6-luna` + `low` + Fast | やることが依頼文で一意に決まる作業。収集役 |
 | `dev-default` | `gpt-6-luna` + `high` + Fast | 既定。迷ったらここ |
 | `dev-high` | `gpt-6.1-sol` + `low` + Fast | 構造の理解が要る、影響範囲が広い、正しさの判定が難しい実装 |
-| `dev-xhigh` | `gpt-6.1-sol` + `high` | `dev-high` で抜けなかったとき。絞り込んだ材料からの判断 |
+| `dev-xhigh` | `gpt-6.1-sol` + `high` + Fast | `dev-high` で抜けなかったとき。絞り込んだ材料からの判断 |
 | `dev-max` | `gpt-6-astra` + `xhigh` | `dev-xhigh` でも抜けなかったとき。**毎回ユーザーの許可を取ってから出す** |
 
 この表がプロファイルの定義である。herdr と Orca の reference は起動引数へ展開した表を持つので、プロファイルを変えたら3つとも直す。

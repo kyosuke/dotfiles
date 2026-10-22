@@ -19,7 +19,7 @@ Codex は `terminal create --command` で起動引数ごと立ち上げ、プロ
 | `dev-low` | `codex -m gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
 | `dev-default` | `codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review` |
 | `dev-high` | `codex -m gpt-6.1-sol -c model_reasoning_effort=low -c service_tier=priority -c approvals_reviewer=auto_review` |
-| `dev-xhigh` | `codex -m gpt-6.1-sol -c model_reasoning_effort=high -c service_tier=default -c approvals_reviewer=auto_review` |
+| `dev-xhigh` | `codex -m gpt-6.1-sol -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review` |
 | `dev-max` | `codex -m gpt-6-astra -c model_reasoning_effort=xhigh -c service_tier=default -c approvals_reviewer=auto_review` |
 
 プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。

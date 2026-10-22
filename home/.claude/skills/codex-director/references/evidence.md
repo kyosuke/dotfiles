@@ -20,6 +20,7 @@
 | 2026-10-01 | Codex のプラン変更と GPT-6.1 Sol の公開を受け、5段に組み替える。`dev-high` を `gpt-6.1-sol` + `low` + Fast、`dev-xhigh`（新設）を `gpt-6.1-sol` + `high`、`dev-max` を `gpt-6-astra` + `xhigh` にする。許可制は `dev-max` だけに残し、Sol までは許可なしで出す。`dev-low` は速さを買って `low` のまま残す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-01 | 書き込みを伴う委任を並列に出すときは、herdr・Orca それぞれの公式の手順で worktree を分ける。全体の速度を上げるため | `../SKILL.md` / `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
+| 2026-10-22 | OpenAI の使用量に余裕があるので、`gpt-6.1-sol` は常に Fast で出す。`dev-xhigh` を Fast 有りへ替え、`orca-review` も Sol の時は `service_tier=priority` を渡す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 
 ## 試験運用の記録（終了）
 
