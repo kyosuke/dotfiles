@@ -19,7 +19,7 @@ Orcaのターミナルで対話型のCodexを起動し、レビューを依頼�
 | `--effort <effort>` | `high` |
 | 対象（PR番号かベースブランチ） | 現在のブランチを`main`と比べる |
 
-ユーザーが文章で「6.1 sol high」「astraのxhighで」のように指定したら、それも上書きとして扱う。モデル名は`grep -oE '"gpt-[^"]+"' "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/models_cache.json" | sort -u`で確かめ、無い名前なら起動前にユーザーへ伝える。OrcaのCodexは`~/.codex`ではなく、このOrca専用のホームを使う。
+ユーザーが文章で「6.1 sol high」「astraのxhighで」のように指定したら、それも上書きとして扱う。モデル名は`grep -oE '"gpt-[^"]+"' "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/models_cache.json" | sort -u`で確かめ、無い名前なら起動前にユーザーへ伝える。OrcaのCodexは設定を`~/.codex`ではなく、このOrca専用のホームから読む。実行ログはどちらのホームにも書かれたことがあるので、手順4では両方を探す。
 
 PR番号なら`gh pr view <番号> --json baseRefName,headRefName,title,body`でベースとブランチを得る。PRのブランチが手元でチェックアウトされていなければ、ユーザーに伝えて止まる。
 
@@ -73,7 +73,7 @@ orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 報告はCodexの実行ログから読む。画面は収まる分しか読めず、`--screen`を外すと再描画の断片が混ざる。依頼文に入れた目印でログを探し、最後のターンを見る。完了していれば報告の全文が、そうでなければ`未完了: <状態>`が出る。
 
 ```sh
-grep -rlF 'review-id: <handle>' "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions"
+grep -rlF 'review-id: <handle>' "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions" "$HOME/.codex/sessions" 2>/dev/null
 jq -rs '[.[] | select(.type == "event_msg" and (.payload.type | IN("task_started", "task_complete", "turn_aborted")))] | last | .payload | if .type == "task_complete" then .last_agent_message else "未完了: " + .type end' "<ログのパス>"
 ```
 
