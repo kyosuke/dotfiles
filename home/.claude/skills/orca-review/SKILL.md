@@ -1,6 +1,6 @@
 ---
 name: orca-review
-description: Orcaのターミナルで対話型のCodexを起動し、PRやブランチの差分をレビューさせる。ユーザーはOrcaの画面で進行を見られる。既定はgpt-6.1-sol・推論量high・read-only。「Orcaでレビューさせて」「Codexにレビューしてもらって」のような依頼で使う。
+description: Orcaのターミナルで対話型のCodexを起動し、PRやブランチの差分をレビューさせる。ユーザーはOrcaの画面で進行を見られる。既定はgpt-6.1-sol・推論量high・Fast・read-only。「Orcaでレビューさせて」「Codexにレビューしてもらって」のような依頼で使う。
 argument-hint: "[PR番号|ベースブランチ] [--model <model>] [--effort <effort>]"
 allowed-tools: Bash(orca terminal *), Bash(gh pr view*), Bash(grep *), Bash(jq *), Bash(echo *)
 ---
@@ -38,8 +38,10 @@ Codexは会話の文脈を持たない。依頼文だけで成立するように
 
 ```sh
 orca terminal create --worktree active --title "review <対象>" \
-  --command 'codex --model <model> -c model_reasoning_effort="<effort>" -s read-only -a never' --json
+  --command 'codex --model <model> -c model_reasoning_effort="<effort>" -c service_tier=<tier> -s read-only -a never' --json
 ```
+
+`<tier>`はモデルが`gpt-6.1-sol`なら`priority`（Fast）、それ以外は`default`。省くとTUIのトグルが書き戻した値が効くので必ず明示する。
 
 `-a never`で、sandboxの外で動かすコマンドは承認を求めずに失敗として返る。権限の確認で止まらなくなる。
 

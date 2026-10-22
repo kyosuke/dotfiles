@@ -22,7 +22,7 @@
 - `gpt-6.1-sol`（`dev-high` / `dev-xhigh`）は許可なしで出してよい。`low` で `gpt-6-luna` + `max` と同程度のスコアとコストになり、誤答も少ない。ただし単価は `luna` の20倍で入力にも同じだけ効くので、通読や広域の走査は下記のとおり収集を分ける。
 - `gpt-6-astra`（`dev-max`）は許可制（`../SKILL.md`）。コーディングの公表値では `gpt-6.1-sol` + `high` を上回らず、1タスクのコストは7倍前後になる。
 - 実効レンジは `none, low, medium, high, xhigh, max`。「推論を最小に」は `none` を指す。**`minimal` は GPT-5.6 の API が 400（unsupported_value）で拒否した（GPT-6 では未確認）。** `none` は OpenAI の移行ガイドで `gpt-6-sol` / `gpt-6-luna` が対応と明記されている（`gpt-6-astra` は非対応。`models_cache.json` の対応レベルには載らない）。GPT-6 での実測はまだ無い。
-- Fast（`service_tier`）の有無はプロファイルが持つ。速度を使用量（2倍）で買う設定で、`luna` と、遅い `gpt-6.1-sol` の `low`（`dev-high`）で買う。1タスクのコストが大きい `dev-xhigh` と `dev-max` では買わない。値の語彙と渡し方はランナーの reference。
+- Fast（`service_tier`）の有無はプロファイルが持つ。速度を使用量（2倍）で買う設定で、`luna` と `gpt-6.1-sol`（`dev-high` / `dev-xhigh`）で買う。1タスクのコストが大きい `dev-max` では買わない。値の語彙と渡し方はランナーの reference。
 - プロファイルのモデルが使えなくなったら、ユーザーへプロファイルの更新を諮る。`models_cache.json` から自分で割り当て直さない。
 
 ## 基本より下げてよいか
