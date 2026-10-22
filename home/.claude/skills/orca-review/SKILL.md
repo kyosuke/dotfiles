@@ -70,10 +70,10 @@ EOF
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 ```
 
-報告はCodexの実行ログから読む。画面は収まる分しか読めず、`--screen`を外すと再描画の断片が混ざる。依頼文に入れた目印でログを探し、最後のターンを見る。完了していれば報告の全文が、そうでなければ`未完了: <状態>`が出る。
+報告はCodexの実行ログから読む。画面は収まる分しか読めず、`--screen`を外すと再描画の断片が混ざる。依頼文に入れた目印でログを探し、最後のターンを見る。完了していれば報告の全文が、そうでなければ`未完了: <状態>`が出る。探索の終了コードは見ず、出たパスで判断する（片方のホームで一致しないと0以外になる）。
 
 ```sh
-grep -rlF 'review-id: <handle>' "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions" "$HOME/.codex/sessions" 2>/dev/null
+for d in "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions" "$HOME/.codex/sessions"; do [ -d "$d" ] && grep -rlF 'review-id: <handle>' "$d"; done
 jq -rs '[.[] | select(.type == "event_msg" and (.payload.type | IN("task_started", "task_complete", "turn_aborted")))] | last | .payload | if .type == "task_complete" then .last_agent_message else "未完了: " + .type end' "<ログのパス>"
 ```
 
