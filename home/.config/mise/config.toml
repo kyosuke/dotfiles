@@ -25,3 +25,5 @@ yazi = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
+self_update.auto = true
+tool_update.global_auto = true
