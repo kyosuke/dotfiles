@@ -1,6 +1,6 @@
 # 短い名前のツールはレジストリ既定（多くは aqua: 公式リリースをチェックサム検証して入れる）。
 # JS 製 CLI は npm バックエンドで入れる。Node.js を上げても消えない。
-# cf はベータ中で latest だと古い 0.x になるので版を固定する。GA が出たら latest に戻す。
+# cf はベータ版しかないので prerelease で latest にプレリリースを含める。
 # esa-cli はダウンロード数が少なく弾かれるので allow_low_downloads で許可する。
 # fish はレジストリに無いので aqua を明示する。1password は aqua だと版を一覧できないので既定の vfox で入れる。
 # opencode 2 系は npm だけで配られ、postinstall でバイナリを置くので allow_builds で許可する。
@@ -16,7 +16,7 @@ node = "lts"
 pnpm = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
-"npm:cf" = "1.0.0-beta.18"
+"npm:cf" = { version = "latest", prerelease = true }
 "npm:@esaio/esa-cli" = { version = "latest", allow_low_downloads = true }
 "npm:@opencode/cli" = { version = "latest", allow_builds = ["@opencode/cli"] }
 "npm:svgo" = "latest"
