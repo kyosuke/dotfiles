@@ -41,7 +41,6 @@
       "Bash(gh release delete:*)",
       "Bash(gh release delete-asset:*)",
       "Bash(gh issue transfer:*)",
-      "Bash(codex exec:*)",
       "Bash(dotenvx get:*)",
       "Bash(dotenvx decrypt:*)",
       "Bash(dotenvx keypair:*)",

@@ -93,6 +93,8 @@ PY
 
 ## 畳んだあとにスレッドへ戻る
 
+herdr・Orca のときの手順である。`codex exec` で出したスレッドは `runner-exec.md` の「差し戻す」に従い、起動引数（`sandbox_mode` と承認の設定を含む）を全部渡して `exec resume` する。
+
 **素の shell で `codex resume <UUID>` を叩かない。** ランナーがエージェントとして認識しないので、発注も報告回収も承認の検知も効かず、復旧したはずのスレッドが管理外に出る。ランナーの起動経路からセッションを引き継ぐ。
 
 起動引数として `resume <セッションUUID>` を渡す。前のスレッドの内容を保った状態で待機に入る（2026-08-09、herdr 0.8.0 / Codex 0.146.0 で確認）。
@@ -105,7 +107,7 @@ UUID を省いて `--last` に当たる指定を使わない。直近のセッ�
 
 運用の判断は `execution.md` の「ネットワークとローカルバインド」にある。設定の状態が疑わしいときだけ実測する。サンドボックス内では `LISTEN FAIL: EPERM` と `OUTBOUND FAIL: ENOTFOUND` が正しい。ネットワークが要る発注でこれを見たなら、起動引数で開け忘れている。`network_access=true` を付けて起動し直す。
 
-**検証もランナー越しに行う。`codex exec` でヘッドレスに走らせない。** `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（実測は `evidence.md`）。ランナー越しなら同じ状況が承認待ちとして見え、ユーザーが答えられる。
+**herdr・Orca があるなら検証もランナー越しに行う。`codex exec` でヘッドレスに走らせない。** 無いときは `runner-exec.md` の引数（`approvals_reviewer=auto_review`）で走らせる。 `~/.codex/config.toml` の `approval_policy` が `on-request` だと、Codex は承認を求めた時点で答える相手を失い、標準出力に1バイトも出さないまま固まる（実測は `evidence.md`）。ランナー越しなら同じ状況が承認待ちとして見え、ユーザーが答えられる。
 
 ```bash
 cat > /tmp/net-test.mjs <<'JS'

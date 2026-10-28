@@ -55,7 +55,7 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 | `dev-xhigh` | `gpt-6.1-sol` + `high` + Fast | `dev-high` で抜けなかったとき。絞り込んだ材料からの判断 |
 | `dev-max` | `gpt-6-astra` + `xhigh` | `dev-xhigh` でも抜けなかったとき。**毎回ユーザーの許可を取ってから出す** |
 
-この表がプロファイルの定義である。herdr と Orca の reference は起動引数へ展開した表を持つので、プロファイルを変えたら3つとも直す。
+この表がプロファイルの定義である。herdr・Orca・exec の reference は起動引数へ展開した表を持つので、プロファイルを変えたら4つとも直す。
 
 承認はどのプロファイルも auto-reviewer（`approvals_reviewer=auto_review`）へ回し、これを上書きしない。選ぶのはプロファイルだけである。表に無い組み合わせが要ると感じたら、まず上下のプロファイルで足りないかを考える。外れて指定するなら、その理由を発注前報告へ書く。Fast の有無は表が持ち、渡し方は判定したランナーの reference にある。
 
@@ -63,14 +63,14 @@ Claude Code を**ディレクターAI**として動かし、調査・実装・�
 
 ## 委任の経路
 
-委任は、**ユーザーから見える場所で Codex を動かすランナー**を通して行う。ランナーへ求めるのは次の4つで、どれかが欠けるなら委任経路として使わない。
+委任は、**ユーザーから見える場所で Codex を動かすランナー**を通して行う。ランナーへ求めるのは次の4つで、どれかが欠けるなら委任経路として使わない。例外は herdr・Orca が無いときの `codex exec`（下記）だけである。
 
 - 動作がユーザーに見える
 - 承認を求められたら人へ届き、その場で答えられる
 - 差し戻しが同じスレッドで続く
 - 報告を機械的に回収できる
 
-**`codex exec` でヘッドレスに走らせない。** サンドボックスの挙動を確かめるだけの用でも同じで、承認を求められた時点で答える相手がおらず、無言のまま固まる。使えるランナーが無いときに別の経路へ退避しない。
+**herdr・Orca があるなら `codex exec` でヘッドレスに走らせない。** サンドボックスの挙動を確かめるだけの用でも同じで、見えるランナーを使う。`codex exec` は承認を求められた時点で答える相手がおらず、承認を auto-reviewer へ回さないと無言のまま固まる。
 
 まずランナーを判定する。
 
@@ -82,13 +82,11 @@ printf 'HERDR_ENV=%s ORCA_TERMINAL_HANDLE=%s\n' "${HERDR_ENV:-}" "${ORCA_TERMINA
 |---|---|
 | `HERDR_ENV` が 1 | herdr 公式スキル（Skill ツールの `herdr`、無ければ `herdr --skill`）。この Skill からの上書きは `references/runner-herdr.md` |
 | `ORCA_TERMINAL_HANDLE` が空でない | Orca 本体のガイド（`orca skills get orca-cli`）。この Skill からの上書きは `references/runner-orca.md` |
-| どれでもない | 委任しない |
+| どれでもない（Codex アプリ内など） | `references/runner-exec.md`。見えない代替なので、発注前報告でその旨を添える |
 
 上の行から順に判定し、最初に当たった行を使う。Orca のターミナルの中で herdr を動かしているなら、内側のランナーが優先される。
 
 **判定したランナーの reference だけを読む。** 他のランナーは制約も手段も違い、読むと混ざる。
-
-**どれでもないなら委任しない。** 発注も実装も始めず、「この Skill は Codex を動かすランナー（herdr・Orca）の中でだけ使える」とユーザーへ伝えて止まる。ここで Claude が代わりに成果物を書くと分担も検収も成立しない。Claude 自身で進めるかはユーザーの判断で、そう指示されたらこの Skill を離れる。
 
 ランナーが違っても手順の骨格は変わらない。エージェントを起動し、依頼文を渡し、完了を待ち、報告を回収し、片付ける。ランナーに依らない Codex 側の運用（依頼文の渡し方、承認の境界、待機中の判断、報告回収の制約、ネットワークの開け方、スレッドの分割と片付け）は `references/execution.md` にまとめてあり、委任のたびに読む。期待どおりに動かないときは `references/recovery.md`。
 
@@ -125,5 +123,6 @@ printf 'HERDR_ENV=%s ORCA_TERMINAL_HANDLE=%s\n' "${HERDR_ENV:-}" "${ORCA_TERMINA
 | `references/runner-herdr.md` | herdr で委任するたび。公式スキルへの上書き、プロファイルの引数展開、`service_tier` の語彙、ネットワーク、読み取り専用 |
 | `references/runner-orca.md` | Orca で委任するたび。Orchestration を使わない理由、プロファイルの引数展開、`$ORCA_CODEX_HOME`、`tui-idle` での完了待ち、実行ログでの報告回収、承認待ちの見え方、片付け |
 | `references/review.md` | Codex 完了後。確認項目、証拠の扱い、機械的な照合（`scripts/` の2本）、テストを壊して確かめる手順、指摘の仕分けと差し戻し |
+| `references/runner-exec.md` | herdr も Orca も無いとき。`codex exec` での発注、承認で固まらせない引数、報告の回収、`exec resume` での差し戻し（再開時に引数を全部渡す） |
 | `references/recovery.md` | 起動・発注・完了検知・報告回収が期待どおりに動かないとき。承認待ちの読み方、`listen EPERM` の実測手順、スレッドの再開 |
 | `references/evidence.md` | 運用の前提そのものを変えるとき。実測値、退けた選択肢、事故の記録、ユーザーからの指示の履歴 |
