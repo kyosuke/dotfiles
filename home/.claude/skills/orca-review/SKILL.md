@@ -7,7 +7,7 @@ allowed-tools: Bash(orca terminal *), Bash(gh pr view*), Bash(grep *), Bash(jq *
 
 # Orcaでのレビュー
 
-Orcaのターミナルで対話型のCodexを起動し、レビューを依頼して結果を取り次ぐ。`codex exec`や`codex review`をBashで実行する方法は使わない。前者は許可されず、後者は独自のレビュー観点を受け付けない。ターミナルで動かせば、ユーザーがOrcaの画面で進行を見られる。
+Orcaのターミナルで対話型のCodexを起動し、レビューを依頼して結果を取り次ぐ。`codex exec`や`codex review`をBashで実行する方法は使わない。前者はユーザーから進行が見えず、後者は独自のレビュー観点を受け付けない。ターミナルで動かせば、ユーザーがOrcaの画面で進行を見られる。
 
 ## 1. 引数を読む
 
