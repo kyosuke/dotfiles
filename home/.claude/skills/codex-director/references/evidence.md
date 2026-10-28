@@ -21,6 +21,7 @@
 | 2026-10-01 | 書き込みを伴う委任を並列に出すときは、herdr・Orca それぞれの公式の手順で worktree を分ける。全体の速度を上げるため | `../SKILL.md` / `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-22 | OpenAI の使用量に余裕があるので、`gpt-6.1-sol` は常に Fast で出す。`dev-xhigh` を Fast 有りへ替え、`orca-review` も Sol の時は `service_tier=priority` を渡す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
+| 2026-10-28 | Codex アプリ内では herdr・Orca が無く使えなかったため、「見えなくてもいいのでとりあえず使える方法」として `codex exec` を最後のランナーに加える。承認は auto-reviewer へ回して固まらせない | `../SKILL.md` / `runner-exec.md` / `recovery.md` |
 
 ## 試験運用の記録（終了）
 
@@ -151,6 +152,7 @@ herdr のペインで測った値。ランナーに依らない項目（所要�
 - 承認プロンプトは `send-keys esc` で却下でき、ファイルは作られなかった。承認の代理入力はclassifierに止められる。
 - 素の shell の `codex resume` はランナーの管理外に出る。起動引数として `resume <UUID>` を渡す形で復旧できた（2026-08-09、herdr 0.8.0 / Codex 0.146.0）。
 - `codex exec` をヘッドレスで走らせると、`approval_policy = on-request` では承認待ちのまま標準出力へ1バイトも出さずに固まる（2026-08-12、27分放置）。
+- `codex exec` に `-c approval_policy=on-request -c approvals_reviewer=auto_review` を渡すと固まらない。ネットワークを閉じたサンドボックスで `curl` が失敗したあと、Codex は `require_escalated` を出し、auto-reviewer が承認して11秒で完了した（2026-10-28、Codex 0.164.0）。`exec resume` で `sandbox_mode` を渡さないと、read-only で起動したスレッドが `workspace-write` に戻った。
 
 **ペインの記録が事実と食い違った例。** listen の可否を調べさせたとき、最終報告は `EPERM` と書いていたが、画面に見えていたのは `TIMEOUT` と `SERVER_CLOSED` で、畳まれた行（`… +464 lines`）に本当の出力があった。追試すると `EPERM` が事実で、`TIMEOUT` は Codex 自身のスクリプトに残ったタイマーの出力だった。
 
