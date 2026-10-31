@@ -1,10 +1,6 @@
 # PATH への重複追加を防ぐ（.zshenv は入れ子のシェルでも都度 source されるため）。
 typeset -U path PATH
 
-# Emscripten (emsdk)。同梱の Python は版番号入りのディレクトリに入るので、emsdk を上げても追従するよう glob で引く。
-export EMSDK="$HOME/GitHub/emscripten-core/emsdk"
-path=($EMSDK $EMSDK/upstream/emscripten $EMSDK/python/*_64bit/bin(N) $path)
-
 # Rust (cargo)
 export PATH="$HOME/.cargo/bin:$PATH"
 
