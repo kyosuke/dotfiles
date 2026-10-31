@@ -4,16 +4,19 @@
 # esa-cli はダウンロード数が少なく弾かれるので allow_low_downloads で許可する。
 # fish はレジストリに無いので aqua を明示する。1password は aqua だと版を一覧できないので既定の vfox で入れる。
 # opencode 2 系は npm だけで配られ、postinstall でバイナリを置くので allow_builds で許可する。
+# emsdk は Python 3.10 以上が要り、macOS 同梱の 3.9 では入らないので depends で mise の python を先に入れる。
 # herdr と opencode は自己更新すると mise の管理とずれるので、mise up で更新する。
 [tools]
 1password = "latest"
 codex = "latest"
 dotenvx = "latest"
+emsdk = { version = "latest", depends = ["python"] }
 gh = "latest"
 herdr = "latest"
 hunk = "latest"
 node = "lts"
 pnpm = "latest"
+python = "latest"
 yazi = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
 "npm:cf" = { version = "latest", prerelease = true }
