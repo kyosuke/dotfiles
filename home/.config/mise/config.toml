@@ -5,6 +5,7 @@
 # fish はレジストリに無いので aqua を明示する。1password は aqua だと版を一覧できないので既定の vfox で入れる。
 # opencode 2 系は npm だけで配られ、postinstall でバイナリを置くので allow_builds で許可する。
 # emsdk は Python 3.10 以上が要り、macOS 同梱の 3.9 では入らないので depends で mise の python を先に入れる。
+# 実行時も shim 経由だと PATH 上の python3 が同梱の 3.9 になるので、[env] の EMSDK_PYTHON で mise の python を指す。
 # herdr と opencode は自己更新すると mise の管理とずれるので、mise up で更新する。
 [tools]
 1password = "latest"
@@ -25,6 +26,9 @@ yazi = "latest"
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
 "github:can1357/oh-my-pi" = "latest"
+
+[env]
+EMSDK_PYTHON = "{{env.HOME}}/.local/share/mise/installs/python/latest/bin/python3"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
