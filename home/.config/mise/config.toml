@@ -6,9 +6,11 @@
 # opencode 2 系は npm だけで配られ、postinstall でバイナリを置くので allow_builds で許可する。
 # emsdk は Python 3.10 以上が要り、macOS 同梱の 3.9 では入らないので depends で mise の python を先に入れる。
 # 実行時も shim 経由だと PATH 上の python3 が同梱の 3.9 になるので、[env] の EMSDK_PYTHON で mise の python を指す。
+# 1password の行は betterleaks が password = "..." と誤検知するので betterleaks:allow で外す。
 # herdr と opencode は自己更新すると mise の管理とずれるので、mise up で更新する。
 [tools]
-1password = "latest"
+1password = "latest" # betterleaks:allow
+betterleaks = "latest"
 codex = "latest"
 dotenvx = "latest"
 emsdk = { version = "latest", depends = ["python"] }
