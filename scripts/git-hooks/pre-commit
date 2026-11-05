@@ -6,6 +6,12 @@
 
 set -eu
 
+# 平文の秘密情報（トークン・鍵など）をステージした差分から探す。
+betterleaks git --staged --redact --no-banner -v || {
+  echo "pre-commit: betterleaks が秘密情報らしきものを見つけた。誤検知なら該当行に betterleaks:allow を書くか、git commit --no-verify で通す。" >&2
+  exit 1
+}
+
 names=$(gh repo list pxgrid --visibility private --limit 1000 --json name -q '.[].name') || {
   echo "pre-commit: gh で pxgrid のリポジトリ一覧を取れなかった。確認済みなら git commit --no-verify で通す。" >&2
   exit 1
