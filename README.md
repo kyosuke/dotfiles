@@ -63,7 +63,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
 | `home/.config/opencode/opencode.jsonc` | OpenCode |
 | `home/.config/git/config`, `ignore` | Git (user, GitHub auth through gh, global ignore) |
-| `home/.claude/` | Claude Code (settings, statusline, hooks, skills) |
+| `home/.claude/` | Claude Code (user instructions, settings, statusline, hooks, skills). `CLAUDE.md` imports the untracked `~/.claude/CLAUDE.local.md` for machine-specific notes |
 | `home/.codex/` | Codex CLI (command policy, hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
