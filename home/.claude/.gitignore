@@ -3,6 +3,8 @@
 # 共有すると決めた設定とスキルだけを明示的に opt-in する。
 /*
 !/.gitignore
+# アカウント ID など公開できない指示は ~/.claude/CLAUDE.local.md に置き、CLAUDE.md から読み込む。
+!/CLAUDE.md
 !/settings.json
 !/statusline-command.sh
 !/hooks/
