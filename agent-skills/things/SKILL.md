@@ -27,3 +27,5 @@ description: Things 3 の ToDo を AppleScript で読み書きする。「今日
 ## 権限
 
 osascript から Things を操作するには、呼び出し元のアプリ（ターミナル、Claude Code、Codex など）に macOS のオートメーション権限（システム設定 → プライバシーとセキュリティ → オートメーション → Things3）が要る。初回は確認ダイアログが出て、許可されるまで止まる。拒否されていると `-1743` のエラーになるので、その旨をユーザーへ伝える。
+
+Codex の sandbox の中では osascript が Things に接続できず、スクリプトの解釈で失敗する（`expressionがあるべきところですが“to”が見つかりました` など）。Codex から実行するときは、最初から sandbox 外での実行（権限の昇格）を求める。
