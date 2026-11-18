@@ -1,6 +1,6 @@
 ---
 name: things
-description: Things 3 の ToDo を AppleScript で読み書きする。「今日のToDoを見せて」「Thingsに〜を追加して」のように、Today リストの確認や ToDo の追加を頼まれたときに使う。完了・更新・削除にはまだ対応していない
+description: Things 3 の ToDo を AppleScript で読み書きする。「今日のToDoを見せて」「Thingsに〜を追加して」「〜を完了にして」のように、Today リストの確認や ToDo の追加・完了を頼まれたときに使う。更新・削除にはまだ対応していない
 ---
 
 # Things 3
@@ -23,6 +23,13 @@ description: Things 3 の ToDo を AppleScript で読み書きする。「今日
 - 期限は `YYYY-MM-DD`。
 - 追加先はプロジェクト名 → エリア名 → 組み込みリスト名の順に探す。組み込みリストは Things の表示言語の名前（日本語なら「今日」「いつか」など）。省略すると Inbox に入る。
 - 追加先が見つからない・同じ名前の追加先が複数ある・期限が存在しない日付などのときは、ToDo を残さずにエラー終了する。メッセージをユーザーへ伝える。
+
+## ToDo を完了にする
+
+    osascript "$S/complete-todo.applescript" id
+
+- id は「Today リストを見る」の出力にある `[id: …]` の値。名前しか分からないときは、先に Today リストを見て id を確かめる。
+- id が見つからないときはエラー終了する。
 
 ## 権限
 
