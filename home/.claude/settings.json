@@ -116,7 +116,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/pr-merge-gate.sh\"",
+            "command": "f=\"$HOME/.claude/hooks/pr-merge-gate.py\"; [ ! -f \"$f\" ] || python3 \"$f\"",
             "timeout": 15
           }
         ]
