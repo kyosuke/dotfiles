@@ -4,7 +4,7 @@
 
 bot はユーザーの代わりに item（bot が持つ依頼の単位）を受けて動くので、発注前報告や `dev-max` の許可を会話で返事待ちにできない。そこで Codex の起動は `runner-orca.md` と同じくターミナルで行い、監督と報告の回収だけを Orca の Orchestration に任せる。
 
-**次は `runner-orca.md` を読んで使う。** プロファイルを起動引数へ展開した表、`service_tier`・`approvals_reviewer` を明示する理由、`$ORCA_CODEX_HOME`、ネットワークと読み取り専用の起動引数、`--base-branch` を付ける理由、承認待ちの見え方、`terminal close` の返り値。同じ内容をここへ写さない。Orchestration の操作そのものは公式ガイド（`orca skills get orchestration`、`--reference references/low-level-topology.md`）に従う。
+**次は `runner-orca.md` を読んで使う。** プロファイルを起動引数へ展開した表、`service_tier`・`approvals_reviewer` を明示する理由、`$ORCA_CODEX_HOME`、ネットワークの起動引数、`--base-branch` を付ける理由、承認待ちの見え方、`terminal close` の返り値。同じ内容をここへ写さない。Orchestration の操作そのものは公式ガイド（`orca skills get orchestration`、`--reference references/low-level-topology.md`）に従う。
 
 ## 対象外の作業
 
@@ -18,6 +18,12 @@ codex-director の対象はコードの調査・実装・検証である。文�
 - 報告の全文はファイルへ書かせ、`worker_done` の `--report-path` で受け取る。要約は `worker_done` の本文に載る。
 
 完了の検知は Orca が `worker_done` で bot を起こすので、`tui-idle` で待たず、実行ログで終わったかを判定しない。
+
+## 読み取り専用で起動しない
+
+bot の経路では `-s read-only` を付けない。読み取り専用の Codex は `orca` CLI の呼び出しもサンドボックスで止められ、`worker_done` も `ask` も送れない。bot の chat から `dev-low` + `-s read-only` で試すと、worker は「`worker_done` が `runtime_access_denied` で拒否された」と出してターンを終え、Orca は `worker_done` の代わりに escalation（`stopReason: finished`）を bot へ送った（2026-11-22）。`runner-orca.md` の「読み取り専用で起動できる」は、報告を実行ログから取る経路の話で、ここには当てはまらない。
+
+収集役やレビューを読み取りだけにしたいなら、依頼文で「ファイルを変更しない」と理由を添えて頼み、検収で `git -C <worktree> status --short` が空なのを確かめる。
 
 ## 起動する
 
@@ -90,6 +96,6 @@ orca orchestration send --to dispatch:<dispatchId> --subject "<差し戻しの�
 
 ## 片付ける
 
-外から渡したターミナルは、worker が終わっても閉じない（`terminalState: retained`）。`worker-release` も閉じなかった（`reason: external_terminal`、`processAction: none`）。PR を見届けたら `terminal close` で閉じ、worktree を消す（`runner-orca.md`）。`worktree rm` の後にブランチが残ることがあったので、`git branch --list` で確かめる（2026-11-22）。
+外から渡したターミナルは、worker が終わっても閉じない（`terminalState: retained`）。`worker-release` も閉じなかった（`reason: external_terminal`、`processAction: none`）。途中で止めたいときも `worker-stop` では止まらず、`stop_unknown`（「The worker terminal is external; no terminal was closed.」）が返る。止めるのも閉じるのも `terminal close` で行う。PR を見届けたら `terminal close` で閉じ、worktree を消す（`runner-orca.md`）。`worktree rm` の後にブランチが残ることがあったので、`git branch --list` で確かめる（2026-11-22）。
 
 この文書の挙動は Orca 1.4.269 / `gpt-6-luna` + `low` で実測した（`evidence.md`）。`--item` は bot の Home chat から確かめた。

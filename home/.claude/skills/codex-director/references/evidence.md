@@ -249,6 +249,8 @@ Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `te
 - bot の Home chat から `worker-start --environment local --spec … --terminal <handle> --item <n> --json` を実行すると通り、`dispatchId`・`taskId`・`state: ready` が返った。`bot item show` では item に `dispatch:<id> · <タイトル> · working` として結び付き、item は In progress になり、イベントに `linked dispatch:<id>` が残った。
 - `check` の表示では `reportPath` はパスだけで、中身は展開されなかった。`inbox --json` の簡易表示では payload の `outcome`・`reportPath` が落ち、`--full` で載った。
 - `send --to dispatch:<id>` を終わった worker へ送ると `delivery: follow_up` で新しい Dispatch になり、同じ Codex の実行ログに2つ目のターンが足された。
+- 上の bot の chat からの試験は Codex を `-s read-only` で起動していた。worker は `worker_done` が Codex のサンドボックスに `runtime_access_denied` で拒否されたと出してターンを終え、Orca は `worker_done` 無しの escalation（`stopReason: finished`）を bot に送った。読み取り専用の Codex は `orca` CLI を呼べず、`worker_done` も `ask` も送れない。
+- 外部ターミナルの worker に `worker-stop` を送ると `stop_unknown`（「The worker terminal is external; no terminal was closed.」）が返った。
 - 外から渡したターミナルは終了後も `terminalState: retained` で、`worker-release` は `reason: external_terminal`・`processAction: none` で閉じなかった。`terminal close` で閉じた。
 - `worktree create --base-branch main` はローカルの `main`（`origin/main` より古い）から作られた。`worktree rm --force` の後、ブランチが残った（2026-10-01 は消えた）。
 
