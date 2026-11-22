@@ -66,6 +66,7 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.codex/` | Codex CLI (command policy, hooks) |
 | `agent-skills/` | Skills for Codex and other agents |
 | `scripts/check-codex-policy.sh` | Validates the Codex command policy |
+| `scripts/check-pr-merge-gate.sh` | Validates the Claude Code hook that lets `gh pr merge --auto --merge` run without a prompt only in kyosuke/snowcation |
 | `scripts/install-fonts.sh` | Installs fonts from GitHub (run by `mise bootstrap`) |
 | `scripts/git-hooks/pre-commit` | Blocks commits that contain secrets (betterleaks) or mention private pxgrid repo names (enabled by `mise bootstrap`) |
 | `docs/apps.md` | Apps installed outside mise, with download links |
