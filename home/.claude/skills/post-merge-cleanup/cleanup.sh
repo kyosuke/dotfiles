@@ -51,11 +51,17 @@ if [ -z "$target" ]; then
   fi
 fi
 
+gone=""
 if [ -n "$target" ]; then
-  git show-ref --verify --quiet "refs/heads/$target" \
-    || stop 2 "ローカルブランチ $target が見つからない"
   [ "$target" != "$default" ] \
     || stop 2 "対象がデフォルトブランチ $default 自身なので削除しない"
+  # 手で先に消してあっても、記録が残っていれば止めずに戻る・pull・掃除を続ける。どちらにも無ければタイプミスとみなす
+  if ! git show-ref --verify --quiet "refs/heads/$target"; then
+    records_file="$(git rev-parse --git-common-dir)/review-terminals"
+    [ -f "$records_file" ] && awk -v b="$target" '"" $1 == "" b { f = 1 } END { exit !f }' "$records_file" \
+      || stop 2 "ローカルブランチ $target も、その記録も見つからない"
+    gone=$target
+  fi
 fi
 
 # 4. デフォルトブランチへ戻り、fast-forwardで取り込む
@@ -120,7 +126,7 @@ close_review_terminals() {
     esac
     closed="${closed}${kind}:${id} "
   done 3< "$records"
-  awk -v b="$branch" '$1 != b' "$records" > "$records.tmp" && mv "$records.tmp" "$records"
+  awk -v b="$branch" '"" $1 != "" b' "$records" > "$records.tmp" && mv "$records.tmp" "$records"
 }
 
 delete_if_merged() {
@@ -161,7 +167,9 @@ delete_if_merged() {
 "
 }
 
-if [ -n "$target" ]; then
+if [ -n "$gone" ]; then
+  :
+elif [ -n "$target" ]; then
   delete_if_merged "$target"
 else
   # まとめて片付け: デフォルトブランチから到達できるものだけが挙がる
@@ -177,6 +185,16 @@ if git remote get-url origin >/dev/null 2>&1; then
   git remote prune origin >/dev/null 2>&1 || true
 fi
 
+# 6b. ローカルにもどのリモート追跡参照にもないブランチの記録は役目を終えている。
+# 先に -D した、別の場所でマージしたなどで上の経路を通らなかった分をここで閉じて消す
+if [ -f "$records" ]; then
+  for b in $(awk '{print $1}' "$records" | sort -u); do
+    git show-ref --verify --quiet "refs/heads/$b" && continue
+    [ -n "$(git for-each-ref --format=x "refs/remotes/*/$b")" ] && continue
+    close_review_terminals "$b"
+  done
+fi
+
 # 7. 報告
 echo "ブランチ: ${default}（${pulled}）"
 if [ -n "$deleted" ]; then
@@ -184,6 +202,7 @@ if [ -n "$deleted" ]; then
 else
   echo "削除: なし"
 fi
+[ -n "$gone" ] && echo "対象 $gone はローカルに既になかった"
 [ -n "$closed" ] && echo "閉じたレビュー用ターミナル: ${closed% }"
 [ -n "$unclosed" ] && echo "閉じられなかったレビュー用ターミナル（手動で閉じてほしい）: ${unclosed% }"
 if [ -n "$skipped" ]; then
