@@ -16,13 +16,13 @@
 | 2026-09-18 | 試験運用を終了し、タスクごとの記録をやめる。残す価値のある観測は `evidence.md` へ | `../SKILL.md` |
 | 2026-09-24 | Orca を3つ目のランナーに加える | `../SKILL.md` / `runner-orca.md` |
 | 2026-09-24 | GPT-6 の公開を受け、`dev-low`〜`dev-high` を `gpt-5.6-luna` から `gpt-6-luna` へ、`dev-max` を `gpt-6-astra` + `low` から `gpt-6-sol` + `xhigh` へ替える。`max` はコストが跳ねるので1段下げる。Fast・許可制は据え置き | `../SKILL.md` / `ordering.md` / `runner-herdr.md` |
-| 2026-10-01 | Paseo をランナーから外す（今後使わない）。`runner-paseo.md` を削除し、Paseo 固有の実測もここから消す | `../SKILL.md` / `execution.md` / `recovery.md` |
+| 2026-10-01 | Paseo をランナーから外す（今後使わない）。旧 reference（`runner-paseo`）を削除し、Paseo 固有の実測もここから消す | `../SKILL.md` / `execution.md` / `recovery.md` |
 | 2026-10-01 | Codex のプラン変更と GPT-6.1 Sol の公開を受け、5段に組み替える。`dev-high` を `gpt-6.1-sol` + `low` + Fast、`dev-xhigh`（新設）を `gpt-6.1-sol` + `high`、`dev-max` を `gpt-6-astra` + `xhigh` にする。許可制は `dev-max` だけに残し、Sol までは許可なしで出す。`dev-low` は速さを買って `low` のまま残す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-01 | 書き込みを伴う委任を並列に出すときは、herdr・Orca それぞれの公式の手順で worktree を分ける。全体の速度を上げるため | `../SKILL.md` / `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-22 | OpenAI の使用量に余裕があるので、`gpt-6.1-sol` は常に Fast で出す。`dev-xhigh` を Fast 有りへ替え、`orca-review` も Sol の時は `service_tier=priority` を渡す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-28 | Codex アプリ内では herdr・Orca が無く使えなかったため、「見えなくてもいいのでとりあえず使える方法」として `codex exec` を最後のランナーに加える。承認は auto-reviewer へ回して固まらせない | `../SKILL.md` / `runner-exec.md` / `recovery.md` |
-| 2026-11-22 | Orca bot のコード委任をネスト方式へ替える。bot は Claude の worker を立てるだけにし、worker が director として codex-director で Codex を起動・検収する。Orca 標準の bot の規則（コード作業は worker へ渡す）と、bot 自身が director になる旧手順が矛盾していたため。`runner-orca-bot.md` を削除 | `~/.claude/CLAUDE.md` / `../SKILL.md` / `runner-orca.md` |
+| 2026-11-22 | Orca bot のコード委任をネスト方式へ替える。bot は Claude の worker を立てるだけにし、worker が director として codex-director で Codex を起動・検収する。Orca 標準の bot の規則（コード作業は worker へ渡す）と、bot 自身が director になる旧手順が矛盾していたため。旧 reference（`runner-orca-bot`）を削除 | `~/.claude/CLAUDE.md` / `../SKILL.md` / `runner-orca.md` |
 | 2026-11-22 | GPT-6.2 の公開を受け、推論量は据え置いてモデルだけ 6.2 系へ揃える。`dev-high` / `dev-xhigh` を `gpt-6.2-sol`、`dev-max` を `gpt-6.2-astra` にする。6.2 Sol は評価が割れているが「新しいの試してみないとわからない」。`gpt-6.1-terra` は採らない | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` / `runner-exec.md` |
 
 ## 試験運用の記録（終了）
@@ -167,15 +167,20 @@ herdr のペインで測った値。ランナーに依らない項目（所要�
 - `--no-alt-screen` 付きで `recent-unwrapped` が262行（対象5ファイル全項目、冒頭のマーカーも残る）、81桁のペインでも213行を全項目そろって回収できた。同じ依頼を短い応答で走らせたときも40行返った。付け忘れた同構成では0行だった。
 - 読み取りは常に下端が基準である（500行の出力を `--lines 10` で読むと 493〜500 が返り、1〜10 は返らない）。
 - 所要時間は読み取りだけの小さな依頼で12〜40秒、実装を伴う依頼は20分超。開始3分後はまだ調査中だった。
-- `-c model_reasoning_effort=none` で起動したペインは、フッターに `gpt-5.6-luna default fast` と出しながら `/status` は `reasoning none` を返した（2026-08-12）。
+- `-c model_reasoning_effort=none` で起動したペインは、フッターに `gpt-5.6-luna default fast` と出しながら `/status` は `reasoning none` を返した（2026-08-12）。起動直後のバナーは `/status` と一致した。
 - 承認プロンプトは `send-keys esc` で却下でき、ファイルは作られなかった。承認の代理入力はclassifierに止められる。
 - 素の shell の `codex resume` はランナーの管理外に出る。起動引数として `resume <UUID>` を渡す形で復旧できた（2026-08-09、herdr 0.8.0 / Codex 0.146.0）。
 - `codex exec` をヘッドレスで走らせると、`approval_policy = on-request` では承認待ちのまま標準出力へ1バイトも出さずに固まる（2026-08-12、27分放置）。
 - `codex exec` に `-c approval_policy=on-request -c approvals_reviewer=auto_review` を渡すと固まらない。ネットワークを閉じたサンドボックスで `curl` が失敗したあと、Codex は `require_escalated` を出し、auto-reviewer が承認して11秒で完了した（2026-10-28、Codex 0.164.0）。`exec resume` で `sandbox_mode` を渡さないと、read-only で起動したスレッドが `workspace-write` に戻った。
+- 同日、推論量 `low` で「列挙します」とだけ返って終了し、`.events.jsonl` に `command_execution` が無い例があった。
 
 **ペインの記録が事実と食い違った例。** listen の可否を調べさせたとき、最終報告は `EPERM` と書いていたが、画面に見えていたのは `TIMEOUT` と `SERVER_CLOSED` で、畳まれた行（`… +464 lines`）に本当の出力があった。追試すると `EPERM` が事実で、`TIMEOUT` は Codex 自身のスクリプトに残ったタイマーの出力だった。
 
 ## 依頼文と検収の事故
+
+**依頼文をシェルへ埋め込んだ事故。** 文中のバックティックがコマンド置換され、`` `wrangler dev` `` が起動して残り、仕様の核が欠落した依頼文が渡った。Claude Code の classifier は権限昇格の文言を含むヒアドキュメントを止めた。
+
+[Anthropic の Prompting best practices](https://platform.claude.com/docs/en/docs/build-with-claude/prompt-engineering/claude-prompting-best-practices) は禁止より要望と背景を書くよう勧める。[OpenAI の GPT-5 prompting guide](https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide) は GPT-5 が矛盾する指示の調停に推論を費やすと説明している（いずれも2026-08参照）。
 
 **脆い手段を選ばれた2件。** 生成バンドルを読む検査で「バンドラ生成の識別子に依存しない形にする」と差し戻したら、依存先が `default: () => ident` という出力形状へ移り、ブレースを数える手書きのパーサ100行が入った（検査を取り下げ、依存バージョンの固定へ振り替えた）。エラーメッセージが呼び出し側の引数名を指すことだけを条件にしたら、上流の Error を `replace(/\bfrom\b/g, "startDate").replace(/\bto\b/g, "endDate")` で書き換える実装が来た（"to" は英文に普遍的に現れるので、上流の文言が増えるだけで別の箇所が壊れる）。どちらも条件の照合だけでは合格になる。
 
@@ -212,6 +217,7 @@ Orca 1.4.210 / Codex 0.156.1、`gpt-6-luna` + `low` + `service_tier=priority` + 
 - **`terminal close` の戻り値。** 3回とも `ok: false`（`terminal_stop_unverifiable`、`ptyKilled: false`）が返ったが、タブは `terminal list` から消え、`pgrep -f` でも起動コマンドは残っていなかった。
 - **Codex の設定の置き場所。** `ORCA_CODEX_HOME` は `~/Library/Application Support/orca/codex-runtime-home/home` で、`config.toml`・`models_cache.json`・`sessions/` を独自に持つ。`config.toml` はリンクではない複製で、Orca のフック（`hooks.json`）の設定が足されている。
 - **Orchestration を採らなかった理由。** `orchestration worker-start` は `--model` / `--effort` しか持たない（`--help`、1.4.210）。`worktree create --agent codex` はモデルや推論量の引数を受け付けない（`orca skills get orca-cli`）。
+- **承認の既定（2026-09-29 実測）。** どちらの `config.toml` にも `approvals_reviewer` の指定が無く、起動引数で省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がった。
 
 ## Orca の tui-idle（2026-10-03 実測）
 
@@ -242,7 +248,7 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 
 ## Orca bot の監督経路（2026-11-22 実測）
 
-この経路（bot 自身が director になり、`terminal create` した Codex を `worker-start --terminal` で監督する）は同日に退けた。理由と比較は次の節。ここの観測のうち、ネスト方式でも効くもの（dispatch された worker からの `--terminal` の拒否、`--base-branch` がローカルの ref で解決されること、`worktree rm` の後に残るブランチ）は `runner-orca.md` へ移した。
+この経路（bot 自身が director になり、`terminal create` した Codex を `worker-start --terminal` で監督する）は同日に退けた。理由と比較は次の節。ここの観測のうち、ネスト方式でも効くもの（dispatch された worker からの `--terminal` の拒否、`--base-branch` がローカルの ref で解決されること、`worktree rm` の後に残るブランチ）の運用は `runner-orca.md` にある。
 
 Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `terminal create --command` で起動し、dispatch されていない素のシェルを coordinator 代わりにして試した。`--item` だけは bot の Home chat から確かめた。
 

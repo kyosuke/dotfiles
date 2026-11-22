@@ -1,14 +1,10 @@
 # 委任ランナー: Orca
 
-`ORCA_TERMINAL_HANDLE` が空でないときに読む（判定の順は `../SKILL.md`）。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
-
-**Orca の操作は本体が出すガイドに従う。** `orca skills get orca-cli` を実行して読む（バイナリが出力元なので本体の更新に追従する）。`~/.agents/skills/orca-cli` はこのガイドを呼び出すための案内だけで、Skill ツールには出てこない。ターミナルの作成・読み取り・送信・待機のフラグや、worktree のセレクタの書き方はガイドにあるので、ここには書かない。読まずに想像で補わない。
-
-この Skill からの上書きと、ガイドに無い事実だけをここに置く。
+`ORCA_TERMINAL_HANDLE` が空でないときに読む（判定順は `../SKILL.md`）。共通手順は `execution.md`。Orca の操作は **`orca skills get orca-cli`** で本体と同じ版のガイドを読み、従う。`~/.agents/skills/orca-cli` は呼び出し案内で、Skill ツールには出ない。
 
 ## Orchestration を使わない
 
-`orca orchestration worker-start` は監督付きの起動経路だが、委任には使わない。渡せるのが `--model` と `--effort` だけで、`service_tier`・サンドボックス・ネットワークを指定できない。完了も `worker_done` の3文要約で返す約束になっていて、報告を全文で回収する前提（`execution.md`）と合わない。`worktree create --agent codex` も Orca の既定ランチャーで起動するので、起動引数を渡せない。自分が dispatch された worker（Orca bot から渡された作業など）なら、`terminal create` で立てたターミナルを `worker-start --terminal` で監督下へ入れる経路も「A worker starts helpers in a new agent on this host」で拒否される（2026-11-22）。
+Codex の委任に `orca orchestration worker-start` は使わない。`--model` と `--effort` しか渡せず、`service_tier`・サンドボックス・ネットワークを指定できないうえ、`worker_done` の3文要約では報告全文を取れない。dispatch された worker は `worker-start --terminal` で既存ターミナルを監督下に入れることもできない（`evidence.md`）。
 
 Codex は `terminal create --command` で起動引数ごと立ち上げ、プロファイルの値を起動引数に展開して渡す。
 
@@ -24,11 +20,11 @@ Codex は `terminal create --command` で起動引数ごと立ち上げ、プロ
 
 プロファイルの定義は `../SKILL.md` の表にある。プロファイルが変わったらこの表を直す。
 
-Fast は Codex の `service_tier` で、プロファイルの Fast 有りを `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない（実測は `evidence.md`）。
+Fast の値の語彙は `execution.md`。
 
 `service_tier` は必ず明示する。Orca から起動した Codex の設定は `~/.codex` ではなく `$ORCA_CODEX_HOME`（`~/Library/Application Support/orca/codex-runtime-home/home`）にあり、`config.toml` はリンクではなく独立した複製である。`execution.md` と `recovery.md` が `~/.codex/config.toml`・`~/.codex/models_cache.json` と書いている箇所は、このランナーでは `$ORCA_CODEX_HOME` 配下のファイルを指す。実行ログ（`sessions/`）は `$ORCA_CODEX_HOME` 側にも `~/.codex` 側にも書かれたことがあるので、両方を探す（下記）。`recovery.md` の `f=$(ls -t ~/.codex/sessions/…)` は、このランナーでは `f=$(find "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-home/home}/sessions" "$HOME/.codex/sessions" -name "rollout-*-$U.jsonl" 2>/dev/null | head -1)` に読み替える。UUID でファイルは1つに決まる。ディレクターのシェルでは `ORCA_CODEX_HOME` が空のことがあり、そのときは上の既定パスを使う。書き換えないという規則もこちらの複製に同じく当てはまる。
 
-`approvals_reviewer=auto_review` も必ず明示する。どちらの `config.toml` にも指定が無く、省くと `turn_context.approvals_reviewer` が `user` になり、承認がすべて人へ上がる（2026-09-29 実測）。`approval_policy` は既定の `on-request` のまま変えない。
+**`approvals_reviewer=auto_review` を明示する。** 省くと承認が人へ上がる（`evidence.md`）。`approval_policy` は既定の `on-request`。
 
 表に無い推論量もそのまま渡せる。プロファイルから外れるときは、理由を発注前報告へ書く（`ordering.md`）。
 
@@ -39,7 +35,7 @@ orca terminal create --worktree active --title <タスク名> \
   --command 'codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review' --json
 ```
 
-返ってきた `result.terminal.handle` を以降の宛先に使う。dispatch された worker から作ると、ターミナルを discoverable にできないという warning が付くことがあった。起動は成功していて、`orca terminal focus --terminal <handle>`（`terminal switch` の別名）で解消した（2026-11-22）。起動時刻も控えておき、実行ログの特定に使う（下記）。
+返った `result.terminal.handle` を宛先に使い、ログ特定用に起動時刻を控える。dispatch された worker で discoverable の警告が出ても起動は成功しており、`orca terminal focus --terminal <handle>`（`terminal switch` の別名）で解消する（`evidence.md`）。
 
 PRのブランチのために起動したターミナルを、マージまで残すことがあるなら記録する。マージ後に post-merge-cleanup が閉じる。PRに関係しない調査では記録しない。
 
@@ -47,8 +43,8 @@ PRのブランチのために起動したターミナルを、マージまで残
 echo "<ブランチ名> orca <handle>" >> "$(git rev-parse --git-common-dir)/review-terminals"
 ```
 
-- **読み取り専用で起動できる。** `-s read-only` を付けると、実行ログの `turn_context.sandbox_policy` が `read-only` になった。収集役を同じ作業ツリーで並列に走らせる前提（`ordering.md`）は、このランナーでも成立する。
-- **ネットワークは起動時に開ける。** `-c sandbox_workspace_write.network_access=true` を渡すと、そのセッションだけネットワークが通る。書き込み範囲は `workspace-write` のままなので、コマンド単位の昇格（サンドボックス外での実行）より露出が小さい。こちらを使い、昇格を既定にしない。ループバックだけを開ける設定は無く、外向きも同時に開く（運用は `execution.md`）。
+- **読み取りだけの調査・並列収集は `-s read-only`。** 実行ログの `turn_context.sandbox_policy` で確認できる（`evidence.md`）。
+- **ネットワークは `-c sandbox_workspace_write.network_access=true`。** 外向きとループバックが同時に開く。書き込み範囲と昇格の扱いは `execution.md`。
 - `--no-alt-screen` は付けなくてよい。報告は画面から読まない（下記）ので、効き目が無い。
 
 ## worktree を分けて起動する
@@ -60,7 +56,7 @@ orca worktree create --name <タスク名> --no-parent --base-branch <起点> --
 ```
 
 - **`--agent codex` は使わない。** Orca の既定ランチャーで起動するので、プロファイルの起動引数を渡せない。作ってから、返ってきた `result.worktree.id` を丸ごと `--worktree id:<…>` に渡して `terminal create` する。`id` は `<repoId>::<パス>` の形で、repo の ID だけに縮めない。
-- **`--base-branch` は必ず付ける。** 省くと repo の既定ブランチから作られ、今いるブランチではなかった（2026-10-01、`main` から作られた）。渡した名前はローカルの ref として解決され、`main` を渡すと `origin/main` より古いローカルの `main` から作られた（2026-11-22）。最新から始めたいなら先に `git fetch` し、`origin/<ブランチ>` を渡す。
+- **`--base-branch` は必ず付ける。** 省くと repo の既定ブランチから作られる。渡した名前はローカルの ref として解決する。最新から始めるなら先に `git fetch` し、`origin/<ブランチ>` を渡す（`evidence.md`）。
 - **`--setup` は repo の `orca.yaml` に setup フックがあるかで決める。** あれば `run` で依存物を入れさせ、無ければ `skip` にして、インストールは依頼文で Codex に頼む（`execution.md`）。
 - **最初に空のシェルが1つできる。** `startupTerminal` は `null` で返り、`terminal list` に fish のターミナルが1つ載っていた。`terminal list` で使われていないと確かめてから閉じる。
 - 作られる場所は `~/orca/workspaces/<repo>/<タスク名>`、ブランチは `<ユーザーのプレフィックス>/<タスク名>` だった。パスとブランチは決め打ちにせず、返り値の `result.worktree.path` / `branch` を使う。
@@ -71,7 +67,7 @@ orca worktree create --name <タスク名> --no-parent --base-branch <起点> --
 orca worktree rm --worktree id:<repoId>::<パス> --json
 ```
 
-未コミットの変更が残っていると `runtime_error`（`Failed to delete worktree …`）で止まる。残った中身を `execution.md` の手順で確かめ、不要と判断できたときだけ `--force` を付けて消し直す。2026-10-01 はディレクトリとブランチの両方が消えたが、2026-11-22 はブランチが残った。消した後に `git branch --list` で確かめる。
+未コミットの変更が残ると `runtime_error`（`Failed to delete worktree …`）で止まる。`execution.md` に従い、不要と判断できたときだけ `--force` を付ける。削除後はブランチが残っていないか `git branch --list` で見る（`evidence.md`）。
 
 ## 依頼文を送る
 
@@ -85,13 +81,13 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 
 ## 完了を待つ
 
-**完了は `tui-idle` で待つ。** ガイドの規則どおりで、ターンが終わるまで返らない（Orca 1.4.219 で2回確かめた）。待機は Bash ツールの既定タイムアウト（120秒）を超えるので、`timeout` に `600000` を指定する。
+**完了は `tui-idle` で待つ。** ターンが終わるまで返らず（`evidence.md`）、Bash の既定タイムアウト（120秒）を超えるので `timeout` に `600000` を指定する。
 
 ```bash
 orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
 ```
 
-`satisfied: true` なら、実行ログで最後のターンの状態を見る（下記）。`satisfied: false` で `blockedReason` が `agent-interactive-prompt` なら承認を待っている（次の節）。`agent-trust-workspace` なら、その repo での初回起動でフォルダを信頼するかを聞かれている。発注を送る前に返ることが多い。ユーザーが Orca の画面で答えるまで発注を送れないので、そう伝えて待つ。ディレクターは代行しない。それ以外の `false` と、`satisfied: null`（2026-10-07 の時間切れはこちらで返った）は時間切れで、もう一度待つ。
+`satisfied: true` なら実行ログで最後のターンを確認する。`false` で `blockedReason` が `agent-interactive-prompt` なら承認待ち（該当節を参照）。`agent-trust-workspace` は repo 初回起動時のフォルダ信頼確認で、発注前に返ることが多い。ユーザーに伝え、画面での回答まで発注を待ち、代行しない。それ以外の `false` と `null` は時間切れなので待ち直す（`evidence.md`）。
 
 実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` か `~/.codex/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
 
@@ -107,7 +103,7 @@ find "${ORCA_CODEX_HOME:-$HOME/Library/Application Support/orca/codex-runtime-ho
 done | tail -1
 ```
 
-**最後のターンの状態で判定する。** ターンが始まるたびに `task_started` が足されるので、3種の行のうち最後のものを見れば、初回でも差し戻しでも今のターンの状態が分かる。数を数えて送信の前後で比べる必要はない。
+**最後のターンの状態で判定する。** 初回も差し戻しも、3種のイベントの最後の1件を読む。
 
 ```bash
 jq -rs '[.[] | select(.type == "event_msg" and (.payload.type | IN("task_started", "task_complete", "turn_aborted")))] | last | .payload.type' "<ログのパス>"
@@ -131,12 +127,10 @@ jq -rs '[.[] | select(.type == "event_msg" and (.payload.type | IN("task_started
 jq -rs 'map(select(.payload.type=="task_complete")) | last | .payload.last_agent_message' "<ログのパス>"
 ```
 
-差し戻しを重ねたスレッドでは `task_complete` が複数行になるので、上の例のとおり最後のものを読む。読むのは、最後のターンの状態が `task_complete` だったときだけである。報告の中身を信用しないこと、検収は `git diff` で行うことは他のランナーと同じである（`execution.md`・`review.md`）。
+最後のターンが `task_complete` のときだけ、上の例で最新の報告を取る。検収は `review.md` に従う。
 
 **起動引数が効いたかも実行ログで確かめる。** `turn_context` に、実際に当たった `model`・`effort`・`approval_policy`・`approvals_reviewer`・`sandbox_policy` が載る。消費は `token_count` の `info.total_token_usage` で見る。週次の残量は TUI の `/status` で見る。
 
 ## 片付ける
 
-終わったら、自分が作ったターミナルだけを `terminal close --terminal <handle>` で閉じる。**`ok: false`（`terminal_stop_unverifiable`）が返っても、タブは消えていて、プロセスも終わっていた**（3回とも同じ）。閉じ直したり、別のホストに向けて再試行したりしない。`terminal list` から消えたことと、`pgrep -f` で起動コマンドが残っていないことを確かめて終える。
-
-この文書の挙動は Orca 1.4.210 / Codex 0.156.1 で実測した（`evidence.md`）。worktree の手順は Orca 1.4.217、`tui-idle` での完了待ちは Orca 1.4.219 で確かめた。
+自分が作ったターミナルだけを `terminal close --terminal <handle>` で閉じる。`ok: false`（`terminal_stop_unverifiable`）でも閉じられていることがある（`evidence.md`）。閉じ直したり別ホストで再試行したりせず、`terminal list` と `pgrep -f` でタブと起動コマンドが消えたことを確かめる。
