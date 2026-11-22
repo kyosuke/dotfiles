@@ -10,7 +10,7 @@ AI coding tools (Claude Code, Codex), linked into place with
 ## Setting up a new Mac
 
 `mise bootstrap` links the config files, installs Node.js, pnpm, fish, Codex,
-OpenCode, herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
+herdr, Hunk, Yazi, gh, and the npm CLIs esa, SVGO, and Wrangler
 (`home/.config/mise/config.toml`), installs Claude Code with its native
 installer, sets up the fish plugins, installs the PlemolJP35 Console NF, IBM
 Plex Sans JP, and Noto Sans/Serif CJK JP fonts from GitHub, and turns the trackpad tracking speed and
@@ -61,7 +61,6 @@ agents, each linked to `~/.agents/skills/<name>`.
 | `home/.config/mise/config.toml` | mise (Node.js, fish, and CLI versions) |
 | `home/.wezterm.lua`, `home/.config/ghostty/config` | WezTerm, Ghostty |
 | `home/.config/herdr/`, `hunk/`, `yazi/` | herdr, Hunk, Yazi |
-| `home/.config/opencode/opencode.jsonc` | OpenCode |
 | `home/.config/git/config`, `ignore` | Git (user, GitHub auth through gh, global ignore) |
 | `home/.claude/` | Claude Code (user instructions, settings, statusline, hooks, skills). `CLAUDE.md` imports the untracked `~/.claude/CLAUDE.local.md` for machine-specific notes |
 | `home/.codex/` | Codex CLI (command policy, hooks) |
