@@ -8,7 +8,7 @@
 
 ## Orchestration を使わない
 
-`orca orchestration worker-start` は監督付きの起動経路だが、委任には使わない。渡せるのが `--model` と `--effort` だけで、`service_tier`・サンドボックス・ネットワークを指定できない。完了も `worker_done` の3文要約で返す約束になっていて、報告を全文で回収する前提（`execution.md`）と合わない。`worktree create --agent codex` も Orca の既定ランチャーで起動するので、起動引数を渡せない。
+`orca orchestration worker-start` は監督付きの起動経路だが、委任には使わない。渡せるのが `--model` と `--effort` だけで、`service_tier`・サンドボックス・ネットワークを指定できない。完了も `worker_done` の3文要約で返す約束になっていて、報告を全文で回収する前提（`execution.md`）と合わない。`worktree create --agent codex` も Orca の既定ランチャーで起動するので、起動引数を渡せない。自分が dispatch された worker（Orca bot から渡された作業など）なら、`terminal create` で立てたターミナルを `worker-start --terminal` で監督下へ入れる経路も「A worker starts helpers in a new agent on this host」で拒否される（2026-11-22）。
 
 Codex は `terminal create --command` で起動引数ごと立ち上げ、プロファイルの値を起動引数に展開して渡す。
 
@@ -39,7 +39,7 @@ orca terminal create --worktree active --title <タスク名> \
   --command 'codex -m gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority -c approvals_reviewer=auto_review' --json
 ```
 
-返ってきた `result.terminal.handle` を以降の宛先に使う。起動時刻も控えておき、実行ログの特定に使う（下記）。
+返ってきた `result.terminal.handle` を以降の宛先に使う。dispatch された worker から作ると、ターミナルを discoverable にできないという warning が付くことがあった。起動は成功していて、`orca terminal focus --terminal <handle>`（`terminal switch` の別名）で解消した（2026-11-22）。起動時刻も控えておき、実行ログの特定に使う（下記）。
 
 PRのブランチのために起動したターミナルを、マージまで残すことがあるなら記録する。マージ後に post-merge-cleanup が閉じる。PRに関係しない調査では記録しない。
 
@@ -60,7 +60,7 @@ orca worktree create --name <タスク名> --no-parent --base-branch <起点> --
 ```
 
 - **`--agent codex` は使わない。** Orca の既定ランチャーで起動するので、プロファイルの起動引数を渡せない。作ってから、返ってきた `result.worktree.id` を丸ごと `--worktree id:<…>` に渡して `terminal create` する。`id` は `<repoId>::<パス>` の形で、repo の ID だけに縮めない。
-- **`--base-branch` は必ず付ける。** 省くと repo の既定ブランチから作られ、今いるブランチではなかった（2026-10-01、`main` から作られた）。
+- **`--base-branch` は必ず付ける。** 省くと repo の既定ブランチから作られ、今いるブランチではなかった（2026-10-01、`main` から作られた）。渡した名前はローカルの ref として解決され、`main` を渡すと `origin/main` より古いローカルの `main` から作られた（2026-11-22）。最新から始めたいなら先に `git fetch` し、`origin/<ブランチ>` を渡す。
 - **`--setup` は repo の `orca.yaml` に setup フックがあるかで決める。** あれば `run` で依存物を入れさせ、無ければ `skip` にして、インストールは依頼文で Codex に頼む（`execution.md`）。
 - **最初に空のシェルが1つできる。** `startupTerminal` は `null` で返り、`terminal list` に fish のターミナルが1つ載っていた。`terminal list` で使われていないと確かめてから閉じる。
 - 作られる場所は `~/orca/workspaces/<repo>/<タスク名>`、ブランチは `<ユーザーのプレフィックス>/<タスク名>` だった。パスとブランチは決め打ちにせず、返り値の `result.worktree.path` / `branch` を使う。
@@ -71,7 +71,7 @@ orca worktree create --name <タスク名> --no-parent --base-branch <起点> --
 orca worktree rm --worktree id:<repoId>::<パス> --json
 ```
 
-未コミットの変更が残っていると `runtime_error`（`Failed to delete worktree …`）で止まる。残った中身を `execution.md` の手順で確かめ、不要と判断できたときだけ `--force` を付けて消し直す。消えるとディレクトリとブランチの両方が消える（2026-10-01）。
+未コミットの変更が残っていると `runtime_error`（`Failed to delete worktree …`）で止まる。残った中身を `execution.md` の手順で確かめ、不要と判断できたときだけ `--force` を付けて消し直す。2026-10-01 はディレクトリとブランチの両方が消えたが、2026-11-22 はブランチが残った。消した後に `git branch --list` で確かめる。
 
 ## 依頼文を送る
 

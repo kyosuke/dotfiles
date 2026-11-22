@@ -22,6 +22,7 @@
 | 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-22 | OpenAI の使用量に余裕があるので、`gpt-6.1-sol` は常に Fast で出す。`dev-xhigh` を Fast 有りへ替え、`orca-review` も Sol の時は `service_tier=priority` を渡す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-28 | Codex アプリ内では herdr・Orca が無く使えなかったため、「見えなくてもいいのでとりあえず使える方法」として `codex exec` を最後のランナーに加える。承認は auto-reviewer へ回して固まらせない | `../SKILL.md` / `runner-exec.md` / `recovery.md` |
+| 2026-11-22 | Orca bot のコード委任をネスト方式へ替える。bot は Claude の worker を立てるだけにし、worker が director として codex-director で Codex を起動・検収する。Orca 標準の bot の規則（コード作業は worker へ渡す）と、bot 自身が director になる旧手順が矛盾していたため。`runner-orca-bot.md` を削除 | `~/.claude/CLAUDE.md` / `../SKILL.md` / `runner-orca.md` |
 | 2026-11-22 | GPT-6.2 の公開を受け、推論量は据え置いてモデルだけ 6.2 系へ揃える。`dev-high` / `dev-xhigh` を `gpt-6.2-sol`、`dev-max` を `gpt-6.2-astra` にする。6.2 Sol は評価が割れているが「新しいの試してみないとわからない」。`gpt-6.1-terra` は採らない | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` / `runner-exec.md` |
 
 ## 試験運用の記録（終了）
@@ -241,6 +242,8 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 
 ## Orca bot の監督経路（2026-11-22 実測）
 
+この経路（bot 自身が director になり、`terminal create` した Codex を `worker-start --terminal` で監督する）は同日に退けた。理由と比較は次の節。ここの観測のうち、ネスト方式でも効くもの（dispatch された worker からの `--terminal` の拒否、`--base-branch` がローカルの ref で解決されること、`worktree rm` の後に残るブランチ）は `runner-orca.md` へ移した。
+
 Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `terminal create --command` で起動し、dispatch されていない素のシェルを coordinator 代わりにして試した。`--item` だけは bot の Home chat から確かめた。
 
 - `worker-start --spec-file … --terminal <handle>` は `--task` も `task-create` も無しで通り、Task・Run（`runCreated: true`）・Dispatch が作られた。Codex は前置きどおり `worker_done` を `--report-path` 付きで送った。
@@ -253,6 +256,15 @@ Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `te
 - 外部ターミナルの worker に `worker-stop` を送ると `stop_unknown`（「The worker terminal is external; no terminal was closed.」）が返った。
 - 外から渡したターミナルは終了後も `terminalState: retained` で、`worker-release` は `reason: external_terminal`・`processAction: none` で閉じなかった。`terminal close` で閉じた。
 - `worktree create --base-branch main` はローカルの `main`（`origin/main` より古い）から作られた。`worktree rm --force` の後、ブランチが残った（2026-10-01 は消えた）。
+
+## Orca bot のネスト方式（2026-11-22 比較）
+
+同じ小タスクを、bot 自身が director になる上の経路と、bot が Claude の worker を立て、その worker が director として codex-director を使う経路とで比べた。後者を採った。
+
+- bot の会話に入るのが worker の結果通知だけで済んだ。前者は Codex の起動・待機・検収の出力がすべて bot の会話に積もる。
+- Orca 標準の bot の規則（コード作業は自分の agent の worker へ渡し、bot 自身は対象リポジトリを見ない）とそのまま合う。前者は CLAUDE.md の指示とこの規則が食い違い、bot の判断がぶれた。
+- dispatch された Claude worker の環境には `ORCA_BOT_TOOLS_TOKEN` が引き継がれず、`ORCA_TERMINAL_HANDLE` が入った。worker の中の codex-director は `runner-orca.md` の経路（`terminal create` → `tui-idle` → `terminal send` → 実行ログ回収 → `terminal close`）に当たり、そのまま通った。
+- 詰まったのは `terminal create` に付いた、ターミナルを discoverable にできないという warning だけで、`terminal focus` で解消した。
 
 ## worktree（2026-10-01 実測）
 
