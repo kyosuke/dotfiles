@@ -239,6 +239,18 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 - ログの選び方（依頼文の先頭行で探し、`turn_context.model` が `codex-auto-review` でないもの）は `~/.codex/sessions` でもそのまま効いた。起動引数（`gpt-6-luna`・`high`・`approvals_reviewer=auto_review`）も効いていた。
 - 初回起動では今回も `agent-trust-workspace` が `tui-idle` から即座に返った。
 
+## Orca bot の監督経路（2026-11-22 実測）
+
+Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `terminal create --command` で起動し、dispatch されていない素のシェルを coordinator 代わりにして試した。bot の chat からは試していない。
+
+- `worker-start --spec-file … --terminal <handle>` は `--task` も `task-create` も無しで通り、Task・Run（`runCreated: true`）・Dispatch が作られた。Codex は前置きどおり `worker_done` を `--report-path` 付きで送った。
+- dispatch された worker のシェルから `--terminal` を付けると「A worker starts helpers in a new agent on this host; omit --on and --terminal」で拒否された。
+- `--item` を `--terminal` と併用すると、bot 以外からは「Only a bot writes items, from one of its own chats」で拒否された。併用そのものは引数の誤りにならなかった。
+- `check` の表示では `reportPath` はパスだけで、中身は展開されなかった。`inbox --json` の簡易表示では payload の `outcome`・`reportPath` が落ち、`--full` で載った。
+- `send --to dispatch:<id>` を終わった worker へ送ると `delivery: follow_up` で新しい Dispatch になり、同じ Codex の実行ログに2つ目のターンが足された。
+- 外から渡したターミナルは終了後も `terminalState: retained` で、`worker-release` は `reason: external_terminal`・`processAction: none` で閉じなかった。`terminal close` で閉じた。
+- `worktree create --base-branch main` はローカルの `main`（`origin/main` より古い）から作られた。`worktree rm --force` の後、ブランチが残った（2026-10-01 は消えた）。
+
 ## worktree（2026-10-01 実測）
 
 Orca 1.4.217、cwd は dotfiles（`feat/codex-director-gpt61` ブランチ、未コミットの変更あり）。Codex は起動せず、worktree の作成から削除までを確かめた。
