@@ -1,0 +1,14 @@
+#!/bin/sh
+# kyosuke/snowcation の PR に auto-merge（merge commit）を設定する。
+# Claude Code の settings.json で、このコマンドだけ確認なしで許可している。
+# gh pr merge そのものは ask のままにし、マージ先と方式をここで固定する。
+# 実際のマージ条件（必須チェック・競合）は GitHub の ruleset が持つ。
+
+set -eu
+
+case ${1-} in
+  '' | *[!0-9]*) echo "usage: snowcation-automerge <PR番号>" >&2; exit 2 ;;
+esac
+[ $# -eq 1 ] || { echo "usage: snowcation-automerge <PR番号>" >&2; exit 2; }
+
+exec gh pr merge "$1" --auto --merge --repo kyosuke/snowcation
