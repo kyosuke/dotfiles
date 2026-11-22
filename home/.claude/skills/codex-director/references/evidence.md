@@ -22,6 +22,7 @@
 | 2026-10-01 | worktree の削除に、中身を見ないまま `--force` を使わない（「--forceは事故が起こる」）。変更が残っていたら中身を確かめ、不要と判断できれば消し、ユーザーでないと判断できないものだけ諮る（「大抵の場合はユーザーに確認しなくても不要かどうか判断できる」） | `execution.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-22 | OpenAI の使用量に余裕があるので、`gpt-6.1-sol` は常に Fast で出す。`dev-xhigh` を Fast 有りへ替え、`orca-review` も Sol の時は `service_tier=priority` を渡す | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` |
 | 2026-10-28 | Codex アプリ内では herdr・Orca が無く使えなかったため、「見えなくてもいいのでとりあえず使える方法」として `codex exec` を最後のランナーに加える。承認は auto-reviewer へ回して固まらせない | `../SKILL.md` / `runner-exec.md` / `recovery.md` |
+| 2026-11-22 | GPT-6.2 の公開を受け、推論量は据え置いてモデルだけ 6.2 系へ揃える。`dev-high` / `dev-xhigh` を `gpt-6.2-sol`、`dev-max` を `gpt-6.2-astra` にする。6.2 Sol は評価が割れているが「新しいの試してみないとわからない」。`gpt-6.1-terra` は採らない | `../SKILL.md` / `ordering.md` / `runner-herdr.md` / `runner-orca.md` / `runner-exec.md` |
 
 ## 試験運用の記録（終了）
 
@@ -86,6 +87,23 @@
 - `6.1-sol` + `high` の DeepSWE のコストは出典で $0.65 と約 $1.50 に割れる。`6.1-sol` の推論量に対する非単調さはノイズの可能性もある。
 
 出典（2026-10-01参照）: [Kingy AI（Luna）](https://kingy.ai/blog/gpt-6-sol-luna-specs-benchmarks-pricing-comparison/)、[Kingy AI（6.1 Sol）](https://kingy.ai/blog/gpt-6-1-sol-specs-benchmarks-pricing-task-costs/)、[Emergent](https://emergent.sh/learn/gpt-6-1-sol-benchmarks)、[Vellum](https://www.vellum.ai/blog/gpt-6-1-sol-benchmarks-explained)、[AI Agent Store](https://aiagentstore.ai/ai-models/reasoning-effort/gpt-6-luna)。
+
+**GPT-6.2 への差し替え（2026-11-22 確認）。** `gpt-6.2-sol` / `gpt-6.2-astra` は 2026-11-17 公開。`~/.codex/models_cache.json` に載り、どちらも `priority`（Fast）に対応する。単価（100万トークンあたり、入力 / 出力）は Sol $2 / $10（6.1 と同じ）、Astra $8 / $40（GPT-6 Astra の2割安）。推論量ごとの DeepSWE 値は出ていないので、段の推論量は上の 2026-10-01 の表で決めたまま据え置いた。手元の値（スコア / 1タスクのコスト）:
+
+| | `6.2-sol` | `6.1-sol` | `6.2-astra` | `6-astra` |
+|---|---|---|---|---|
+| DeepSWE v1.1 | 68.8%（`max`、第三者の集計で未検証） | 75.2% / $0.65（`high`） | 公表なし | 74.1% / $4.43（`xhigh`） |
+| FrontierCode 2.0（`max`） | 43.8% / $1.29 | 39.0% | 44.2% / $5.97 | 42.8% |
+| Terminal-Bench 4.0 | 56.1%（`medium`、Artificial Analysis） | 52.7%（`medium`） | — | — |
+| Agents' Last Exam v1.1 | 73.0% / $1.32（`max`） | 72.5% | 78.3% / $2.89 | 73.1% / $8.99 |
+| AA Coding Agent Index v2.1（Codex） | 50（6.1 から −3） | 53 | 53 | — |
+
+- 6.2 Sol は指標で勝ち負けが割れ、根拠にしてきた DeepSWE では後退している。OpenAI の公表は 6.2 が上。試してみないと分からないというユーザーの判断で差し替えた。推論量ごとの DeepSWE 値が出たら `dev-high`（`low`）と `dev-xhigh`（`high`）の置き場所を見直す。
+- 6.2 Astra は公表値の範囲で GPT-6 Astra を上回り、1タスクのコストは3分の1未満。置き換えの不利が無い。
+- `gpt-6.1-terra` + `medium` を `dev-high` に置く案は採らなかった。Terminal-Bench 4.0 で `medium` 35.8%（6.1 Sol `medium` 52.7%）、`low` での誤答率 16.7%（6.1 Sol 7.7%）で、OpenAI もソフトウェア開発には Sol / Astra を勧めている。
+- 2026-11-22 時点で Orca の `models_cache.json` は 2026-10-11 取得のままで 6.2 が載っていないが、Orca から `dev-high` / `dev-max` の引数（`-s read-only` 付き）で起動すると、どちらも返事が返った。実行ログの `turn_context` には指定どおりのモデル・推論量・`auto_review` が載り、Sol のフッターには `fast` が出た。
+
+出典（2026-11-22参照）: [DataCamp](https://www.datacamp.com/blog/gpt-6-2-astra-and-sol)、[DataCamp（Sol vs Opus 5.5）](https://www.datacamp.com/blog/gpt-6-2-sol-vs-claude-opus-5-5)、[geotoolbox](https://geotoolbox.ai/blog/gpt-6-2)、[Atomic Agent](https://atomicagent.io/blog/gpt-6-2/)、[OpenAI Community](https://community.openai.com/t/gpt-6-2-astra-and-sol-are-now-available/1417531)、[Emergent（Terra）](https://emergent.sh/learn/gpt-6-1-terra-benchmarks)。
 
 ただし発注1件のコストは、差し戻し1回で発生するディレクター側の検収サイクル（差分の読み直し、テストの再実行、追加の依頼文）より小さい。安いから下げるのではなく、依頼文で迷う余地を消せたから下げる。単価は判定の順序を覆さない。`models_cache.json` に単価は載っていないので、この数値は確認日つきの参考であり、判断に効くほどの差を感じたら出典を引き直す。サブスクリプション経由の実行では、請求は単価ではなくクレジット消費になる。
 
