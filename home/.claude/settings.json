@@ -50,6 +50,7 @@
       "Bash(dotenvx bitwarden:*)",
       "Bash(dotenvx armor:*)",
       "Bash(dotenvx primitives:*)",
+      "Bash(dotenvx run:*)",
       "Bash(security find-generic-password:*)",
       "Bash(/usr/bin/security find-generic-password:*)",
       "Bash(security dump-keychain:*)",
