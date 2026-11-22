@@ -39,7 +39,7 @@ orca orchestration worker-start --environment local --spec-file <依頼文のフ
 
 - **`--task` も `task-create` も要らない。** `--spec-file`（または `--spec`）と `--terminal` だけで通り、Task と Run が作られて bot に結び付いた（返り値に `taskId`・`runId`・`runCreated: true`・`dispatchId`）。`task-create` 済みの Task を渡すなら `--task <id>` を使う。
 - **依頼文は spec に書く。** Orca が worker 用の前置き（`ask`・`worker_done` の使い方）を付けて Codex へ送る。依頼文の組み方は `ordering.md` のまま。終わったら全文を worktree 内のファイルへ書き、そのパスを `--report-path` に付けて `worker_done` を送るよう依頼文の最後に書く。
-- **`--item <n>` で bot の item に結び付く。** worker がその item に紐づき、item が In progress になる（`worker-start --help` の記述）。`--terminal` との併用は引数として受け付けられた（bot 以外から試すと「Only a bot writes items」で拒否され、併用の誤りとしては拒否されなかった）。bot の chat から実際に結び付くかは**未確認**。
+- **`--item <n>` で bot の item に結び付く。** bot の chat から `--terminal` と併用して通り、`bot item show` で item に `dispatch:<id> · <タイトル> · working` として載り、item が In progress になり、イベントに `linked dispatch:<id>` が残った（2026-11-22）。bot 以外から付けると「Only a bot writes items」で拒否される。
 - 返り値の `dispatchId` を控える。差し戻しの宛先になる。
 - dispatch された worker（自分が worker として動いているとき）からは `--terminal` は拒否される（「A worker starts helpers in a new agent on this host」）。bot は coordinator なので当たらない。
 
@@ -92,4 +92,4 @@ orca orchestration send --to dispatch:<dispatchId> --subject "<差し戻しの�
 
 外から渡したターミナルは、worker が終わっても閉じない（`terminalState: retained`）。`worker-release` も閉じなかった（`reason: external_terminal`、`processAction: none`）。PR を見届けたら `terminal close` で閉じ、worktree を消す（`runner-orca.md`）。`worktree rm` の後にブランチが残ることがあったので、`git branch --list` で確かめる（2026-11-22）。
 
-この文書の挙動は Orca 1.4.269 / `gpt-6-luna` + `low` で実測した（`evidence.md`）。bot の chat からは試していない。
+この文書の挙動は Orca 1.4.269 / `gpt-6-luna` + `low` で実測した（`evidence.md`）。`--item` は bot の Home chat から確かめた。

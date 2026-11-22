@@ -241,11 +241,12 @@ Orca 1.4.219、`gpt-6.1-sol` + `high` + `-s read-only`、cwd は dotfiles。
 
 ## Orca bot の監督経路（2026-11-22 実測）
 
-Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `terminal create --command` で起動し、dispatch されていない素のシェルを coordinator 代わりにして試した。bot の chat からは試していない。
+Orca 1.4.269、dotfiles の使い捨て worktree で `dev-low` の Codex を `terminal create --command` で起動し、dispatch されていない素のシェルを coordinator 代わりにして試した。`--item` だけは bot の Home chat から確かめた。
 
 - `worker-start --spec-file … --terminal <handle>` は `--task` も `task-create` も無しで通り、Task・Run（`runCreated: true`）・Dispatch が作られた。Codex は前置きどおり `worker_done` を `--report-path` 付きで送った。
 - dispatch された worker のシェルから `--terminal` を付けると「A worker starts helpers in a new agent on this host; omit --on and --terminal」で拒否された。
 - `--item` を `--terminal` と併用すると、bot 以外からは「Only a bot writes items, from one of its own chats」で拒否された。併用そのものは引数の誤りにならなかった。
+- bot の Home chat から `worker-start --environment local --spec … --terminal <handle> --item <n> --json` を実行すると通り、`dispatchId`・`taskId`・`state: ready` が返った。`bot item show` では item に `dispatch:<id> · <タイトル> · working` として結び付き、item は In progress になり、イベントに `linked dispatch:<id>` が残った。
 - `check` の表示では `reportPath` はパスだけで、中身は展開されなかった。`inbox --json` の簡易表示では payload の `outcome`・`reportPath` が落ち、`--full` で載った。
 - `send --to dispatch:<id>` を終わった worker へ送ると `delivery: follow_up` で新しい Dispatch になり、同じ Codex の実行ログに2つ目のターンが足された。
 - 外から渡したターミナルは終了後も `terminalState: retained` で、`worker-release` は `reason: external_terminal`・`processAction: none` で閉じなかった。`terminal close` で閉じた。
