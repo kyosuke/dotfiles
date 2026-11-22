@@ -1,6 +1,6 @@
 # 委任ランナー: herdr
 
-`HERDR_ENV` が 1 のときに読む。Codex 側の運用（依頼文の渡し方、承認の境界、並列の可否、ネットワーク、スレッドの片付け）はランナーに依らないので `execution.md` にある。
+`HERDR_ENV` が 1 のときに読む。共通手順は `execution.md`。
 
 **herdr の操作は公式スキルに従う。** Skill ツールで `herdr` を呼ぶ（無ければ `herdr --skill` が同じ内容を出力する。バイナリが出力元なので本体の更新に追従する）。公式スキルの description は「ユーザーが herdr に言及したときだけ使う」と制限しているが、この委任経路は herdr のペイン操作そのものなので対象に入る。
 
@@ -39,7 +39,7 @@ herdr にプロファイルの仕組みは無い。`../SKILL.md` で選んだプ
 
 ### `service_tier` の語彙
 
-Fast は Codex の `service_tier` で、プロファイルの Fast 有りを `priority`、無しを `default` へ写す。値の語彙は [`codex-rs/core/config.schema.json`](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) にあり、オフを表す `default` はここにしか出てこない（`models_cache.json` は各モデルの対応ティア表で、語彙の一覧ではない）。オンに legacy の `fast` ではなく `priority` を渡す。対応ティアに無い値は警告つきでオフになるだけなので使わない。値を変えるならスキーマで語彙を確かめ、リクエスト本文まで読む（実測とその方法は `evidence.md`）。
+Fast の語彙と出典は `execution.md`。値を変える場合はスキーマと実際のリクエスト本文を確認する（方法は `evidence.md`）。
 
 `service_tier` は起動時に必ず明示する。TUI のトグルが `~/.codex/config.toml` へこのキーを書き戻すので、省くと対話セッションの状態が委任へ漏れる。
 
@@ -67,9 +67,7 @@ git branch -d <タスク名>
 
 ## ネットワークは起動時に開ける
 
-`-c sandbox_workspace_write.network_access=true` を渡すと、**そのセッションだけ**ネットワークが通る。書き込み範囲は `workspace-write` のままなので、コマンド単位の昇格（サンドボックス外での実行）より露出が小さい。こちらを使い、昇格を既定にしない。
-
-ループバックだけを開ける設定は無いので、外向きも同時に開く。運用の判断と `~/.codex/config.toml` を触らない理由は `execution.md`。
+`-c sandbox_workspace_write.network_access=true` を起動時に渡す。外向きとループバックが同時に開く。書き込み範囲・昇格・設定ファイルの扱いは `execution.md`。
 
 ## 読み取り専用で起動できる
 

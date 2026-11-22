@@ -2,7 +2,7 @@
 
 herdr も Orca も無いとき（Codex アプリ内のターミナルなど）に読む（判定の順は `../SKILL.md`）。Codex 側の運用（依頼文の渡し方、並列の可否、ネットワーク、スレッドの分割）はランナーに依らないので `execution.md` にある。
 
-`codex exec` をバックグラウンドで走らせる。ランナーに求める4条件のうち「動作がユーザーに見える」と「承認が人へ届く」を欠く。それを承知でユーザーが用意させた代替経路である（2026-10-28）。発注前報告で、このランナーで出すこと（画面に出ない、承認は auto-reviewer だけが判断する）を1行添える。
+`codex exec` はバックグラウンドで実行する。発注前報告に、画面に出ない代替経路を使い、承認は auto-reviewer だけが判断する旨を1行添える（採用の経緯は `evidence.md`）。
 
 ## 承認で固まらせない
 
@@ -26,7 +26,7 @@ herdr も Orca も無いとき（Codex アプリ内のターミナルなど）�
 -c approval_policy=on-request -c approvals_reviewer=auto_review -c sandbox_mode=<workspace-write|read-only>
 ```
 
-プロファイルの定義は `../SKILL.md` の表にある。`service_tier` の語彙は `runner-orca.md` と同じ。
+プロファイルの定義は `../SKILL.md`、`service_tier` の語彙は `execution.md`。
 
 - 読み取りだけの依頼は `sandbox_mode=read-only` にする。`-s` は `exec resume` に無いので使わない。
 - ネットワークが要る依頼は `-c sandbox_workspace_write.network_access=true` を足す（`execution.md`）。
@@ -44,7 +44,7 @@ cd <作業ディレクトリ> && codex exec <起動引数> --json \
 
 完了したら `<タスク名>.report.md` が最終報告である（最後の `agent_message` だけが入る）。空なら `.stderr` と `.events.jsonl` の末尾を読む。待機中の進み具合は `.events.jsonl` を見る。`item.completed` の `command_execution` に、コマンドと `exit_code` が出る。ユーザーに見せたいときは `tail -f` を案内する。
 
-**報告だけで実行の有無を判断しない。** 推論量 `low` では、何も実行せずに「列挙します」とだけ返して終わったことがある（2026-10-28）。`.events.jsonl` に `command_execution` があるかを見る。
+**実行の有無は `.events.jsonl` の `command_execution` で確認する。** 報告だけ返して何も実行しなかった例がある（`evidence.md`）。
 
 ## 差し戻す
 
@@ -57,7 +57,7 @@ cd <作業ディレクトリ> && codex exec resume <thread_id> <起動引数> --
   > <scratchpad>/<タスク名>.events2.jsonl 2> <scratchpad>/<タスク名>.stderr2
 ```
 
-- **起動引数は再開時も全部渡す。** 省いた設定は `~/.codex/config.toml` の既定に戻る。read-only で起動したスレッドでも、再開時に指定しなかったら `workspace-write` になった（2026-10-28）。
+- **起動引数は再開時も全部渡す。** 省いた設定は `~/.codex/config.toml` の既定に戻る（`evidence.md`）。
 - `exec resume` には `-C` が無く、セッションの検索も cwd で絞られる。起動と同じディレクトリへ `cd` してから実行する。
 - `--last` は使わない。直近のセッションは別のリポジトリや用途のことがある。
 
