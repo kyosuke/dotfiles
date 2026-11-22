@@ -16,9 +16,9 @@ herdr も Orca も無いとき（Codex アプリ内のターミナルなど）�
 |---|---|
 | `dev-low` | `-c model=gpt-6-luna -c model_reasoning_effort=low -c service_tier=priority` |
 | `dev-default` | `-c model=gpt-6-luna -c model_reasoning_effort=high -c service_tier=priority` |
-| `dev-high` | `-c model=gpt-6.1-sol -c model_reasoning_effort=low -c service_tier=priority` |
-| `dev-xhigh` | `-c model=gpt-6.1-sol -c model_reasoning_effort=high -c service_tier=priority` |
-| `dev-max` | `-c model=gpt-6-astra -c model_reasoning_effort=xhigh -c service_tier=default` |
+| `dev-high` | `-c model=gpt-6.2-sol -c model_reasoning_effort=low -c service_tier=priority` |
+| `dev-xhigh` | `-c model=gpt-6.2-sol -c model_reasoning_effort=high -c service_tier=priority` |
+| `dev-max` | `-c model=gpt-6.2-astra -c model_reasoning_effort=xhigh -c service_tier=default` |
 
 どれにも共通で次を足す。以下では、プロファイルの引数にこれを足したものを「起動引数」と呼ぶ。
 
