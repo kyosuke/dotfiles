@@ -9,6 +9,7 @@
 !/statusline-command.sh
 !/hooks/
 /hooks/*
+!/hooks/pr-merge-gate.sh
 !/skills/
 /skills/*
 !/skills/grill-me/
