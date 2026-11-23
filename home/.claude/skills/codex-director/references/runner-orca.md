@@ -71,7 +71,7 @@ orca worktree rm --worktree id:<repoId>::<パス> --json
 
 ## 依頼文を送る
 
-最初の送信の前に、`terminal wait --for tui-idle` で入力待ちになったことを確かめる。`satisfied: true` が返ってから送る。起動中の TUI へ打ち込んだ依頼文は失われる。
+最初の送信の前に、`terminal wait --for tui-idle` で入力待ちになったことを確かめる。`result.wait.satisfied: true` が返ってから送る。起動中の TUI へ打ち込んだ依頼文は失われる。
 
 ```bash
 orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --enter --wait-submit 20 --json
@@ -81,13 +81,30 @@ orca terminal send --terminal <handle> --text "$(cat <scratchpad>/order.txt)" --
 
 ## 完了を待つ
 
-**完了は `tui-idle` で待つ。** ターンが終わるまで返らず（`evidence.md`）、Bash の既定タイムアウト（120秒）を超えるので `timeout` に `600000` を指定する。
+**完了は `tui-idle` で待つ。** Bash の既定タイムアウト（120秒）を超えるため、`run_in_background: true` で待つ。複数ターミナルは以下のように待ち、総待機時間が40分を超えたら残りを待たない。
 
 ```bash
-orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 560000 --json
+deadline=$(( $(date +%s) + 2400 ))
+for h in handle1 handle2; do
+  while :; do
+    if [ "$(date +%s)" -ge "$deadline" ]; then echo "$h timeout"; break; fi
+    out=$(orca terminal wait --terminal "$h" --for tui-idle --timeout-ms 560000 --json)  # ok:false は終了コード1
+    state=$(printf '%s\n' "$out" | jq -er '
+      if .ok == false and .error.code == "timeout" then "retry"
+      elif .ok == false and (.error.code | type == "string") then "error " + .error.code
+      elif .ok == true and .result.wait.satisfied == true then "idle"
+      elif .ok == true and (.result.wait.blockedReason | type == "string") then "blocked " + .result.wait.blockedReason
+      else empty end
+    ' 2>/dev/null) || state=bad-output
+    case "$state" in
+      retry) continue ;;
+      *) echo "$h $state"; break ;;
+    esac
+  done
+done
 ```
 
-`satisfied: true` なら実行ログで最後のターンを確認する。`false` で `blockedReason` が `agent-interactive-prompt` なら承認待ち（該当節を参照）。`agent-trust-workspace` は repo 初回起動時のフォルダ信頼確認で、発注前に返ることが多い。ユーザーに伝え、画面での回答まで発注を待ち、代行しない。それ以外の `false` と `null` は時間切れなので待ち直す（`evidence.md`）。
+`satisfied` と `blockedReason` は `result.wait` の下にある。`idle` なら実行ログで最後のターンを確認する。`blocked agent-interactive-prompt` は承認待ち（該当節）、`blocked agent-trust-workspace` は初回起動時のフォルダ信頼確認で、ユーザーに伝えて画面での回答を待ち、代行しない。待ち直すのは `ok: false` の `error.code: timeout` だけであり、`error terminal_exited` は `terminal read` または実行ログで最後のターンを確認し、`task_complete` なら報告回収へ進み、それ以外は状況を報告する。他の `error`、総待機時間の `timeout`、`bad-output` も状況を報告する。Bash ツールでは `run_in_background: true` で実行し、出力各行の `idle` は実行ログ確認、`blocked` は承認待ち/信頼確認、`error` は上記の確認、`timeout` は状況報告へ進む。
 
 実行ログは、終わったことの確かめと報告の回収に使う。ログは `$ORCA_CODEX_HOME/sessions/<年>/<月>/<日>/rollout-*.jsonl` か `~/.codex/sessions/<年>/<月>/<日>/rollout-*.jsonl` にあり、ターンが始まると `event_msg` の `task_started` が、終わると `task_complete` が、却下や中断で終わると `turn_aborted` が1行ずつ足される。
 
