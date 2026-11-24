@@ -22,10 +22,15 @@ stop() {
 git rev-parse --git-dir >/dev/null 2>&1 || stop 2 "gitリポジトリではない"
 
 # 1. 作業ツリーの確認。汚れていたら触らない（pullや切り替えで失う恐れがあるため）
-if [ -n "$(git status --porcelain)" ]; then
+dirty=$(git status --porcelain --untracked-files=all) || stop 2 "git status が失敗した"
+if [ -n "$dirty" ]; then
   git status --short >&2
   stop 2 "未コミットの変更がある。stashは行わないので、コミットするか退避してから再実行してほしい"
 fi
+# rebaseやmergeの途中は、ファイル差分が空でもworktree固有の状態を持つ。切り替えや削除で失わないよう触らない
+for f in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD sequencer BISECT_LOG; do
+  [ -e "$(git rev-parse --git-path "$f")" ] && stop 2 "$f があり、rebase・merge・bisectなどの途中なので触らない"
+done
 
 # 2. デフォルトブランチの判定
 default=$(git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
@@ -41,10 +46,19 @@ fi
 
 current=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)
 
+# linked worktreeではデフォルトブランチが本体側でチェックアウト済みのため切り替えられない。
+# 代わりに origin/<default> へdetachしてから -d し、ブランチが消えたらworktree自体を片付ける
+linked=""
+[ "$(git rev-parse --path-format=absolute --git-dir)" != "$(git rev-parse --path-format=absolute --git-common-dir)" ] && linked=1
+# detached中に別ブランチを指定させると、detachし直したときに今のHEADにしかないコミットを失う
+if [ -n "$linked" ] && [ -n "${1:-}" ] && [ "$1" != "$current" ]; then
+  stop 2 "worktreeでは、そこでチェックアウトしているブランチだけを片付ける（引数なしで実行する）"
+fi
+
 # 3. 対象ブランチの決定。引数 > 現在のフィーチャーブランチ > まとめて片付け
 target=${1:-}
 if [ -z "$target" ]; then
-  if [ -z "$current" ]; then
+  if [ -z "$current" ] && [ -z "$linked" ]; then
     stop 2 "detached HEADで、対象ブランチも指定されていない"
   elif [ "$current" != "$default" ]; then
     target=$current
@@ -64,21 +78,55 @@ if [ -n "$target" ]; then
   fi
 fi
 
-# 4. デフォルトブランチへ戻り、fast-forwardで取り込む
-if [ "$current" != "$default" ]; then
+# 3b. 本体worktreeでは、未マージと分かっているブランチのために切り替えやpullをしない。元のブランチにいたまま止める
+if [ -z "$linked" ] && [ -n "$target" ] && [ -z "$gone" ]; then
+  pre=$default
+  if git remote get-url origin >/dev/null 2>&1; then
+    git fetch --quiet origin "+refs/heads/$default:refs/remotes/origin/$default" \
+      || stop 3 "origin の $default を取得できなかった。ブランチは削除していない"
+    pre=refs/remotes/origin/$default
+  fi
+  if ! git merge-base --is-ancestor "$target" "$default" && ! git merge-base --is-ancestor "$target" "$pre"; then
+    state=""
+    command -v gh >/dev/null 2>&1 && state=$(gh pr view "$target" --json state --jq '.state' 2>/dev/null || true)
+    if [ "$state" != "MERGED" ]; then
+      echo "ブランチ: ${current:-detached HEAD}（$default へ切り替えていない）"
+      echo "削除: なし"
+      if [ -n "$state" ]; then
+        echo "未削除: $target: PRが $state で $default に未取り込みのため、何もせずに止めた"
+      else
+        echo "未削除: $target: $default に未取り込みで、PRの状態も確認できなかったため、何もせずに止めた"
+      fi
+      exit 4
+    fi
+  fi
+fi
+
+# 4. デフォルトブランチへ戻り、fast-forwardで取り込む。worktreeでは origin を取得するだけ
+base=$default
+if [ -n "$linked" ]; then
+  if git remote get-url origin >/dev/null 2>&1; then
+    git fetch --quiet origin "+refs/heads/$default:refs/remotes/origin/$default" \
+      || stop 3 "origin の $default を取得できなかった。ブランチは削除していない"
+    base=refs/remotes/origin/$default
+  fi
+  pulled="worktreeのため ${base#refs/remotes/} と比較"
+elif [ "$current" != "$default" ]; then
   git checkout "$default" || stop 3 "$default への切り替えが失敗した"
 fi
 
-before=$(git rev-parse HEAD)
-if git remote get-url origin >/dev/null 2>&1; then
-  git pull --ff-only \
-    || stop 3 "git pull --ff-only が失敗した。ローカルとリモートが分岐している可能性がある。ブランチは削除していない"
-fi
+if [ -z "$linked" ]; then
+  before=$(git rev-parse HEAD)
+  if git remote get-url origin >/dev/null 2>&1; then
+    git pull --ff-only \
+      || stop 3 "git pull --ff-only が失敗した。ローカルとリモートが分岐している可能性がある。ブランチは削除していない"
+  fi
 
-if [ "$before" != "$(git rev-parse HEAD)" ]; then
-  pulled="取り込んだ変更あり"
-else
-  pulled="取り込む変更なし"
+  if [ "$before" != "$(git rev-parse HEAD)" ]; then
+    pulled="取り込んだ変更あり"
+  else
+    pulled="取り込む変更なし"
+  fi
 fi
 
 # 5. 削除
@@ -133,7 +181,7 @@ delete_if_merged() {
   local branch=$1
 
   # 決定表: 先祖なら取り込み済み。それ以外はsquash/rebaseマージの可能性をPRで確認する。
-  if git merge-base --is-ancestor "$branch" "$default"; then
+  if git merge-base --is-ancestor "$branch" "$base"; then
     close_review_terminals "$branch"
     if git branch -d "$branch" >/dev/null 2>&1; then
       deleted="${deleted}${branch}
@@ -170,8 +218,16 @@ delete_if_merged() {
 if [ -n "$gone" ]; then
   :
 elif [ -n "$target" ]; then
+  # worktreeでは自分がチェックアウトしていると -d できない。取り込み済みのときだけ base へdetachする
+  if [ -n "$linked" ] && git merge-base --is-ancestor "$target" "$base"; then
+    git checkout --quiet --detach "$base" || stop 3 "$base へのdetachが失敗した。ブランチは削除していない"
+  fi
   delete_if_merged "$target"
-else
+  # 消せなかったらブランチへ戻し、worktreeも残す
+  if [ -n "$linked" ] && git show-ref --verify --quiet "refs/heads/$target"; then
+    git checkout --quiet "$target" || stop 3 "$target へ戻れなかった。ブランチとworktreeは残っている"
+  fi
+elif [ -z "$linked" ]; then
   # まとめて片付け: デフォルトブランチから到達できるものだけが挙がる
   while IFS= read -r branch; do
     [ -n "$branch" ] || continue
@@ -209,6 +265,30 @@ if [ -n "$skipped" ]; then
   printf '%b' "$skipped" | while IFS= read -r s; do
     [ -n "$s" ] && echo "未削除: $s"
   done
+  [ -n "$linked" ] && echo "worktreeはブランチが残っているので削除しなかった"
   exit 4
+fi
+
+# 8. worktreeの削除。ブランチが消え、HEADが base に含まれ、作業ツリーがきれいなら失うものはない。
+# Orcaのworktreeはこのセッションごと閉じられうるので、報告を出し終えてから最後に行う
+if [ -n "$linked" ]; then
+  [ -z "$(git symbolic-ref --quiet HEAD 2>/dev/null)" ] \
+    || stop 4 "HEADがまだブランチを指しているのでworktreeは削除しなかった"
+  git merge-base --is-ancestor HEAD "$base" \
+    || stop 4 "HEADが $base に含まれないコミットなのでworktreeは削除しなかった"
+  dirty=$(git status --porcelain --untracked-files=all) || stop 4 "git status が失敗したのでworktreeは削除しなかった"
+  [ -z "$dirty" ] || stop 4 "作業ツリーに変更があるのでworktreeは削除しなかった"
+  top=$(git rev-parse --show-toplevel)
+  main=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+  cd "$main" || stop 3 "本体のworktree $main へ移れなかった"
+  if command -v orca >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 \
+     && (cd "$top" && orca worktree current --json 2>/dev/null) \
+       | jq -e --arg p "$top" '.result.worktree | .path == $p and .isMainWorktree == false' >/dev/null; then
+    echo "worktreeを削除: ${top}（Orcaのワークスペースごと閉じる）"
+    orca worktree rm --worktree "path:$top" >/dev/null || stop 3 "orca worktree rm が失敗した: $top（ブランチは削除済み、worktreeはdetachしたまま残っている）"
+  else
+    echo "worktreeを削除: $top"
+    git worktree remove "$top" || stop 3 "git worktree remove が失敗した: $top（ブランチは削除済み、worktreeはdetachしたまま残っている）"
+  fi
 fi
 exit 0
