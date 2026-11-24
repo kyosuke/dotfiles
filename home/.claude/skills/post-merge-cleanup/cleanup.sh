@@ -78,6 +78,30 @@ if [ -n "$target" ]; then
   fi
 fi
 
+# 3b. 本体worktreeでは、未マージと分かっているブランチのために切り替えやpullをしない。元のブランチにいたまま止める
+if [ -z "$linked" ] && [ -n "$target" ] && [ -z "$gone" ]; then
+  pre=$default
+  if git remote get-url origin >/dev/null 2>&1; then
+    git fetch --quiet origin "+refs/heads/$default:refs/remotes/origin/$default" \
+      || stop 3 "origin の $default を取得できなかった。ブランチは削除していない"
+    pre=refs/remotes/origin/$default
+  fi
+  if ! git merge-base --is-ancestor "$target" "$default" && ! git merge-base --is-ancestor "$target" "$pre"; then
+    state=""
+    command -v gh >/dev/null 2>&1 && state=$(gh pr view "$target" --json state --jq '.state' 2>/dev/null || true)
+    if [ "$state" != "MERGED" ]; then
+      echo "ブランチ: ${current:-detached HEAD}（$default へ切り替えていない）"
+      echo "削除: なし"
+      if [ -n "$state" ]; then
+        echo "未削除: $target: PRが $state で $default に未取り込みのため、何もせずに止めた"
+      else
+        echo "未削除: $target: $default に未取り込みで、PRの状態も確認できなかったため、何もせずに止めた"
+      fi
+      exit 4
+    fi
+  fi
+fi
+
 # 4. デフォルトブランチへ戻り、fast-forwardで取り込む。worktreeでは origin を取得するだけ
 base=$default
 if [ -n "$linked" ]; then
