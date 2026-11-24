@@ -3,7 +3,6 @@
 # cf はベータ版しかないので prerelease で latest にプレリリースを含める。
 # esa-cli はダウンロード数が少なく弾かれるので allow_low_downloads で許可する。
 # fish はレジストリに無いので aqua を明示する。1password は aqua だと版を一覧できないので既定の vfox で入れる。
-# emsdk は Python 3.10 以上が要り、macOS 同梱の 3.9 では入らないので depends で mise の python を先に入れる。
 # mlx-whisper は pipx: で入れるので uv が要り、音声の読み込みに ffmpeg を呼ぶので両方を depends に入れる。
 # 1password の行は betterleaks が password = "..." と誤検知するので betterleaks:allow で外す。
 # herdr は自己更新すると mise の管理とずれるので、mise up で更新する。
@@ -12,7 +11,6 @@
 betterleaks = "latest"
 codex = "latest"
 dotenvx = "latest"
-emsdk = { version = "latest", depends = ["python"] }
 gh = "latest"
 herdr = "latest"
 hunk = "latest"
