@@ -6,7 +6,6 @@
 # mlx-whisper は pipx: で入れるので uv が要り、音声の読み込みに ffmpeg を呼ぶので両方を depends に入れる。
 # 1password の行は betterleaks が password = "..." と誤検知するので betterleaks:allow で外す。
 # herdr は自己更新すると mise の管理とずれるので、mise up で更新する。
-# gwscli（Google 公式の Workspace CLI）は版付きの URL が無いので http: で版を rolling に固定する。mise up では更新されないので mise install -f http:gwscli で入れ直す。
 [tools]
 1password = "latest" # betterleaks:allow
 betterleaks = "latest"
@@ -28,7 +27,6 @@ yazi = "latest"
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
 "github:can1357/oh-my-pi" = "latest"
-"http:gwscli" = { version = "rolling", bin = "gwscli", platforms = { macos-arm64 = { url = "https://dl.google.com/workspace-cli/macos_silicon/gwscli" }, macos-x64 = { url = "https://dl.google.com/workspace-cli/macos_intel/gwscli" } } }
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
