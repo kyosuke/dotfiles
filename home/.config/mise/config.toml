@@ -27,6 +27,7 @@ yazi = "latest"
 "npm:svgo" = "latest"
 "npm:wrangler" = "latest"
 "github:can1357/oh-my-pi" = "latest"
+"github:googleworkspace/cli" = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
